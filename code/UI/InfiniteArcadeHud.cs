@@ -10,14 +10,15 @@ namespace infinitearcade.UI
 {
 	public partial class InfiniteArcadeHud : Sandbox.HudEntity<RootPanel>
 	{
-		public Label health;
-		
 		public InfiniteArcadeHud()
 		{
 			if (!IsClient)
 				return;
 
-			RootPanel.SetTemplate("/ui/infinitearcade.html");
+			RootPanel.AddChild<ChatBox>();
+			RootPanel.AddChild<VoiceList>();
+
+			RootPanel.AddChild<Status>();
 		}
 	}
 }

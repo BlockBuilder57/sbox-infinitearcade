@@ -63,18 +63,6 @@ namespace infinitearcade
 					Camera = new ThirdPersonCamera();
 				}
 			}
-
-			if (Input.Pressed(InputButton.Voice) && LifeState == LifeState.Alive)
-			{
-				if (Controller is not GravityOnlyController)
-				{
-					Controller = new GravityOnlyController();
-				}
-				else
-				{
-					Controller = new WalkController();
-				}
-			}
 		}
 
 		private void BecomeRagdollOnClient(Vector3 velocity, DamageFlags damageFlags, Vector3 forcePos, Vector3 force, int bone)

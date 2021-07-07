@@ -16,6 +16,8 @@ namespace infinitearcade.UI
 
 		public Status()
 		{
+			StyleSheet.Load("/ui/Status.scss");
+
 			health = Add.Label("100", "health");
 			pawnstatus = Add.Label("", "pawnstatus");
 		}
@@ -25,10 +27,10 @@ namespace infinitearcade.UI
 			var player = Local.Pawn;
 			if (player == null) return;
 
-			health.Text = $"{player.Health.CeilToInt()}";
+			health.Text = player.Health.CeilToInt().ToString();
 
 			if (player is ArcadeMachinePlayer)
-				pawnstatus.Text = "YOU'RE IN AN ARCADE MACHINE";
+				pawnstatus.Text = "YOU'RE IN AN ARCADE MACHINE (press use to leave)";
 			else
 				pawnstatus.Text = "";
 		}
