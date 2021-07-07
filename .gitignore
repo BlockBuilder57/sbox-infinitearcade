@@ -1,0 +1,18 @@
+# remove sbox generated stuff
+.intermediate
+.codegen
+
+code/*.csproj
+code/obj
+code/Properties/launchSettings.json
+
+config/*.fgd
+
+# map generation
+_bakeresourcecache
+maps/*.vpk
+maps/*.los
+
+# asset browser info
+tools_asset_info.bin
+tools_thumbnail_cache.bin
