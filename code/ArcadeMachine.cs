@@ -13,11 +13,11 @@ namespace infinitearcade
 	public partial class ArcadeMachine : ModelEntity, IUse
 	{
 		[Net, Predicted]
-		ArcadePlayer CreatedPlayer { get; set; }
+		public ArcadePlayer CreatedPlayer { get; set; }
 		[Net, Predicted]
-		ArcadePlayer CreatorPlayer { get; set; }
+		public ArcadePlayer CreatorPlayer { get; set; }
 		[Net, Predicted]
-		Client CurrentClient { get; set; }
+		public Client CurrentClient { get; set; }
 
 		public bool BeingPlayed => CurrentClient != null;
 

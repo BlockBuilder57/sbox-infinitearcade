@@ -1,5 +1,6 @@
 ﻿using infinitearcade.UI;
 using Sandbox;
+using Sandbox.UI;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -51,6 +52,20 @@ namespace infinitearcade
 			client.Pawn = player;
 
 			player.Respawn();
+		}
+
+		public override void ClientDisconnect(Client cl, NetworkDisconnectionReason reason)
+		{
+			Log.Info($"\"{cl.Name}\" has left the game ({reason})");
+			ChatBox.AddInformation(To.Everyone, $"{cl.Name} has left ({reason})", $"avatar:{cl.SteamId}");
+
+			foreach (ArcadeMachine machine in Entity.All.OfType<ArcadeMachine>().Where(x => x.CurrentClient == cl))
+			{
+				if (machine.CreatorPlayer.IsValid() && machine.CreatorPlayer is not ArcadeMachinePlayer)
+					machine.CreatorPlayer.Delete();
+
+				machine.CurrentClient = null;
+			}
 		}
 	}
 }
