@@ -6,16 +6,18 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace infinitearcade
+namespace infinitearcade.UI
 {
 	public partial class InfiniteArcadeHud : Sandbox.HudEntity<RootPanel>
 	{
+		public Label health;
+		
 		public InfiniteArcadeHud()
 		{
-			if (IsClient)
-			{
-				RootPanel.SetTemplate("/InfiniteArcade.html");
-			}
+			if (!IsClient)
+				return;
+
+			RootPanel.SetTemplate("/ui/infinitearcade.html");
 		}
 	}
 }
