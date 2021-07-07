@@ -14,14 +14,12 @@ namespace infinitearcade
 		{
 			if ( IsServer )
 			{
-				Log.Info( "My Gamemode Has Created Serverside!" );
-
-				//new MinimalHudEntity();
+				new InfiniteArcadeHud();
 			}
 
 			if ( IsClient )
 			{
-				Log.Info( "My Gamemode Has Created Clientside!" );
+				//clientside gubbins
 			}
 		}
 
