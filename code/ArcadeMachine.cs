@@ -12,12 +12,14 @@ namespace infinitearcade
 	[Library("prop_arcademachine", Description = "An arcade machine.")]
 	public partial class ArcadeMachine : ModelEntity, IUse
 	{
-		[Net]
+		[Net, Predicted]
 		ArcadePlayer CreatedPlayer { get; set; }
-		[Net]
+		[Net, Predicted]
 		ArcadePlayer CreatorPlayer { get; set; }
-		[Net]
+		[Net, Predicted]
 		Client CurrentClient { get; set; }
+
+		public bool BeingPlayed => CurrentClient != null;
 
 		[Property("Spawnpoint", "Player Spawnpoint", FGDType = "target_destination")]
 		public string SpawnpointName { get; set; }
@@ -32,7 +34,7 @@ namespace infinitearcade
 			SetupPhysicsFromModel(PhysicsMotionType.Static, true);
 		}
 
-		[Event.Frame]
+		[Event.Tick]
 		public void OnFrame()
 		{
 			if (HasDebugBitsSet(DebugOverlayBits.OVERLAY_TEXT_BIT) && CreatedPlayer.IsValid() && CreatorPlayer.IsValid())
@@ -49,6 +51,23 @@ namespace infinitearcade
 					DebugOverlay.Line(machineBottom, loopCreator.WorldSpaceBounds.Center, Color.Yellow, depthTest: true);
 				}
 			}
+
+			if (BeingPlayed)
+			{
+				if (CreatorPlayer.IsValid())
+				{
+					CreatorPlayer.Controller?.Simulate(CurrentClient, CreatorPlayer, CreatorPlayer.GetActiveAnimator());
+					//DebugOverlay.Text(CreatorPlayer.Position, "Creator player", 0f);
+				}
+			}
+			else
+			{
+				if (CreatedPlayer.IsValid())
+				{
+					CreatedPlayer.Controller?.Simulate(CurrentClient, CreatedPlayer, CreatedPlayer.GetActiveAnimator());
+					//DebugOverlay.Text(CreatedPlayer.Position, "Created player", 0f);
+				}
+			}
 		}
 
 		public bool IsUsable(Entity user)
@@ -63,37 +82,67 @@ namespace infinitearcade
 
 			if (user == CreatedPlayer)
 			{
-				ExitMachine();
-				CreatedPlayer.Delete();
-				CreatedPlayer = null;
+				DestroyCreatedPlayer();
 				return false;
 			}
+
+			EnterMachine(user);
+
+			return false;
+		}
+
+		public void EnterMachine(Entity creator)
+		{
+			if (!creator.IsValid())
+				return;
 
 			if (!CreatedPlayer.IsValid())
 			{
 				CreatedPlayer = new ArcadeMachinePlayer();
 				(CreatedPlayer as ArcadeMachinePlayer).ParentMachine = this;
 				CreatedPlayer.Respawn();
-				CreatedPlayer.RenderColor = Color.Red;
-				CreatorPlayer = (ArcadePlayer)user;
-				CurrentClient = Client.All.First(x => x.Pawn == user);
-				CurrentClient.Pawn = CreatedPlayer;
-			}
-			else
-			{
-				CreatorPlayer = (ArcadePlayer)user;
-				CurrentClient = Client.All.First(x => x.Pawn == user);
-				CurrentClient.Pawn = CreatedPlayer;
+				CreatedPlayer.RenderColor = Color.Random;
 			}
 
-			return false;
+			if (!CurrentClient.IsValid())
+			{
+				CreatorPlayer = (ArcadePlayer)creator;
+				CreatorPlayer.Controller = new GravityOnlyController();
+				CreatedPlayer.Controller = new WalkController();
+
+				CurrentClient = Client.All.FirstOrDefault(x => x.Pawn == creator);
+				CurrentClient.Pawn = CreatedPlayer;
+			}
 		}
 
 		public void ExitMachine()
 		{
-			if (CreatedPlayer.IsValid() && CreatorPlayer.IsValid() && IsServer)
+			if (IsServer)
 			{
-				Client.All.First(x => x.Pawn == CreatedPlayer).Pawn = CreatorPlayer;
+				if (CurrentClient.IsValid())
+				{
+					if (CreatorPlayer.IsValid())
+						CreatorPlayer.Controller = new WalkController();
+					if (CreatedPlayer.IsValid())
+						CreatedPlayer.Controller = new GravityOnlyController();
+					CurrentClient.Pawn = CreatorPlayer;
+					CurrentClient = null;
+				}
+			}
+		}
+
+		public void DestroyCreatedPlayer()
+		{
+			if (IsServer)
+			{
+				if (CurrentClient.IsValid())
+					ExitMachine();
+
+				if (CreatedPlayer.IsValid())
+				{
+					CreatedPlayer.Delete();
+					CreatedPlayer = null;
+				}
 			}
 		}
 	}

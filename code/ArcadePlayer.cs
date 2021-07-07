@@ -14,12 +14,14 @@ namespace infinitearcade
 			SetModel("models/citizen/citizen.vmdl");
 
 			// Use WalkController for movement (you can make your own PlayerController for 100% control)
-			Controller = new WalkController();
+			if (Controller == null)
+				Controller = new WalkController();
 
 			// Use StandardPlayerAnimator  (you can make your own PlayerAnimator for 100% control)
-			Animator = new StandardPlayerAnimator();
+			if (Animator == null)
+				Animator = new StandardPlayerAnimator();
 
-			// Use ThirdPersonCamera (you can make your own Camera for 100% control)
+			// Use FirstPersonCamera (you can make your own Camera for 100% control)
 			Camera = new FirstPersonCamera();
 
 			EnableAllCollisions = true;
@@ -47,7 +49,8 @@ namespace infinitearcade
 			if (LifeState != LifeState.Alive)
 				return;
 
-			TickPlayerUse();
+			if (cl.Pawn == this)
+				TickPlayerUse();
 
 			if (Input.Pressed(InputButton.View) && LifeState == LifeState.Alive)
 			{
@@ -58,6 +61,18 @@ namespace infinitearcade
 				else
 				{
 					Camera = new ThirdPersonCamera();
+				}
+			}
+
+			if (Input.Pressed(InputButton.Voice) && LifeState == LifeState.Alive)
+			{
+				if (Controller is not GravityOnlyController)
+				{
+					Controller = new GravityOnlyController();
+				}
+				else
+				{
+					Controller = new WalkController();
 				}
 			}
 		}

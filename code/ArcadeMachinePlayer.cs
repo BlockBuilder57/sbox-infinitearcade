@@ -42,6 +42,7 @@ namespace infinitearcade
 			if (ParentMachine != null)
 			{
 				ParentMachine.ExitMachine();
+
 				return;
 			}
 		}
