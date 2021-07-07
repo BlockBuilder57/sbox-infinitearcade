@@ -18,10 +18,10 @@ namespace infinitearcade
 
 		public override Transform GetSpawnpoint()
 		{
-			PlayerSpawnpoint spawnpoint = Entity.All.OfType<PlayerSpawnpoint>().Where( x => x.PlayerType == PlayerSpawnpoint.SpawnType.MachinePlayer && x.EntityName == ParentMachine.SpawnpointName ).OrderBy( x => Guid.NewGuid() ).FirstOrDefault();
+			PlayerSpawnpoint spawnpoint = Entity.All.OfType<PlayerSpawnpoint>().Where(x => x.PlayerType == PlayerSpawnpoint.SpawnType.MachinePlayer && x.EntityName == ParentMachine.SpawnpointName).OrderBy(x => Guid.NewGuid()).FirstOrDefault();
 			Transform transform = Transform.Zero;
-			
-			if ( spawnpoint != null )
+
+			if (spawnpoint != null)
 			{
 				return spawnpoint.Transform;
 			}
@@ -31,7 +31,7 @@ namespace infinitearcade
 				transform.Position = ParentMachine.Position + ParentMachine.Rotation.Right * 32;
 				transform.Scale = ParentMachine.Scale;
 			}
-			
+
 			return transform;
 		}
 
@@ -39,7 +39,7 @@ namespace infinitearcade
 		{
 			base.UseFail();
 
-			if ( ParentMachine != null )
+			if (ParentMachine != null)
 			{
 				ParentMachine.ExitMachine();
 				return;

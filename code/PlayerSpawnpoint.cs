@@ -7,9 +7,9 @@ using System.Threading.Tasks;
 
 namespace infinitearcade
 {
-	[Library( "info_arcadeplayer_start" )]
-	[Hammer.EditorModel( "models/citizen/citizen.vmdl" )]
-	[Hammer.EntityTool( "Arcade Player Spawnpoint", "Player", "Defines a point where the player can (re)spawn" )]
+	[Library("info_arcadeplayer_start")]
+	[Hammer.EditorModel("models/citizen/citizen.vmdl")]
+	[Hammer.EntityTool("Arcade Player Spawnpoint", "Player", "Defines a point where the player can (re)spawn")]
 	public class PlayerSpawnpoint : Sandbox.SpawnPoint
 	{
 		public enum SpawnType

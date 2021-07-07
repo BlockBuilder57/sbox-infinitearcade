@@ -9,7 +9,7 @@ namespace infinitearcade
 {
 	//[Hammer.EditorModel( "models/sbox_props/street_lamp/street_lamp_open.vmdl" )]
 	[Hammer.Model]
-	[Library( "prop_arcademachine", Description = "An arcade machine." )]
+	[Library("prop_arcademachine", Description = "An arcade machine.")]
 	public partial class ArcadeMachine : ModelEntity, IUse
 	{
 		[Net]
@@ -19,46 +19,49 @@ namespace infinitearcade
 		[Net]
 		Client CurrentClient { get; set; }
 
-		[Property( "Spawnpoint", "Player Spawnpoint", FGDType = "target_destination" )]
+		[Property("Spawnpoint", "Player Spawnpoint", FGDType = "target_destination")]
 		public string SpawnpointName { get; set; }
 
 		public override void Spawn()
 		{
 			base.Spawn();
 
-			SetupPhysicsFromModel( PhysicsMotionType.Static, true );
+			if (string.IsNullOrEmpty(GetModelName()))
+				SetModel("models/sbox_props/street_lamp/street_lamp_open.vmdl");
+
+			SetupPhysicsFromModel(PhysicsMotionType.Static, true);
 		}
 
 		[Event.Frame]
 		public void OnFrame()
 		{
-			if ( HasDebugBitsSet(DebugOverlayBits.OVERLAY_TEXT_BIT) && CreatedPlayer.IsValid() && CreatorPlayer.IsValid() )
+			if (HasDebugBitsSet(DebugOverlayBits.OVERLAY_TEXT_BIT) && CreatedPlayer.IsValid() && CreatorPlayer.IsValid())
 			{
 				ArcadePlayer loopCreated = CreatedPlayer;
 				ArcadePlayer loopCreator = CreatorPlayer;
 				ArcadeMachine loopMachine = this;
-				//while ( loopPlayer != null && loopMachine != null)
+				//while (loopPlayer != null && loopMachine != null)
 				{
-					Vector3 machineBottom = new Vector3( loopMachine.WorldSpaceBounds.Center.x, loopMachine.WorldSpaceBounds.Center.y, loopMachine.WorldSpaceBounds.Mins.z );
-					Vector3 machineTop = new Vector3( loopMachine.WorldSpaceBounds.Center.x, loopMachine.WorldSpaceBounds.Center.y, loopMachine.WorldSpaceBounds.Maxs.z );
+					Vector3 machineBottom = new Vector3(loopMachine.WorldSpaceBounds.Center.x, loopMachine.WorldSpaceBounds.Center.y, loopMachine.WorldSpaceBounds.Mins.z);
+					Vector3 machineTop = new Vector3(loopMachine.WorldSpaceBounds.Center.x, loopMachine.WorldSpaceBounds.Center.y, loopMachine.WorldSpaceBounds.Maxs.z);
 
-					DebugOverlay.Line( loopCreated.WorldSpaceBounds.Center, machineTop, Color.Red, depthTest: true );
-					DebugOverlay.Line( machineBottom, loopCreator.WorldSpaceBounds.Center, Color.Yellow, depthTest: true );
+					DebugOverlay.Line(loopCreated.WorldSpaceBounds.Center, machineTop, Color.Red, depthTest: true);
+					DebugOverlay.Line(machineBottom, loopCreator.WorldSpaceBounds.Center, Color.Yellow, depthTest: true);
 				}
 			}
 		}
 
-		public bool IsUsable( Entity user )
+		public bool IsUsable(Entity user)
 		{
 			return true;
 		}
 
-		public bool OnUse( Entity user )
+		public bool OnUse(Entity user)
 		{
-			if ( !IsServer )
+			if (!IsServer)
 				return false;
 
-			if ( user == CreatedPlayer )
+			if (user == CreatedPlayer)
 			{
 				ExitMachine();
 				CreatedPlayer.Delete();
@@ -73,7 +76,7 @@ namespace infinitearcade
 				CreatedPlayer.Respawn();
 				CreatedPlayer.RenderColor = Color.Red;
 				CreatorPlayer = (ArcadePlayer)user;
-				CurrentClient = Client.All.First( x => x.Pawn == user );
+				CurrentClient = Client.All.First(x => x.Pawn == user);
 				CurrentClient.Pawn = CreatedPlayer;
 			}
 			else
