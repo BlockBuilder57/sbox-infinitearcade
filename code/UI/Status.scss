@@ -1,22 +1,43 @@
-.health
-{
-	position: absolute;
-	background-color: rgba( black, 0.25 );
-	left: 0;
-	bottom: 0;
-	font-size: 50px;
-	font-weight: 0;
-	color: white;
-	height: 60px;
-	padding: 0 10px;
-	align-items: center;
-}
+Status {
 
-.pawnstatus
-{
-	position: absolute;
-	top: 10px;
-	left: 10px;
-	font-size: 20px;
-	color: white;
+	& {
+		/*background-color: red;*/
+		display: flex;
+		flex-direction: column;
+		width: 320px;
+		overflow: hidden;
+	}
+
+	NumberDisplay {
+		.numberDisplay {
+			background-color: rgba( black, 0.25 );
+			font-size: 50px;
+			color: white;
+			padding: 0 0 0 8px;
+			align-items: center;
+			border-radius: 8px;
+		}
+
+		.numberDisplay:first-child {
+			margin-right: 25px;
+			padding-right: 8px;
+		}
+
+		.armorMult {
+			font-size: 16px;
+			transform: rotate(-90deg);
+		}
+	}
+
+
+	.pawnstatus {
+		display: block;
+		flex-basis: 100%;
+		font-size: 20px;
+		color: white;
+	}
+
+	.hidden {
+		display: none;
+	}
 }

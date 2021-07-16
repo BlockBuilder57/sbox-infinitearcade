@@ -9,17 +9,27 @@ namespace infinitearcade
 {
 	public partial class ArcadePlayer : Sandbox.Player
 	{
+		// public float Health (already exists)
+		[Net]
+		public float MaxHealth { get; set; }
+
+		[Net]
+		public float Armor { get; set; };
+		[Net]
+		public float MaxArmor { get; set; };
+
+		[Net]
+		public float ArmorMultiplier { get; set; }
+
 		public override void Respawn()
 		{
 			SetModel("models/citizen/citizen.vmdl");
 
 			// Use WalkController for movement (you can make your own PlayerController for 100% control)
-			if (Controller == null)
-				Controller = new WalkController();
+			Controller = new WalkController();
 
 			// Use StandardPlayerAnimator  (you can make your own PlayerAnimator for 100% control)
-			if (Animator == null)
-				Animator = new StandardPlayerAnimator();
+			Animator = new StandardPlayerAnimator();
 
 			// Use FirstPersonCamera (you can make your own Camera for 100% control)
 			Camera = new FirstPersonCamera();
@@ -29,12 +39,85 @@ namespace infinitearcade
 			EnableHideInFirstPerson = true;
 			EnableShadowInFirstPerson = true;
 
-			base.Respawn();
+			Host.AssertServer();
+
+			LifeState = LifeState.Alive;
+			Velocity = Vector3.Zero;
+			WaterLevel.Clear();
+
+			InitStats();
+
+			if (IsServer)
+			{
+				Declothe();
+				Clothe();
+			}
+
+			CreateHull();
+
+			Game.Current?.MoveToSpawnpoint(this);
+			ResetInterpolation();
+		}
+
+		public virtual void InitStats()
+		{
+			Health = 20f;
+			MaxHealth = 20f;
+			Armor = 0f;
+			MaxArmor = 50f;
+		}
+
+		[ConVar.ClientData("ia_player_clothes_head", Saved = true)]
+		public string ClothesHead { get; set; } = "models/citizen_clothes/hair/hair_femalebun.black.vmdl";
+		[ConVar.ClientData("ia_player_clothes_torso", Saved = true)]
+		public string ClothesTorso { get; set; } = "models/citizen_clothes/jacket/jacket.red.vmdl";
+		[ConVar.ClientData("ia_player_clothes_legs", Saved = true)]
+		public string ClothesLegs { get; set; } = "models/citizen_clothes/trousers/trousers.jeans.vmdl;models/citizen_clothes/shoes/trainers.vmdl";
+
+		public readonly List<ModelEntity> Clothing = new List<ModelEntity>();
+
+		public virtual void Clothe()
+		{
+			List<string> splitClothes = new();
+
+			splitClothes.AddRange(ConsoleSystem.GetValue("ia_player_clothes_head").Split(';'));
+			splitClothes.AddRange(ConsoleSystem.GetValue("ia_player_clothes_torso").Split(';'));
+			splitClothes.AddRange(ConsoleSystem.GetValue("ia_player_clothes_legs").Split(';'));
+
+			foreach (string modelStr in splitClothes)
+			{
+				ModelEntity model = new ModelEntity();
+				model.SetModel(modelStr);
+				model.SetParent(this, true);
+				model.EnableShadowInFirstPerson = true;
+				model.EnableHideInFirstPerson = true;
+				model.Tags.Add("clothes");
+
+				if (model != null && Clothing != null)
+				{
+					Clothing.Add(model);
+
+					ModelPropData propInfo = model.GetModel().GetPropData();
+					if (propInfo.ParentBodyGroupName != null)
+					{
+						SetBodyGroup(propInfo.ParentBodyGroupName, propInfo.ParentBodyGroupValue);
+					}
+				}
+			}
+		}
+
+		public virtual void Declothe()
+		{
+			Clothing?.ForEach(entity => entity.Delete());
+			Clothing?.Clear();
 		}
 
 		public virtual Transform GetSpawnpoint()
 		{
-			PlayerSpawnpoint spawnpoint = Entity.All.OfType<PlayerSpawnpoint>().Where(x => x.PlayerType == PlayerSpawnpoint.SpawnType.ArcadePlayer).OrderBy(x => Guid.NewGuid()).FirstOrDefault();
+			SpawnPoint spawnpoint = Entity.All.OfType<PlayerSpawnpoint>().Where(x => x.PlayerType == PlayerSpawnpoint.SpawnType.ArcadePlayer).OrderBy(x => Guid.NewGuid()).FirstOrDefault();
+
+			if (spawnpoint == null)
+				spawnpoint = Entity.All.OfType<SpawnPoint>().OrderBy(x => Guid.NewGuid()).FirstOrDefault();
 
 			if (spawnpoint != null)
 				return spawnpoint.Transform;
@@ -44,7 +127,13 @@ namespace infinitearcade
 
 		public override void Simulate(Client cl)
 		{
-			base.Simulate(cl);
+			if (IsServer && LifeState == LifeState.Dead && Input.Down(InputButton.Attack1))
+			{
+				Respawn();
+			}
+
+			var controller = GetActiveController();
+			controller?.Simulate(cl, this, GetActiveAnimator());
 
 			if (LifeState != LifeState.Alive)
 				return;
@@ -63,6 +152,48 @@ namespace infinitearcade
 					Camera = new ThirdPersonCamera();
 				}
 			}
+		}
+
+		public override void TakeDamage(DamageInfo info)
+		{
+			LastAttacker = info.Attacker;
+			LastAttackerWeapon = info.Weapon;
+
+			if (IsServer)
+			{
+				float min = Math.Min(info.Damage, Armor);
+
+				if (Armor >= min)
+					Armor -= info.Damage;
+
+				if (Armor < 0)
+				{
+					Health += Armor;
+					Armor = 0;
+				}
+
+				if (Health <= 0)
+				{
+					//Health = 0;
+					this.OnKilled();
+				}
+
+			}
+		}
+
+		public override void OnKilled()
+		{
+			base.OnKilled();
+
+			BecomeRagdollOnClient(Velocity, DamageFlags.Generic, Vector3.Zero, Vector3.Zero, GetHitboxBone(0));
+			Camera = new SpectateRagdollCamera();
+			Controller = null;
+
+			EnableAllCollisions = false;
+			EnableDrawing = false;
+
+			Inventory?.DropActive();
+			Inventory?.DeleteContents();
 		}
 
 		private void BecomeRagdollOnClient(Vector3 velocity, DamageFlags damageFlags, Vector3 forcePos, Vector3 force, int bone)
@@ -94,8 +225,8 @@ namespace infinitearcade
 			{
 				if (child is ModelEntity e)
 				{
-					var model = e.GetModelName();
-					if (model != null && !model.Contains("clothes"))
+					string model = e.GetModelName();
+					if (string.IsNullOrEmpty(model) || !child.Tags.Has("clothes"))
 						continue;
 
 					var clothing = new ModelEntity();
@@ -133,21 +264,6 @@ namespace infinitearcade
 			Corpse = ent;
 
 			ent.DeleteAsync(10.0f);
-		}
-
-		public override void OnKilled()
-		{
-			base.OnKilled();
-
-			BecomeRagdollOnClient(Velocity, DamageFlags.Generic, Vector3.Zero, Vector3.Zero, GetHitboxBone(0));
-			Camera = new SpectateRagdollCamera();
-			Controller = null;
-
-			EnableAllCollisions = false;
-			EnableDrawing = false;
-
-			Inventory?.DropActive();
-			Inventory?.DeleteContents();
 		}
 
 		protected bool IsUseDisabled()

@@ -67,5 +67,27 @@ namespace infinitearcade
 				machine.CurrentClient = null;
 			}
 		}
+
+		public override void DoPlayerSuicide(Client cl)
+		{
+			ArcadePlayer player = cl.Pawn as ArcadePlayer;
+
+			if (player != null)
+			{
+				float damage = player.Health + (player.Armor * player.ArmorMultiplier);
+				player.TakeDamage(DamageInfo.Generic(damage * 2f));
+			}
+		}
+
+		[ServerCmd("hurtme2")]
+		public static void HurtMeCommand(float amount)
+		{
+			Client client = ConsoleSystem.Caller;
+
+			Log.Info($"client null? {client == null}");
+			Log.Info($"pawn null? {client?.Pawn == null}");
+
+			client?.Pawn?.TakeDamage(DamageInfo.Generic(amount));
+		}
 	}
 }

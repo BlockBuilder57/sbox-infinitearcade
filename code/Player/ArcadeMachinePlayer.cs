@@ -9,11 +9,45 @@ namespace infinitearcade
 {
 	public partial class ArcadeMachinePlayer : ArcadePlayer
 	{
+		[Net]
 		public ArcadeMachine ParentMachine { get; set; }
+
+		public int PawnDepth { get { return PlayerChain.Count; } } 
+
+		public List<ArcadePlayer> PlayerChain
+		{ 
+			get
+			{
+				List<ArcadePlayer> players = new List<ArcadePlayer>();
+
+				ArcadeMachine machine = ParentMachine;
+				ArcadeMachinePlayer machinePlayer = null;
+
+				while (machine != null && machine.CreatorPlayer is ArcadePlayer creatorPlayer)
+				{
+					if (creatorPlayer is ArcadeMachinePlayer)
+						machine = machinePlayer.ParentMachine;
+					else
+						machine = null;
+					
+					players.Add(creatorPlayer);
+				}
+
+				return players;
+			}
+		}
 
 		public override void Respawn()
 		{
 			base.Respawn();
+		}
+
+		public override void InitStats()
+		{
+			Health = 100f;
+			MaxHealth = 100f;
+			Armor = 25f;
+			MaxArmor = 100f;
 		}
 
 		public override Transform GetSpawnpoint()
@@ -37,14 +71,13 @@ namespace infinitearcade
 
 		protected override void UseFail()
 		{
-			base.UseFail();
-
-			if (ParentMachine != null)
+			if (!IsUseDisabled() && ParentMachine != null)
 			{
 				ParentMachine.ExitMachine();
-
 				return;
 			}
+
+			base.UseFail();
 		}
 	}
 }

@@ -12,11 +12,11 @@ namespace infinitearcade
 	[Library("prop_arcademachine", Description = "An arcade machine.")]
 	public partial class ArcadeMachine : ModelEntity, IUse
 	{
-		[Net, Predicted]
+		[Net]
 		public ArcadePlayer CreatedPlayer { get; set; }
-		[Net, Predicted]
+		[Net]
 		public ArcadePlayer CreatorPlayer { get; set; }
-		[Net, Predicted]
+		[Net]
 		public Client CurrentClient { get; set; }
 
 		public bool BeingPlayed => CurrentClient != null;
@@ -37,18 +37,16 @@ namespace infinitearcade
 		[Event.Tick]
 		public void OnFrame()
 		{
-			if (HasDebugBitsSet(DebugOverlayBits.OVERLAY_TEXT_BIT) && CreatedPlayer.IsValid() && CreatorPlayer.IsValid())
+			if (HasDebugBitsSet(DebugOverlayBits.OVERLAY_TEXT_BIT))
 			{
-				ArcadePlayer loopCreated = CreatedPlayer;
-				ArcadePlayer loopCreator = CreatorPlayer;
-				ArcadeMachine loopMachine = this;
-				//while (loopPlayer != null && loopMachine != null)
-				{
-					Vector3 machineBottom = new Vector3(loopMachine.WorldSpaceBounds.Center.x, loopMachine.WorldSpaceBounds.Center.y, loopMachine.WorldSpaceBounds.Mins.z);
-					Vector3 machineTop = new Vector3(loopMachine.WorldSpaceBounds.Center.x, loopMachine.WorldSpaceBounds.Center.y, loopMachine.WorldSpaceBounds.Maxs.z);
+				Vector3 machineBottom = new Vector3(this.WorldSpaceBounds.Center.x, this.WorldSpaceBounds.Center.y, this.WorldSpaceBounds.Mins.z);
+				Vector3 machineTop = new Vector3(this.WorldSpaceBounds.Center.x, this.WorldSpaceBounds.Center.y, this.WorldSpaceBounds.Maxs.z);
 
-					DebugOverlay.Line(loopCreated.WorldSpaceBounds.Center, machineTop, Color.Red, depthTest: true);
-					DebugOverlay.Line(machineBottom, loopCreator.WorldSpaceBounds.Center, Color.Yellow, depthTest: true);
+				if (CreatedPlayer.IsValid())
+				{
+					DebugOverlay.Line(CreatedPlayer.Position, machineTop, Color.Red, depthTest: true);
+					if (CreatorPlayer.IsValid())
+						DebugOverlay.Line(machineBottom, CreatorPlayer.Position, Color.Yellow, depthTest: true);
 				}
 			}
 
@@ -101,7 +99,7 @@ namespace infinitearcade
 				CreatedPlayer = new ArcadeMachinePlayer();
 				(CreatedPlayer as ArcadeMachinePlayer).ParentMachine = this;
 				CreatedPlayer.Respawn();
-				CreatedPlayer.RenderColor = Color.Random;
+				CreatedPlayer.RenderColor = Rand.Color();
 			}
 
 			if (!CurrentClient.IsValid())
