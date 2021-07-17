@@ -21,6 +21,8 @@ namespace infinitearcade
 		[Net]
 		public float ArmorMultiplier { get; set; }
 
+		private bool m_clothed = false;
+
 		public override void Respawn()
 		{
 			SetModel("models/citizen/citizen.vmdl");
@@ -49,8 +51,12 @@ namespace infinitearcade
 
 			if (IsServer)
 			{
-				Declothe();
-				Clothe();
+				//Undress();
+				if (!m_clothed)
+				{
+					Clothe();
+					m_clothed = true;
+				}
 			}
 
 			CreateHull();
@@ -118,10 +124,12 @@ namespace infinitearcade
 			}
 		}
 
-		public virtual void Declothe()
+		public virtual void Undress()
 		{
 			Clothing?.ForEach(entity => entity.Delete());
 			Clothing?.Clear();
+
+			m_clothed = false;
 		}
 
 		public virtual Transform GetSpawnpoint()
@@ -280,7 +288,6 @@ namespace infinitearcade
 				return;
 
 			var ent = new ModelEntity();
-			ent.SetModel(GetModelName());
 			ent.Position = Position;
 			ent.Rotation = Rotation;
 			ent.Scale = Scale;
@@ -288,14 +295,15 @@ namespace infinitearcade
 			ent.MoveType = MoveType.Physics;
 			ent.UsePhysicsCollision = true;
 			ent.EnableAllCollisions = true;
-			ent.EnableHitboxes = true;
 			ent.CollisionGroup = CollisionGroup.Debris;
-			ent.PhysicsGroup.Velocity = velocity;
+			ent.EnableHitboxes = true;
 			ent.SurroundingBoundsMode = SurroundingBoundsType.Physics;
 
 			ent.SetInteractsAs(CollisionLayer.Debris);
 			ent.SetInteractsWith(CollisionLayer.WORLD_GEOMETRY);
 			ent.SetInteractsExclude(CollisionLayer.Player | CollisionLayer.Debris);
+
+			ent.SetModel(GetModelName());
 
 			ent.CopyBonesFrom(this);
 			ent.CopyBodyGroups(this);
@@ -317,6 +325,8 @@ namespace infinitearcade
 					clothing.RenderColorAndAlpha = e.RenderColorAndAlpha;
 				}
 			}
+
+			ent.PhysicsGroup.Velocity = velocity;
 
 			if (damageFlags.HasFlag(DamageFlags.Bullet) || damageFlags.HasFlag(DamageFlags.PhysicsImpact))
 			{
