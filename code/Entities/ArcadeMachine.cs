@@ -54,7 +54,7 @@ namespace infinitearcade
 			{
 				if (CreatorPlayer.IsValid())
 				{
-					CreatorPlayer.Controller?.Simulate(CurrentClient, CreatorPlayer, CreatorPlayer.GetActiveAnimator());
+					CreatorPlayer.GetActiveController()?.Simulate(CurrentClient, CreatorPlayer, CreatorPlayer.GetActiveAnimator());
 					//DebugOverlay.Text(CreatorPlayer.Position, "Creator player", 0f);
 				}
 			}
@@ -62,7 +62,7 @@ namespace infinitearcade
 			{
 				if (CreatedPlayer.IsValid())
 				{
-					CreatedPlayer.Controller?.Simulate(CurrentClient, CreatedPlayer, CreatedPlayer.GetActiveAnimator());
+					CreatedPlayer.GetActiveController()?.Simulate(CurrentClient, CreatedPlayer, CreatedPlayer.GetActiveAnimator());
 					//DebugOverlay.Text(CreatedPlayer.Position, "Created player", 0f);
 				}
 			}
@@ -105,8 +105,7 @@ namespace infinitearcade
 			if (!CurrentClient.IsValid())
 			{
 				CreatorPlayer = (ArcadePlayer)creator;
-				CreatorPlayer.Controller = new GravityOnlyController();
-				CreatedPlayer.Controller = new WalkController();
+				CreatorPlayer.CurrentMachine = this;
 
 				CurrentClient = Client.All.FirstOrDefault(x => x.Pawn == creator);
 				CurrentClient.Pawn = CreatedPlayer;
@@ -120,9 +119,8 @@ namespace infinitearcade
 				if (CurrentClient.IsValid())
 				{
 					if (CreatorPlayer.IsValid())
-						CreatorPlayer.Controller = new WalkController();
-					if (CreatedPlayer.IsValid())
-						CreatedPlayer.Controller = new GravityOnlyController();
+						CreatorPlayer.CurrentMachine = null;
+
 					CurrentClient.Pawn = CreatorPlayer;
 					CurrentClient = null;
 				}

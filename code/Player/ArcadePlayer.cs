@@ -21,7 +21,17 @@ namespace infinitearcade
 		[Net]
 		public float ArmorMultiplier { get; set; }
 
+		[Net]
+		public ArcadeMachine CurrentMachine { get; set; }
+
+		protected BasePlayerController m_machineController;
+
 		private bool m_clothed = false;
+
+		public ArcadePlayer()
+		{
+			Inventory = new IAInventory(this);
+		}
 
 		public override void Respawn()
 		{
@@ -29,6 +39,9 @@ namespace infinitearcade
 
 			// Use WalkController for movement (you can make your own PlayerController for 100% control)
 			Controller = new WalkController();
+
+			if (m_machineController == null)
+				m_machineController = new GravityOnlyController();
 
 			// Use StandardPlayerAnimator  (you can make your own PlayerAnimator for 100% control)
 			Animator = new StandardPlayerAnimator();
@@ -151,15 +164,19 @@ namespace infinitearcade
 			{
 				Respawn();
 			}
-
-			var controller = GetActiveController();
-			controller?.Simulate(cl, this, GetActiveAnimator());
+			
 
 			if (LifeState != LifeState.Alive)
 				return;
 
+			var controller = GetActiveController();
+			controller?.Simulate(cl, this, GetActiveAnimator());
+
 			if (cl.Pawn == this)
+			{
 				TickPlayerUse();
+				SimulateActiveChild(cl, ActiveChild);
+			}
 
 			if (Input.Pressed(InputButton.View) && LifeState == LifeState.Alive)
 			{
@@ -196,6 +213,17 @@ namespace infinitearcade
 				return;
 
 			tr.Surface.DoFootstep(this, tr, foot, volume);
+		}
+
+		public override PawnController GetActiveController()
+		{
+			if (this is not ArcadeMachinePlayer)
+			{
+				if (CurrentMachine.IsValid())
+					return m_machineController;
+			}
+
+			return base.GetActiveController();
 		}
 
 		public override void TakeDamage(DamageInfo info)
@@ -278,7 +306,7 @@ namespace infinitearcade
 			EnableAllCollisions = false;
 			EnableDrawing = false;
 
-			Inventory?.DropActive();
+			//Inventory?.DropActive();
 			Inventory?.DeleteContents();
 		}
 

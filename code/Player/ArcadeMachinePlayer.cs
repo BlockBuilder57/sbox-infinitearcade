@@ -40,6 +40,8 @@ namespace infinitearcade
 		public override void Respawn()
 		{
 			base.Respawn();
+
+			Inventory.Add(new Pistol(), true);
 		}
 
 		public override void InitStats()
@@ -78,6 +80,14 @@ namespace infinitearcade
 			}
 
 			return transform;
+		}
+
+		public override PawnController GetActiveController()
+		{
+			if (ParentMachine?.CurrentClient == null)
+				return m_machineController;
+
+			return base.GetActiveController();
 		}
 
 		protected override void UseFail()
