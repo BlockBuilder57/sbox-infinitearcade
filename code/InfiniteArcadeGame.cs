@@ -72,10 +72,10 @@ namespace infinitearcade
 		{
 			ArcadePlayer player = cl.Pawn as ArcadePlayer;
 
-			if (player != null)
+			if (player != null && player.LifeState == LifeState.Alive)
 			{
 				float damage = player.Health + (player.Armor * player.ArmorMultiplier);
-				player.TakeDamage(DamageInfo.Generic(damage * 2f));
+				player.TakeDamage(DamageInfo.Generic(damage * 100f));
 			}
 		}
 
@@ -83,9 +83,6 @@ namespace infinitearcade
 		public static void HurtMeCommand(float amount)
 		{
 			Client client = ConsoleSystem.Caller;
-
-			Log.Info($"client null? {client == null}");
-			Log.Info($"pawn null? {client?.Pawn == null}");
 
 			client?.Pawn?.TakeDamage(DamageInfo.Generic(amount));
 		}

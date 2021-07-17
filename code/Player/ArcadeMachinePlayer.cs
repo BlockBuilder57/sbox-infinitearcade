@@ -46,8 +46,19 @@ namespace infinitearcade
 		{
 			Health = 100f;
 			MaxHealth = 100f;
+
 			Armor = 25f;
 			MaxArmor = 100f;
+			ArmorMultiplier = 1f;
+		}
+
+		public override void Clothe()
+		{
+			Transform coneTransform = Transform.Zero;
+			coneTransform.Rotation = Rotation.From(0f, 90f, 90f);
+			coneTransform.Position.x += 8f;
+
+			AddAsClothes("models/citizen_props/roadcone01.vmdl", "head", coneTransform);
 		}
 
 		public override Transform GetSpawnpoint()

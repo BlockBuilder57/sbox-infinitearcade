@@ -14,9 +14,9 @@ namespace infinitearcade
 		public float MaxHealth { get; set; }
 
 		[Net]
-		public float Armor { get; set; };
+		public float Armor { get; set; }
 		[Net]
-		public float MaxArmor { get; set; };
+		public float MaxArmor { get; set; }
 
 		[Net]
 		public float ArmorMultiplier { get; set; }
@@ -63,8 +63,10 @@ namespace infinitearcade
 		{
 			Health = 20f;
 			MaxHealth = 20f;
+
 			Armor = 0f;
 			MaxArmor = 50f;
+			ArmorMultiplier = 1.0f;
 		}
 
 		[ConVar.ClientData("ia_player_clothes_head", Saved = true)]
@@ -86,22 +88,32 @@ namespace infinitearcade
 
 			foreach (string modelStr in splitClothes)
 			{
-				ModelEntity model = new ModelEntity();
-				model.SetModel(modelStr);
+				AddAsClothes(modelStr);
+			}
+		}
+
+		public void AddAsClothes(string modelStr, string specificBone = null, Transform? offsetTransform = null)
+		{
+			ModelEntity model = new ModelEntity();
+			model.SetModel(modelStr);
+
+			if (string.IsNullOrEmpty(specificBone))
 				model.SetParent(this, true);
-				model.EnableShadowInFirstPerson = true;
-				model.EnableHideInFirstPerson = true;
-				model.Tags.Add("clothes");
+			else
+				model.SetParent(this, specificBone, offsetTransform);
 
-				if (model != null && Clothing != null)
+			model.EnableShadowInFirstPerson = true;
+			model.EnableHideInFirstPerson = true;
+			model.Tags.Add("clothes");
+
+			if (model != null && Clothing != null)
+			{
+				Clothing.Add(model);
+
+				ModelPropData propInfo = model.GetModel().GetPropData();
+				if (propInfo.ParentBodyGroupName != null)
 				{
-					Clothing.Add(model);
-
-					ModelPropData propInfo = model.GetModel().GetPropData();
-					if (propInfo.ParentBodyGroupName != null)
-					{
-						SetBodyGroup(propInfo.ParentBodyGroupName, propInfo.ParentBodyGroupValue);
-					}
+					SetBodyGroup(propInfo.ParentBodyGroupName, propInfo.ParentBodyGroupValue);
 				}
 			}
 		}
@@ -154,22 +166,88 @@ namespace infinitearcade
 			}
 		}
 
+		TimeSince timeSinceLastFootstep = 0;
+
+		public override void OnAnimEventFootstep(Vector3 pos, int foot, float volume)
+		{
+			if (!IsClient || LifeState != LifeState.Alive || GetActiveController()?.GroundEntity == null)
+				return;
+
+			if (timeSinceLastFootstep < 0.1f)
+				return;
+
+			timeSinceLastFootstep = 0;
+
+			//DebugOverlay.Box( 5, pos, -1, 1, Color.Red );
+			//DebugOverlay.Text( pos, $"{volume}", Color.White, 5 );
+			//DebugOverlay.Line( pos, pos + Vector3.Down * 26, Color.Yellow, 5 );
+
+			var tr = Trace.Ray(pos, pos + Vector3.Down * 26).Ignore(this).Run();
+
+			if (!tr.Hit)
+				return;
+
+			tr.Surface.DoFootstep(this, tr, foot, volume);
+		}
+
 		public override void TakeDamage(DamageInfo info)
 		{
 			LastAttacker = info.Attacker;
 			LastAttackerWeapon = info.Weapon;
 
+			if (ArmorMultiplier == 0)
+				ArmorMultiplier = 1f;
+
+			//int debugLine = -1;
+			//const float debugTime = 8f;
+			//Vector2 debugPos = Vector2.One * 40;
+
 			if (IsServer)
 			{
-				float min = Math.Min(info.Damage, Armor);
+				//DebugOverlay.ScreenText(debugPos, debugLine += 1, Color.Yellow, $"Incoming damage: {info.Damage}", debugTime);
 
-				if (Armor >= min)
-					Armor -= info.Damage;
+				bool hadArmor = false;
 
+				//DebugOverlay.ScreenText(debugPos, debugLine += 1, Color.Yellow, $"We have {(Armor <= 0 || info.Damage < 0 ? "no" : "some")} armor ({Armor} * {ArmorMultiplier} == {Armor * ArmorMultiplier} functional)", debugTime);
+
+				// we have no armor, so let's not run the armor calculations
+				if (Armor <= 0 || info.Damage < 0)
+					ArmorMultiplier = 1.0f;
+				else
+				{
+					hadArmor = true;
+					//debugPos.x += 32;
+
+					float trueArmor = Armor * ArmorMultiplier;
+					float min = Math.Min(info.Damage, trueArmor);
+
+					//DebugOverlay.ScreenText(debugPos, debugLine += 1, Color.Yellow, $"min = min({info.Damage}, {trueArmor})\ntrueArmor >= min ({trueArmor} >= {min}) is {trueArmor >= min}", debugTime);
+
+					// if we either have enough armor to tank it, or the damage is so big it nukes our armor
+					if (trueArmor >= min)
+					{
+						//DebugOverlay.ScreenText(debugPos, debugLine += 3, Color.Yellow, $"{(trueArmor > min ? "had enough to tank" : "will destroy armor")}, armor ({Armor}) -= {info.Damage / ArmorMultiplier}, now {Armor - info.Damage / ArmorMultiplier}", debugTime);
+						// subtract the damage value, dampened by the armor multiplier
+						Armor -= info.Damage / ArmorMultiplier;
+					}
+
+					//debugPos.x -= 32;
+				}
+
+				// take any negative armor values as health
 				if (Armor < 0)
 				{
+					// make sure the damage left is not modified by the armor multiplier as our armor is supposed to be gone
+					Armor *= ArmorMultiplier;
 					Health += Armor;
 					Armor = 0;
+				}
+
+				// if we didn't have any armor
+				if (!hadArmor)
+				{
+					//DebugOverlay.ScreenText(debugPos, debugLine += 1, Color.Yellow, "Taking damage directly", debugTime);
+					Health -= info.Damage;
 				}
 
 				if (Health <= 0)
@@ -198,28 +276,32 @@ namespace infinitearcade
 
 		private void BecomeRagdollOnClient(Vector3 velocity, DamageFlags damageFlags, Vector3 forcePos, Vector3 force, int bone)
 		{
+			if (string.IsNullOrEmpty(GetModelName()))
+				return;
+
 			var ent = new ModelEntity();
+			ent.SetModel(GetModelName());
 			ent.Position = Position;
 			ent.Rotation = Rotation;
 			ent.Scale = Scale;
+
 			ent.MoveType = MoveType.Physics;
 			ent.UsePhysicsCollision = true;
 			ent.EnableAllCollisions = true;
-			ent.CollisionGroup = CollisionGroup.Debris;
-			ent.SetModel(GetModelName());
-			ent.CopyBonesFrom(this);
-			ent.CopyBodyGroups(this);
-			ent.CopyMaterialGroup(this);
-			ent.TakeDecalsFrom(this);
 			ent.EnableHitboxes = true;
-			ent.EnableAllCollisions = true;
-			ent.SurroundingBoundsMode = SurroundingBoundsType.Physics;
-			ent.RenderColorAndAlpha = RenderColorAndAlpha;
+			ent.CollisionGroup = CollisionGroup.Debris;
 			ent.PhysicsGroup.Velocity = velocity;
+			ent.SurroundingBoundsMode = SurroundingBoundsType.Physics;
 
 			ent.SetInteractsAs(CollisionLayer.Debris);
 			ent.SetInteractsWith(CollisionLayer.WORLD_GEOMETRY);
 			ent.SetInteractsExclude(CollisionLayer.Player | CollisionLayer.Debris);
+
+			ent.CopyBonesFrom(this);
+			ent.CopyBodyGroups(this);
+			ent.CopyMaterialGroup(this);
+			ent.TakeDecalsFrom(this);
+			ent.RenderColorAndAlpha = RenderColorAndAlpha;
 
 			foreach (var child in Children)
 			{
@@ -236,19 +318,14 @@ namespace infinitearcade
 				}
 			}
 
-			if (damageFlags.HasFlag(DamageFlags.Bullet) ||
-				 damageFlags.HasFlag(DamageFlags.PhysicsImpact))
+			if (damageFlags.HasFlag(DamageFlags.Bullet) || damageFlags.HasFlag(DamageFlags.PhysicsImpact))
 			{
 				PhysicsBody body = bone > 0 ? ent.GetBonePhysicsBody(bone) : null;
 
 				if (body != null)
-				{
 					body.ApplyImpulseAt(forcePos, force * body.Mass);
-				}
 				else
-				{
 					ent.PhysicsGroup.ApplyImpulse(force);
-				}
 			}
 
 			if (damageFlags.HasFlag(DamageFlags.Blast))

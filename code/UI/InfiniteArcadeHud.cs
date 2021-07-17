@@ -22,7 +22,6 @@ namespace infinitearcade.UI
 			RootPanel.StyleSheet.Load("UI/InfiniteArcadeHud.scss");
 
 			// s&box base things
-			RootPanel.AddChild<CrosshairCanvas>();
 			RootPanel.AddChild<ChatBox>();
 			RootPanel.AddChild<VoiceList>();
 			RootPanel.AddChild<KillFeed>();
