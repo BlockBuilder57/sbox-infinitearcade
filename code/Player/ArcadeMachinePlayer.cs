@@ -12,7 +12,7 @@ namespace infinitearcade
 		[Net]
 		public ArcadeMachine ParentMachine { get; set; }
 
-		public int PawnDepth { get { return PlayerChain.Count; } } 
+		public int PawnDepth { get { return PlayerChain.Count; } }
 
 		public List<ArcadePlayer> PlayerChain
 		{ 
@@ -28,7 +28,7 @@ namespace infinitearcade
 					if (creatorPlayer is ArcadeMachinePlayer)
 						machine = machinePlayer.ParentMachine;
 					else
-						machine = null;
+						machine = machinePlayer.UsingMachine;
 					
 					players.Add(creatorPlayer);
 				}
@@ -84,7 +84,7 @@ namespace infinitearcade
 
 		public override PawnController GetActiveController()
 		{
-			if (ParentMachine?.CurrentClient == null)
+			if (!ParentMachine.BeingPlayed)
 				return m_machineController;
 
 			return base.GetActiveController();

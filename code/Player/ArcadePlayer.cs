@@ -22,7 +22,7 @@ namespace infinitearcade
 		public float ArmorMultiplier { get; set; }
 
 		[Net]
-		public ArcadeMachine CurrentMachine { get; set; }
+		public ArcadeMachine UsingMachine { get; set; }
 
 		protected BasePlayerController m_machineController;
 
@@ -80,8 +80,8 @@ namespace infinitearcade
 
 		public virtual void InitStats()
 		{
-			Health = 20f;
-			MaxHealth = 20f;
+			Health = 40f;
+			MaxHealth = 40f;
 
 			Armor = 0f;
 			MaxArmor = 50f;
@@ -160,14 +160,14 @@ namespace infinitearcade
 
 		public override void Simulate(Client cl)
 		{
-			if (IsServer && LifeState == LifeState.Dead && Input.Down(InputButton.Attack1))
+			if (IsServer && LifeState == LifeState.Dead && Input.Released(InputButton.Attack1))
 			{
 				Respawn();
 			}
-			
 
 			if (LifeState != LifeState.Alive)
 				return;
+
 
 			var controller = GetActiveController();
 			controller?.Simulate(cl, this, GetActiveAnimator());
@@ -201,6 +201,8 @@ namespace infinitearcade
 			if (timeSinceLastFootstep < 0.1f)
 				return;
 
+			volume *= FootstepVolume();
+
 			timeSinceLastFootstep = 0;
 
 			//DebugOverlay.Box( 5, pos, -1, 1, Color.Red );
@@ -219,7 +221,7 @@ namespace infinitearcade
 		{
 			if (this is not ArcadeMachinePlayer)
 			{
-				if (CurrentMachine.IsValid())
+				if (UsingMachine.IsValid())
 					return m_machineController;
 			}
 
@@ -305,6 +307,15 @@ namespace infinitearcade
 
 			EnableAllCollisions = false;
 			EnableDrawing = false;
+
+			ArcadeMachine machine = UsingMachine;
+			List<ArcadeMachine> bubbleUp = new List<ArcadeMachine>();
+			while (machine != null && machine.BeingPlayed)
+			{
+				bubbleUp.Add(machine);
+				machine = machine.CreatedPlayer.UsingMachine;
+			}
+			bubbleUp.ForEach(x => x.ExitMachine());
 
 			//Inventory?.DropActive();
 			Inventory?.DeleteContents();

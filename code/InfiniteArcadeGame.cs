@@ -25,6 +25,39 @@ namespace infinitearcade
 			}
 		}
 
+		private int ServerSim = 0;
+		private int ClientSim = 0;
+		private int ClientFrameSim = 0;
+
+		public override void Simulate(Client cl)
+		{
+			/*if (IsClient)
+				DebugOverlay.ScreenText(Vector2.Zero, 5, Color.White, $"Cli: {ClientSim} - {ClientFrameSim}", 1 / 30f);
+			else if (IsServer)
+				DebugOverlay.ScreenText(Vector2.Zero, 6, Color.White, $"Srv: {ServerSim}", 1 / 30f);*/
+
+			Entity pawn = cl.Pawn;
+
+			if (pawn is ArcadePlayer player)
+				player.Simulate(cl);
+
+			if (IsClient)
+				ClientSim++;
+			else if (IsServer)
+				ServerSim++;
+		}
+
+		public override void FrameSimulate(Client cl)
+		{
+			Host.AssertClient();
+
+			Entity pawn = cl.Pawn;
+			
+			if (pawn is ArcadePlayer player)
+				player.FrameSimulate(cl);
+				
+		}
+
 		public override void MoveToSpawnpoint(Entity pawn)
 		{
 			if (pawn is ArcadePlayer)

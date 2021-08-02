@@ -12,6 +12,9 @@ namespace infinitearcade
 		public override void FrameSimulate()
 		{
 			// do nothing
+
+			if (Local.Pawn == Pawn)
+				Log.Error("Active player has a GravityOnlyController!");
 		}
 
 		public override void Simulate()

@@ -16,10 +16,25 @@ namespace infinitearcade
 		public ArcadePlayer CreatedPlayer { get; set; }
 		[Net]
 		public ArcadePlayer CreatorPlayer { get; set; }
-		[Net]
+
 		public Client CurrentClient { get; set; }
 
-		public bool BeingPlayed => CurrentClient != null;
+		public bool BeingPlayed
+		{
+			get
+			{
+				// so, as client is an interface, it can't be networked. because of this, even if
+				// we do stuff on both the client and server for some reason, it just doesn't work
+				// at all. so, hacky fix, if we're the client, just test for CreatedPlayer
+				// yay hacks wooooooo
+
+				if (IsServer)
+					return CurrentClient.IsValid();
+				else if (IsClient)
+					return CreatedPlayer.IsValid();
+				return false;
+			}
+		}
 
 		[Property("Spawnpoint", "Player Spawnpoint", FGDType = "target_destination")]
 		public string SpawnpointName { get; set; }
@@ -34,7 +49,7 @@ namespace infinitearcade
 			SetupPhysicsFromModel(PhysicsMotionType.Static, true);
 		}
 
-		[Event.Tick]
+		[Event.Frame]
 		public void OnFrame()
 		{
 			if (HasDebugBitsSet(DebugOverlayBits.OVERLAY_TEXT_BIT))
@@ -49,22 +64,17 @@ namespace infinitearcade
 						DebugOverlay.Line(machineBottom, CreatorPlayer.Position, Color.Yellow, depthTest: true);
 				}
 			}
+		}
 
-			if (BeingPlayed)
+		[Event.Tick]
+		public void OnTick()
+		{
+			ArcadePlayer player = BeingPlayed ? CreatorPlayer : CreatedPlayer;
+
+			if (player.IsValid())
 			{
-				if (CreatorPlayer.IsValid())
-				{
-					CreatorPlayer.GetActiveController()?.Simulate(CurrentClient, CreatorPlayer, CreatorPlayer.GetActiveAnimator());
-					//DebugOverlay.Text(CreatorPlayer.Position, "Creator player", 0f);
-				}
-			}
-			else
-			{
-				if (CreatedPlayer.IsValid())
-				{
-					CreatedPlayer.GetActiveController()?.Simulate(CurrentClient, CreatedPlayer, CreatedPlayer.GetActiveAnimator());
-					//DebugOverlay.Text(CreatedPlayer.Position, "Created player", 0f);
-				}
+				player.GetActiveController()?.Simulate(CurrentClient, player, player.GetActiveAnimator());
+				//DebugOverlay.Text(player.Position, $"{(BeingPlayed ? "Creator" : "Created")} player", 0f);
 			}
 		}
 
@@ -75,10 +85,7 @@ namespace infinitearcade
 
 		public bool OnUse(Entity user)
 		{
-			if (!IsServer)
-				return false;
-
-			if (user == CreatedPlayer)
+			if (IsServer && user == CreatedPlayer)
 			{
 				DestroyCreatedPlayer();
 				return false;
@@ -94,21 +101,17 @@ namespace infinitearcade
 			if (!creator.IsValid())
 				return;
 
-			if (!CreatedPlayer.IsValid())
-			{
-				CreatedPlayer = new ArcadeMachinePlayer();
-				(CreatedPlayer as ArcadeMachinePlayer).ParentMachine = this;
-				CreatedPlayer.Respawn();
-				CreatedPlayer.RenderColor = Rand.Color();
-			}
+			if (IsServer)
+				CreatePlayer();
 
 			if (!CurrentClient.IsValid())
 			{
 				CreatorPlayer = (ArcadePlayer)creator;
-				CreatorPlayer.CurrentMachine = this;
+				CreatorPlayer.UsingMachine = this;
 
-				CurrentClient = Client.All.FirstOrDefault(x => x.Pawn == creator);
-				CurrentClient.Pawn = CreatedPlayer;
+				CurrentClient = creator.GetClientOwner();
+				if (CurrentClient != null)
+					CurrentClient.Pawn = CreatedPlayer;
 			}
 		}
 
@@ -119,11 +122,22 @@ namespace infinitearcade
 				if (CurrentClient.IsValid())
 				{
 					if (CreatorPlayer.IsValid())
-						CreatorPlayer.CurrentMachine = null;
+						CreatorPlayer.UsingMachine = null;
 
 					CurrentClient.Pawn = CreatorPlayer;
 					CurrentClient = null;
 				}
+			}
+		}
+
+		public void CreatePlayer()
+		{
+			if (!CreatedPlayer.IsValid())
+			{
+				CreatedPlayer = new ArcadeMachinePlayer();
+				(CreatedPlayer as ArcadeMachinePlayer).ParentMachine = this;
+				CreatedPlayer.Respawn();
+				CreatedPlayer.RenderColor = Rand.Color();
 			}
 		}
 

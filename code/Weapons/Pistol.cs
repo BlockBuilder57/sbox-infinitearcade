@@ -23,7 +23,7 @@ namespace infinitearcade
 
 		public override bool CanPrimaryAttack()
 		{
-			return base.CanPrimaryAttack() && Input.Down(InputButton.Attack1);
+			return base.CanPrimaryAttack() && Input.Pressed(InputButton.Attack1);
 		}
 
 		public override void AttackPrimary()
