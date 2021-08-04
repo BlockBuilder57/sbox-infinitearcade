@@ -1,7 +1,17 @@
-Status {
+PlayerStatus {
     position: absolute;
     bottom: 25px;
     left: 25px;
+
+    &.hidden {
+        display: none;
+    }
+}
+
+WeaponStatus {
+    position: absolute;
+    bottom: 25px;
+    right: 25px;
 
     &.hidden {
         display: none;

@@ -27,7 +27,8 @@ namespace infinitearcade.UI
 			RootPanel.AddChild<KillFeed>();
 
 			// custom stuff
-			RootPanel.AddChild<Status>();
+			RootPanel.AddChild<PlayerStatus>();
+			RootPanel.AddChild<WeaponStatus>();
 		}
 
 		[Event.Hotload]

@@ -177,15 +177,29 @@ namespace infinitearcade
 				TickPlayerUse();
 				SimulateActiveChild(cl, ActiveChild);
 
-				if (IsServer && Input.Pressed(InputButton.Drop))
+				if (Input.Down(InputButton.Drop) && ActiveChild.IsValid())
 				{
 					Entity active = Inventory?.DropActive();
 
 					if (active.IsValid())
 					{
-						active.PhysicsGroup.AddAngularVelocity(Vector3.Random * 50f);
 						active.PhysicsGroup.Velocity = Velocity;
-						active.PhysicsGroup.AddVelocity(EyeRot.Forward * 500f);
+
+						const float throwForce = 500f;
+
+						if (GetActiveController() is WalkController walky && !walky.Duck.IsActive)
+						{
+							active.PhysicsGroup.AddAngularVelocity(active.Rotation.Left * 20f);
+							Vector3 throwVector = ((EyeRot.Forward * 500) + (Vector3.Up * 200)).Normal;
+							active.PhysicsGroup.AddVelocity(throwVector * throwForce);
+						}
+						else
+						{
+							TraceResult tr = Trace.Ray(EyePos, EyePos + EyeRot.Forward * 128 + Vector3.Down * 32).WorldAndEntities().Run();
+							active.Rotation = EyeRot.RotateAroundAxis(tr.Normal + Vector3.Forward, 90);
+							Vector3 throwVector = ((EyeRot.Forward * 600) + (Vector3.Up * 100)).Normal;
+							active.PhysicsGroup.AddVelocity(throwVector * throwForce);
+						}
 					}
 				}
 			}
@@ -258,7 +272,7 @@ namespace infinitearcade
 				ArmorMultiplier = 1f;
 
 			//int debugLine = -1;
-			//const float debugTime = 8f;
+			//const float debugTime = 0.5f;
 			//Vector2 debugPos = Vector2.One * 40;
 
 			if (IsServer)
@@ -315,6 +329,7 @@ namespace infinitearcade
 					this.OnKilled();
 				}
 
+				//DebugOverlay.ScreenText(debugPos, debugLine += 1, Color.Yellow, $"Final: {Health} {Armor} (x{ArmorMultiplier}:F1)", debugTime);
 			}
 		}
 

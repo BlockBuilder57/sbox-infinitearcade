@@ -9,16 +9,16 @@ using System.Threading.Tasks;
 
 namespace infinitearcade.UI
 {
-	public class Status : Panel
+	public class PlayerStatus : Panel
 	{
 		public Label pawnstatus;
 
-		public Status()
+		public PlayerStatus()
 		{
-			StyleSheet.Load("/ui/Status.scss");
+			StyleSheet.Load("/ui/PlayerStatus.scss");
 
 			pawnstatus = Add.Label("YOU'RE IN AN ARCADE MACHINE (press use to leave)", "pawnstatus");
-			NumberDisplay numDisplay = AddChild<NumberDisplay>();
+			HealthDisplay healthDisplay = AddChild<HealthDisplay>();
 		}
 
 		public override void Tick()
@@ -35,13 +35,13 @@ namespace infinitearcade.UI
 			pawnstatus?.SetClass("hidden", !(player is ArcadeMachinePlayer));
 		}
 
-		private class NumberDisplay : Panel
+		private class HealthDisplay : Panel
 		{
 			public Label Health;
 			public Label Armor;
 			public Label ArmorMult;
 
-			public NumberDisplay()
+			public HealthDisplay()
 			{
 				Health = Add.Label("100", "numberDisplay");
 				Armor = Add.Label("100", "numberDisplay");

@@ -8,11 +8,14 @@ using System.Threading.Tasks;
 namespace infinitearcade
 {
 	[Library("weapon_pistol", Title = "Pistol", Spawnable = true)]
-	public class Pistol : IAWeapon
+	public class Pistol : IAWeaponFirearm
 	{
 		public override string ViewModelPath => "weapons/rust_pistol/v_rust_pistol.vmdl";
 
-		public override float PrimaryRate => 8f;
+		[Net]
+		public override float PrimaryRate => 5f;
+		//[Net]
+		//public override float ReloadTimeMult => 1/8f;
 
 		public override void Spawn()
 		{
@@ -28,6 +31,16 @@ namespace infinitearcade
 
 		public override void AttackPrimary()
 		{
+			if (Clip1 <= 0)
+			{
+				PlaySound("ui.button.deny");
+				Reload();
+				return;
+			}
+
+			if (!InfiniteClip)
+				Clip1--;
+
 			TimeSincePrimaryAttack = 0;
 			TimeSinceSecondaryAttack = 0;
 
@@ -37,31 +50,17 @@ namespace infinitearcade
 			ViewModelEntity?.SetAnimBool("fire", true);
 
 			PlaySound("rust_pistol.shoot");
-			ShootBullet(Owner.EyePos, Owner.EyeRot.Forward, 0f, 20f, 5f, 2f);
+			ShootBullet(Owner.EyePos, Owner.EyeRot.Forward, 0f, .6f, 5f, 2f);
 		}
 
-		public virtual void ShootBullet(Vector3 pos, Vector3 dir, float spread, float force, float damage, float bulletSize)
+		public override bool CanSecondaryAttack()
 		{
-			var forward = dir;
-			forward += (Vector3.Random + Vector3.Random + Vector3.Random + Vector3.Random) * spread * 0.25f;
-			forward = forward.Normal;
+			return base.CanSecondaryAttack() && Input.Down(InputButton.Attack2);
+		}
 
-			foreach (var tr in TraceBullet(pos, pos + forward * short.MaxValue, bulletSize))
-			{
-				tr.Surface.DoBulletImpact(tr);
-
-				if (!IsServer || !tr.Entity.IsValid())
-					continue;
-
-				// why is prediction turned off here
-				using (Prediction.Off())
-				{
-					var damageInfo = DamageInfo.FromBullet(tr.EndPos, forward * 100 * force, damage)
-						.UsingTraceResult(tr).WithAttacker(Owner).WithWeapon(this);
-
-					tr.Entity.TakeDamage(damageInfo);
-				}
-			}
+		public override void AttackSecondary()
+		{
+			AttackPrimary();
 		}
 	}
 }

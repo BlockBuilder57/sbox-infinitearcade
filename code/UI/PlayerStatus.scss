@@ -1,4 +1,4 @@
-Status {
+PlayerStatus {
 
 	& {
 		/*background-color: red;*/
@@ -8,18 +8,18 @@ Status {
 		overflow: hidden;
 	}
 
-	NumberDisplay {
+	HealthDisplay {
 		.numberDisplay {
 			background-color: rgba( black, 0.25 );
 			font-size: 50px;
 			color: white;
 			padding: 0 0 0 8px;
+			margin-right: 25px;
 			align-items: center;
 			border-radius: 8px;
 		}
 
 		.numberDisplay:first-child {
-			margin-right: 25px;
 			padding-right: 8px;
 		}
 

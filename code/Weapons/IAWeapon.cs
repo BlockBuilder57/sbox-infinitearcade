@@ -9,9 +9,40 @@ namespace infinitearcade
 {
 	public partial class IAWeapon : BaseWeapon, IUse
 	{
-		public override void Simulate(Client player)
+		[Net, Predicted]
+		public TimeSince TimeSinceDeployed { get; set; }
+
+		protected PickupTrigger PickupTrigger { get; set; }
+		[Net]
+		public TimeSince TimeSinceDropped { get; set; }
+
+		public override void Spawn()
 		{
-			base.Simulate(player);
+			base.Spawn();
+
+			PickupTrigger = new PickupTrigger
+			{
+				Parent = this,
+				Position = Position,
+				EnableTouch = true,
+				EnableSelfCollisions = false
+			};
+
+			PickupTrigger.PhysicsBody.EnableAutoSleeping = false;
+		}
+
+		public override void ActiveStart(Entity ent)
+		{
+			base.ActiveStart(ent);
+
+			TimeSinceDeployed = 0;
+		}
+
+		public override void OnCarryDrop(Entity dropper)
+		{
+			base.OnCarryDrop(dropper);
+
+			TimeSinceDropped = 0;
 		}
 
 		public bool OnUse(Entity user)
@@ -34,6 +65,12 @@ namespace infinitearcade
 				return inventory.CanAdd(this);
 
 			return true;
+		}
+
+		public void Remove()
+		{
+			PhysicsGroup?.Wake();
+			Delete();
 		}
 
 		public override void CreateViewModel()
