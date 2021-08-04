@@ -38,7 +38,7 @@ namespace infinitearcade
 			SetModel("models/citizen/citizen.vmdl");
 
 			// Use WalkController for movement (you can make your own PlayerController for 100% control)
-			Controller = new WalkController();
+			Controller = new QPhysController();
 
 			if (m_machineController == null)
 				m_machineController = new GravityOnlyController();
@@ -176,6 +176,18 @@ namespace infinitearcade
 			{
 				TickPlayerUse();
 				SimulateActiveChild(cl, ActiveChild);
+
+				if (IsServer && Input.Pressed(InputButton.Drop))
+				{
+					Entity active = Inventory?.DropActive();
+
+					if (active.IsValid())
+					{
+						active.PhysicsGroup.AddAngularVelocity(Vector3.Random * 50f);
+						active.PhysicsGroup.Velocity = Velocity;
+						active.PhysicsGroup.AddVelocity(EyeRot.Forward * 500f);
+					}
+				}
 			}
 
 			if (Input.Pressed(InputButton.View) && LifeState == LifeState.Alive)
@@ -191,30 +203,39 @@ namespace infinitearcade
 			}
 		}
 
+		public override float FootstepVolume()
+		{
+			return Math.Clamp(base.FootstepVolume(), 0.1f, 2f);
+		}
+
 		TimeSince timeSinceLastFootstep = 0;
 
-		public override void OnAnimEventFootstep(Vector3 pos, int foot, float volume)
+		public virtual void OnAnimEventFootstep(Vector3 pos, int foot, float volume, bool force)
 		{
 			if (!IsClient || LifeState != LifeState.Alive || GetActiveController()?.GroundEntity == null)
 				return;
 
-			if (timeSinceLastFootstep < 0.1f)
+			if (!force && timeSinceLastFootstep < 0.1f)
 				return;
 
 			volume *= FootstepVolume();
 
 			timeSinceLastFootstep = 0;
 
-			//DebugOverlay.Box( 5, pos, -1, 1, Color.Red );
-			//DebugOverlay.Text( pos, $"{volume}", Color.White, 5 );
-			//DebugOverlay.Line( pos, pos + Vector3.Down * 26, Color.Yellow, 5 );
+			//DebugOverlay.Box(5, pos, -1, 1, Color.Red);
+			//DebugOverlay.Text(pos, $"{volume}", Color.White, 5);
+			//DebugOverlay.Line(pos, pos + Vector3.Down * 28, Color.Yellow, 5);
 
-			var tr = Trace.Ray(pos, pos + Vector3.Down * 26).Ignore(this).Run();
+			var tr = Trace.Ray(pos, pos + Vector3.Down * 28).Ignore(this).Run();
 
 			if (!tr.Hit)
 				return;
 
 			tr.Surface.DoFootstep(this, tr, foot, volume);
+		}
+		public override void OnAnimEventFootstep(Vector3 pos, int foot, float volume)
+		{
+			OnAnimEventFootstep(pos, foot, volume, false);
 		}
 
 		public override PawnController GetActiveController()
@@ -315,6 +336,7 @@ namespace infinitearcade
 				bubbleUp.Add(machine);
 				machine = machine.CreatedPlayer.UsingMachine;
 			}
+			bubbleUp.Reverse();
 			bubbleUp.ForEach(x => x.ExitMachine());
 
 			//Inventory?.DropActive();

@@ -33,6 +33,7 @@ namespace infinitearcade
 					players.Add(creatorPlayer);
 				}
 
+				players.Reverse();
 				return players;
 			}
 		}
@@ -84,7 +85,7 @@ namespace infinitearcade
 
 		public override PawnController GetActiveController()
 		{
-			if (!ParentMachine.BeingPlayed)
+			if (ParentMachine?.BeingPlayed == false || UsingMachine?.BeingPlayed == true)
 				return m_machineController;
 
 			return base.GetActiveController();
