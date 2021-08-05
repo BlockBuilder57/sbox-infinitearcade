@@ -42,7 +42,7 @@ namespace infinitearcade
 
 			if (!IsReloading)
 				base.Simulate(owner);
-			else if (TimeSinceReload > ReloadTime * ReloadTimeMult)
+			else if (TimeSinceReload > ReloadTime * 1/ReloadTimeMult)
 				OnReloadFinish();
 		}
 

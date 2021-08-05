@@ -11,17 +11,13 @@ namespace infinitearcade.UI
 {
 	public class WeaponStatus : Panel
 	{
-		public Label Clip1;
-		public Label Ammo1;
-		public Label Clip2;
-		public Label Ammo2;
+		private WeaponAmmoDisplay m_primaryDisplay;
 
 		public WeaponStatus()
 		{
 			StyleSheet.Load("/ui/WeaponStatus.scss");
 
-			Clip1 = Add.Label("0", "numberDisplay");
-			Ammo1 = Add.Label("0", "numberDisplay");
+			m_primaryDisplay = AddChild<WeaponAmmoDisplay>();
 		}
 
 		public override void Tick()
@@ -39,12 +35,31 @@ namespace infinitearcade.UI
 
 			if (weapon is IAWeaponFirearm firearm)
 			{
-				if (Clip1 != null)
-					Clip1.Text = firearm.Clip1.ToString();
-				if (Ammo1 != null)
-					Ammo1.Text = firearm.Ammo1.ToString();
+				m_primaryDisplay.Update(firearm.Clip1, firearm.Ammo1);
 			}
 
+		}
+
+		private class WeaponAmmoDisplay : Panel
+		{
+			public Label Clip;
+			public Label Ammo;
+			public Image Icon;
+
+			public WeaponAmmoDisplay()
+			{
+				Clip = Add.Label("0", "clip");
+				Ammo = Add.Label("0", "ammo");
+				Icon = Add.Image(null);
+			}
+
+			public void Update(int clip, int ammo)
+			{
+				if (Clip != null)
+					Clip.Text = clip.ToString();
+				if (Ammo != null)
+					Ammo.Text = ammo.ToString();
+			}
 		}
 	}
 }

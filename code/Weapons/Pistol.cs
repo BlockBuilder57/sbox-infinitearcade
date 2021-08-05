@@ -12,10 +12,9 @@ namespace infinitearcade
 	{
 		public override string ViewModelPath => "weapons/rust_pistol/v_rust_pistol.vmdl";
 
-		[Net]
 		public override float PrimaryRate => 5f;
-		//[Net]
-		//public override float ReloadTimeMult => 1/8f;
+		public override float SecondaryRate => 8f;
+		public override float ReloadTimeMult => 1f;
 
 		public override void Spawn()
 		{
