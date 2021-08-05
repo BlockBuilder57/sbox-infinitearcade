@@ -20,6 +20,8 @@ namespace infinitearcade
 		{
 			base.Spawn();
 
+			Primary = new WeaponAmmo(8, 32);
+
 			SetModel("weapons/rust_pistol/rust_pistol.vmdl");
 		}
 
@@ -30,15 +32,15 @@ namespace infinitearcade
 
 		public override void AttackPrimary()
 		{
-			if (Clip1 <= 0)
+			if (Primary.Clip <= 0)
 			{
 				PlaySound("ui.button.deny");
 				Reload();
 				return;
 			}
 
-			if (!InfiniteClip)
-				Clip1--;
+			if (!Primary.InfiniteClip)
+				Primary.Clip--;
 
 			TimeSincePrimaryAttack = 0;
 			TimeSinceSecondaryAttack = 0;

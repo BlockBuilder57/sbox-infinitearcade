@@ -9,30 +9,15 @@ namespace infinitearcade
 {
 	public partial class IAWeaponFirearm : IAWeapon
 	{
-		
-
 		[Net]
-		public int Clip1 { get; protected set; } = 8;
-		[Net]
-		public int Ammo1 { get; protected set; } = 32;
-
-		[Net]
-		public int MaxClip1 { get; protected set; } = 8;
-		[Net]
-		public int MaxAmmo1 { get; protected set; } = 128;
-
-		[Net]
-		public bool InfiniteClip { get; set; } = false;
-		[Net]
-		public bool InfiniteAmmo { get; set; } = false;
+		public WeaponAmmo Primary { get; set; }
 
 		public virtual float ReloadTime => 1.35f;
-		[Net]
 		public virtual float ReloadTimeMult => 1.0f;
 
 		[Net, Predicted]
 		public TimeSince TimeSinceReload { get; set; }
-		[Net, Predicted]
+		[Net]
 		public bool IsReloading { get; set; }
 
 		public override void Simulate(Client owner)
@@ -42,13 +27,24 @@ namespace infinitearcade
 
 			if (!IsReloading)
 				base.Simulate(owner);
-			else if (TimeSinceReload > ReloadTime * 1/ReloadTimeMult)
+			else if (TimeSinceReload > ReloadTime * 1 / ReloadTimeMult)
 				OnReloadFinish();
+
+			if (true)
+			{
+				if (IsServer)
+					DebugOverlay.Text(Position, Primary.ToString());
+				if (IsClient)
+					DebugOverlay.Text(Position + Vector3.Down * 2, Primary.ToString(), 0.05f);
+			}
 		}
 
 		public override bool CanReload()
 		{
-			if (!Owner.IsValid() || !Input.Down(InputButton.Reload) || Clip1 == MaxClip1 || (Ammo1 <= 0 && Clip1 <= MaxClip1))
+			if (!Owner.IsValid() || !Input.Down(InputButton.Reload))
+				return false;
+
+			if (Primary.Clip == Primary.MaxClip || (Primary.Ammo <= 0 && Primary.Clip <= Primary.MaxClip))
 				return false;
 
 			return true;
@@ -56,7 +52,7 @@ namespace infinitearcade
 
 		public override void Reload()
 		{
-			if (IsReloading || (Ammo1 <= 0 && Clip1 <= MaxClip1))
+			if (IsReloading || (Primary.Ammo <= 0 && Primary.Clip <= Primary.MaxClip))
 				return;
 
 			TimeSinceReload = 0;
@@ -69,21 +65,7 @@ namespace infinitearcade
 		{
 			IsReloading = false;
 
-			int clipDiff = MaxClip1 - Clip1;
-
-			if (Ammo1 >= clipDiff)
-			{
-				if (!InfiniteAmmo)
-					Ammo1 -= clipDiff;
-				Clip1 = MaxClip1;
-			}
-			else
-			{
-				Clip1 += Math.Clamp(Ammo1, 0, Ammo1);
-				if (!InfiniteAmmo)
-					Ammo1 = 0;
-			}
-
+			Primary.TryReload();
 		}
 
 		[ClientRpc]
@@ -123,7 +105,7 @@ namespace infinitearcade
 			IAWeaponFirearm firearm = ConsoleSystem.Caller?.Pawn?.ActiveChild as IAWeaponFirearm;
 
 			if (firearm.IsValid())
-				firearm.Clip1 = clip;
+				firearm.Primary.Clip = clip;
 		}
 
 		[ServerCmd("setammo")]
@@ -132,39 +114,59 @@ namespace infinitearcade
 			IAWeaponFirearm firearm = ConsoleSystem.Caller?.Pawn?.ActiveChild as IAWeaponFirearm;
 
 			if (firearm.IsValid())
-				firearm.Ammo1 = ammo;
+				firearm.Primary.Ammo = ammo;
 		}
 	}
 
-	// why doesn't this work :(
-	public struct WeaponAmmo : IEquatable<WeaponAmmo>
+	public partial class WeaponAmmo : NetworkComponent
 	{
-		public int Clip;
-		public int MaxClip;
-		public int Ammo;
-		public int MaxAmmo;
+		public int Clip { get; set; }
+		public int MaxClip { get; set; }
+		public int Ammo { get; set; }
+		public int MaxAmmo { get; set; }
+
+		public bool InfiniteClip { get; set; }
+		public bool InfiniteAmmo { get; set; }
+
+		public WeaponAmmo()
+		{
+			Clip = MaxClip = 8;
+			Ammo = MaxAmmo = 32;
+
+			InfiniteClip = false;
+			InfiniteAmmo = false;
+		}
 
 		public WeaponAmmo(int clip, int ammo)
 		{
 			Clip = MaxClip = clip;
 			Ammo = MaxAmmo = ammo;
+
+			InfiniteClip = false;
+			InfiniteAmmo = false;
 		}
 
-		public int SetClip(int amount) => Clip = amount;
-		public int DeltaClip(int amount) => Clip += amount;
-		public int SetMaxClip(int amount) => MaxClip = amount;
-		public int DeltaMaxClip(int amount) => MaxClip += amount;
-		public int SetAmmo(int amount) => Ammo = amount;
-		public int DeltaAmmo(int amount) => Ammo += amount;
-		public int SetMaxAmmo(int amount) => MaxAmmo = amount;
-		public int DeltaMaxAmmo(int amount) => MaxAmmo += amount;
-
-		public bool Equals(WeaponAmmo other)
+		public void TryReload()
 		{
-			if (this.Clip == other.Clip)
-				return true;
+			int clipDiff = MaxClip - Clip;
 
-			return false;
+			if (Ammo >= clipDiff)
+			{
+				if (!InfiniteAmmo)
+					Ammo -= clipDiff;
+				Clip = MaxClip;
+			}
+			else
+			{
+				Clip += Math.Clamp(Ammo, 0, Ammo);
+				if (!InfiniteAmmo)
+					Ammo = 0;
+			}
+		}
+
+		public override string ToString()
+		{
+			return $"{Clip}/{Ammo} (max {MaxClip}/{MaxAmmo})";
 		}
 	}
 }

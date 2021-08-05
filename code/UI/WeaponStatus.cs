@@ -35,7 +35,7 @@ namespace infinitearcade.UI
 
 			if (weapon is IAWeaponFirearm firearm)
 			{
-				m_primaryDisplay.Update(firearm.Clip1, firearm.Ammo1);
+				m_primaryDisplay.Update(firearm.Primary.Clip, firearm.Primary.Ammo);
 			}
 
 		}
