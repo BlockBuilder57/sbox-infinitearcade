@@ -9,13 +9,16 @@ namespace infinitearcade
 {
 	public partial class IAWeaponFirearm : IAWeapon
 	{
+		[ConVar.Replicated]
+		public static bool debug_firearm { get; set; } = false;
+
 		[Net]
 		public WeaponAmmo Primary { get; set; }
 
 		public virtual float ReloadTime => 1.35f;
 		public virtual float ReloadTimeMult => 1.0f;
 
-		[Net, Predicted]
+		[Net]
 		public TimeSince TimeSinceReload { get; set; }
 		[Net]
 		public bool IsReloading { get; set; }
@@ -30,13 +33,21 @@ namespace infinitearcade
 			else if (TimeSinceReload > ReloadTime * 1 / ReloadTimeMult)
 				OnReloadFinish();
 
-			if (true)
+			if (debug_firearm && IsActiveChild())
 			{
 				if (IsServer)
-					DebugOverlay.Text(Position, Primary.ToString());
+					DebugOverlay.Text(Position, "srv: " + Primary.ToString());
 				if (IsClient)
-					DebugOverlay.Text(Position + Vector3.Down * 2, Primary.ToString(), 0.05f);
+					DebugOverlay.Text(Position + Vector3.Down * 2, "cli: " + Primary.ToString(), 0.05f);
 			}
+		}
+
+		public override void OnCarryDrop(Entity dropper)
+		{
+			base.OnCarryDrop(dropper);
+
+			if (Primary.Clip <= 0 && Primary.Ammo <= 0)
+				DeleteAsync(5f);
 		}
 
 		public override bool CanReload()
@@ -105,7 +116,7 @@ namespace infinitearcade
 			IAWeaponFirearm firearm = ConsoleSystem.Caller?.Pawn?.ActiveChild as IAWeaponFirearm;
 
 			if (firearm.IsValid())
-				firearm.Primary.Clip = clip;
+				firearm.Primary.SetClip(clip);
 		}
 
 		[ServerCmd("setammo")]
@@ -114,19 +125,19 @@ namespace infinitearcade
 			IAWeaponFirearm firearm = ConsoleSystem.Caller?.Pawn?.ActiveChild as IAWeaponFirearm;
 
 			if (firearm.IsValid())
-				firearm.Primary.Ammo = ammo;
+				firearm.Primary.SetAmmo(ammo);
 		}
 	}
 
 	public partial class WeaponAmmo : NetworkComponent
 	{
-		public int Clip { get; set; }
-		public int MaxClip { get; set; }
-		public int Ammo { get; set; }
-		public int MaxAmmo { get; set; }
+		[Net] public int Clip { get; set; }
+		[Net] public int MaxClip { get; set; }
+		[Net] public int Ammo { get; set; }
+		[Net] public int MaxAmmo { get; set; }
 
-		public bool InfiniteClip { get; set; }
-		public bool InfiniteAmmo { get; set; }
+		[Net] public bool InfiniteClip { get; set; }
+		[Net] public bool InfiniteAmmo { get; set; }
 
 		public WeaponAmmo()
 		{
@@ -145,6 +156,9 @@ namespace infinitearcade
 			InfiniteClip = false;
 			InfiniteAmmo = false;
 		}
+
+		public void SetClip(int amount) => Clip = amount;
+		public void SetAmmo(int amount) => Ammo = amount;
 
 		public void TryReload()
 		{
