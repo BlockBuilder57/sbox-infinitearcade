@@ -1,0 +1,6 @@
+@BaseClass = firearm : "A firearm"
+[
+	Name(string) : "Name" : "Weapon Name"
+	Description(string) : "Description" : "This is my weapon."
+	Damage(float) : "Damage" : "5"
+]

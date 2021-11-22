@@ -12,6 +12,8 @@ namespace infinitearcade
 		[ConVar.Replicated]
 		public static bool debug_firearm { get; set; } = false;
 
+		public IAWeaponFirearmDefinition Definition { get; set; }
+
 		[Net]
 		public WeaponAmmo Primary { get; set; }
 
@@ -42,12 +44,14 @@ namespace infinitearcade
 			}
 		}
 
+		public override void ActiveStart(Entity ent)
+		{
+			base.ActiveStart(ent);
+		}
+
 		public override void OnCarryDrop(Entity dropper)
 		{
 			base.OnCarryDrop(dropper);
-
-			if (Primary.Clip <= 0 && Primary.Ammo <= 0)
-				DeleteAsync(5f);
 		}
 
 		public override bool CanReload()

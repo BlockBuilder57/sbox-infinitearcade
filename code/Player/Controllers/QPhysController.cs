@@ -11,17 +11,29 @@ namespace infinitearcade
 	public class QPhysController : WalkController
 	{
 
-		[ConVar.Replicated("player_movement_pogo_jumps")]
+		[ConVar.Replicated]
 		public static bool player_movement_pogo_jumps { get; set; } = true;
-		[ConVar.Replicated("player_movement_air_jumps")]
+		[ConVar.Replicated]
 		public static bool player_movement_air_jumps { get; set; } = false;
-		[ConVar.Replicated("player_movement_ahop")]
+		[ConVar.Replicated]
 		public static bool player_movement_ahop { get; set; } = true;
-		[ConVar.Replicated("player_movement_bhop")]
+		[ConVar.Replicated]
 		public static bool player_movement_bhop { get; set; } = true;
 
 		private ArcadePlayer m_player;
 		private int m_debugLineOffset = 0;
+
+		public override void FrameSimulate()
+		{
+			base.FrameSimulate();
+
+			EyeRot = Input.Rotation;
+
+			if (VR.Enabled)
+			{
+				EyeRot = Rotation.From(Input.VR.Head.Rotation.Pitch(), EyeRot.Yaw(), EyeRot.Roll());
+			}
+		}
 
 		public override void Simulate()
 		{
@@ -164,11 +176,22 @@ namespace infinitearcade
 
 			//SaveGroundPos();
 
+			if (VR.Enabled)
+			{
+				EyeRot = Rotation.From(Input.VR.Head.Rotation.Pitch(), EyeRot.Yaw(), EyeRot.Roll());
+			}
+
 			m_debugLineOffset = 0;
 			if (Debug && Host.IsServer)
 			{
 				DebugOverlay.Box(Position + TraceOffset, mins, maxs, Color.Red);
 				DebugOverlay.Box(Position, mins, maxs, Color.Blue);
+
+				//if (m_player.Camera is not FirstPersonCamera)
+				{
+					DebugOverlay.Line(m_player.EyePos, m_player.EyePos + m_player.EyeRot.Forward * 8, Color.White);
+					//DebugOverlay.Line(m_player.EyePos, m_player.EyePos + m_player.Rotation.Forward * 8, Color.Orange);
+				}
 
 				//if (Host.IsServer) m_debugLineOffset = 10;
 
@@ -184,36 +207,10 @@ namespace infinitearcade
 		}
 
 		bool IsTouchingLadder = false;
-		Vector3 LadderNormal;
 
 		public override void CheckLadder()
 		{
-			if (IsTouchingLadder && Input.Pressed(InputButton.Jump))
-			{
-				Velocity = LadderNormal * 100.0f;
-				IsTouchingLadder = false;
-
-				return;
-			}
-
-			const float ladderDistance = 1.0f;
-			var start = Position;
-			Vector3 end = start + (IsTouchingLadder ? (LadderNormal * -1.0f) : WishVelocity.Normal) * ladderDistance;
-
-			var pm = Trace.Ray(start, end)
-						.Size(mins, maxs)
-						.HitLayer(CollisionLayer.All, false)
-						.HitLayer(CollisionLayer.LADDER, true)
-						.Ignore(Pawn)
-						.Run();
-
-			IsTouchingLadder = false;
-
-			if (pm.Hit)
-			{
-				IsTouchingLadder = true;
-				LadderNormal = pm.Normal;
-			}
+			base.CheckLadder();
 		}
 
 		public override void CheckJumpButton()

@@ -119,5 +119,16 @@ namespace infinitearcade
 
 			client?.Pawn?.TakeDamage(DamageInfo.Generic(amount));
 		}
+
+		[ServerCmd("vr_reset_seated_pos")]
+		public static void VRResetSeatedCommand()
+		{
+			Client client = ConsoleSystem.Caller;
+
+			if (client?.Pawn is ArcadePlayer player)
+			{
+				player.ResetSeatedPos();
+			}
+		}
 	}
 }

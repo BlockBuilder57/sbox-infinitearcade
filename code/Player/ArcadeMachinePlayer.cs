@@ -61,7 +61,8 @@ namespace infinitearcade
 			coneTransform.Rotation = Rotation.From(0f, 90f, 90f);
 			coneTransform.Position.x += 8f;
 
-			AddAsClothes("models/citizen_props/roadcone01.vmdl", "head", coneTransform);
+			if (!Input.VR.IsActive)
+				AddAsClothes("models/citizen_props/roadcone01.vmdl", "head", coneTransform);
 		}
 
 		public override Transform GetSpawnpoint()

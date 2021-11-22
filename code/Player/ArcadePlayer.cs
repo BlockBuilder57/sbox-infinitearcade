@@ -26,6 +26,8 @@ namespace infinitearcade
 
 		protected BasePlayerController m_machineController;
 
+		public Transform VRSeatedOffset { private get; set; } = Transform.Zero;
+
 		private bool m_clothed = false;
 
 		public ArcadePlayer()
@@ -37,17 +39,15 @@ namespace infinitearcade
 		{
 			SetModel("models/citizen/citizen.vmdl");
 
-			// Use WalkController for movement (you can make your own PlayerController for 100% control)
 			Controller = new QPhysController();
 
 			if (m_machineController == null)
 				m_machineController = new GravityOnlyController();
 
-			// Use StandardPlayerAnimator  (you can make your own PlayerAnimator for 100% control)
-			Animator = new StandardPlayerAnimator();
+			Animator = new EyePosAnimator();
+			ChangeCamera();
 
-			// Use FirstPersonCamera (you can make your own Camera for 100% control)
-			Camera = new FirstPersonCamera();
+			ResetSeatedPos();
 
 			EnableAllCollisions = true;
 			EnableDrawing = true;
@@ -62,14 +62,11 @@ namespace infinitearcade
 
 			InitStats();
 
-			if (IsServer)
+			Undress();
+			if (!m_clothed)
 			{
-				//Undress();
-				if (!m_clothed)
-				{
-					Clothe();
-					m_clothed = true;
-				}
+				Clothe();
+				m_clothed = true;
 			}
 
 			CreateHull();
@@ -168,7 +165,6 @@ namespace infinitearcade
 			if (LifeState != LifeState.Alive)
 				return;
 
-
 			var controller = GetActiveController();
 			controller?.Simulate(cl, this, GetActiveAnimator());
 
@@ -206,6 +202,22 @@ namespace infinitearcade
 
 			if (Input.Pressed(InputButton.View) && LifeState == LifeState.Alive)
 			{
+				ChangeCamera();
+			}
+		}
+
+		public void ChangeCamera()
+		{
+			if (Input.VR.IsActive || VR.Enabled)
+			{
+				ResetSeatedPos();
+				if (Camera is not VRCamera)
+				{
+					Camera = new VRCamera();
+				}
+			}
+			else
+			{
 				if (Camera is not FirstPersonCamera)
 				{
 					Camera = new FirstPersonCamera();
@@ -215,6 +227,46 @@ namespace infinitearcade
 					Camera = new ThirdPersonCamera();
 				}
 			}
+		}
+
+		public Transform ResetSeatedPos()
+		{
+			if (IsServer)
+				return Transform.Zero;
+
+			Vector3 relativeHeadPos = VR.Anchor.PointToLocal(Input.VR.Head.Position);
+			Rotation relativeHeadRot = VR.Anchor.RotationToLocal(Input.VR.Head.Rotation);
+			Transform offset = new Transform(relativeHeadPos, relativeHeadRot);
+			VRSeatedOffset = offset;
+			//yLog.Info($"VRSeatedOffset: {offset.Position}, {offset.Rotation.Angles()}");
+			return offset;
+		}
+
+		public override void PostCameraSetup(ref CameraSetup setup)
+		{
+			base.PostCameraSetup(ref setup);
+
+			Rotation rot = Rotation.FromYaw(EyeRot.Yaw() - VRSeatedOffset.Rotation.Yaw());
+			//RotatePointAroundPivotWithEuler(Vector3 point, Vector3 pivot, Vector3 angles)
+			Vector3 point = Position;
+			Vector3 pivot = Position + VRSeatedOffset.Position;
+			Angles angles = rot.Angles();
+
+			//DebugOverlay.Circle(point, Rotation.From(Vector3.Up.EulerAngles), 2, Color.Magenta);
+			//DebugOverlay.Sphere(pivot, 2, Color.Yellow);
+
+			Vector3 result = Rotation.From(angles) * (point - pivot) + pivot;
+			result -= VRSeatedOffset.Position;
+
+			Transform anchor = new Transform(result + EyePosLocal, Rotation.LookAt(rot.Forward, rot.Up));
+			//Transform head = anchor.ToWorld(VRSeatedOffset);
+
+			//DebugOverlay.Axis(anchor.Position, anchor.Rotation);
+			//DebugOverlay.Axis(head.Position, head.Rotation);
+
+			//VR.Anchor = Transform.WithPosition(new Vector3(-128, 128, 32)).WithRotation(Rotation.Identity);
+			//VR.Anchor = Transform.WithPosition(new Vector3(0, 0, 256)).WithRotation(Rotation.Identity);
+			VR.Anchor = anchor;
 		}
 
 		public override float FootstepVolume()
