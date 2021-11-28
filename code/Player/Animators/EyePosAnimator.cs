@@ -31,6 +31,11 @@ namespace infinitearcade
 			SetParam("b_sit", sitting);
 			SetParam("b_swim", Pawn.WaterLevel.Fraction > 0.5f && !sitting);
 
+			if (Host.IsClient && Client.IsValid())
+			{
+				SetParam("voice", Client.TimeSinceLastVoice < 0.5f ? Client.VoiceLevel : 0.0f);
+			}
+
 			Vector3 aimPos = Pawn.EyePos + Pawn.EyeRot.Forward * 200;
 			Vector3 lookPos = aimPos;
 
