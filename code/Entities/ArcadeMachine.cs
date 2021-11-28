@@ -36,7 +36,7 @@ namespace infinitearcade
 			}
 		}
 
-		[Property("Spawnpoint", "Player Spawnpoint", FGDType = "target_destination")]
+		[Property("target_destination", "Spawnpoint", "Player Spawnpoint")]
 		public string SpawnpointName { get; set; }
 
 		public override void Spawn()
@@ -109,7 +109,7 @@ namespace infinitearcade
 				CreatorPlayer = (ArcadePlayer)creator;
 				CreatorPlayer.UsingMachine = this;
 
-				CurrentClient = creator.GetClientOwner();
+				CurrentClient = creator.Client;
 				if (CurrentClient != null)
 					CurrentClient.Pawn = CreatedPlayer;
 			}
