@@ -116,5 +116,15 @@ namespace infinitearcade
 				player.TakeDamage(DamageInfo.Generic(damage * 100f));
 			}
 		}
+
+		public override void DoPlayerDevCam(Client player)
+		{
+			Host.AssertServer();
+
+			if (!player.HasPermission("devcam"))
+				return;
+
+			player.DevCamera = player.DevCamera == null ? new DevCamera() : null;
+		}
 	}
 }
