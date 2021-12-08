@@ -9,7 +9,8 @@ namespace infinitearcade
 {
 	public partial class ArcadePlayer : Sandbox.Player
 	{
-		// public float Health (already exists)
+		[Net]
+		public new float Health { get; set; }
 		[Net]
 		public float MaxHealth { get; set; }
 
@@ -17,7 +18,6 @@ namespace infinitearcade
 		public float Armor { get; set; }
 		[Net]
 		public float MaxArmor { get; set; }
-
 		[Net]
 		public float ArmorMultiplier { get; set; }
 
@@ -62,8 +62,10 @@ namespace infinitearcade
 
 			InitStats();
 
-			Undress();
-			if (!m_clothed)
+			//Undress();
+			if (m_clothed)
+				ClothesSetVisiblity(true);
+			else
 			{
 				Clothe();
 				m_clothed = true;
@@ -98,9 +100,9 @@ namespace infinitearcade
 		{
 			List<string> splitClothes = new();
 
-			splitClothes.AddRange(ConsoleSystem.GetValue("ia_player_clothes_head").Split(';'));
-			splitClothes.AddRange(ConsoleSystem.GetValue("ia_player_clothes_torso").Split(';'));
-			splitClothes.AddRange(ConsoleSystem.GetValue("ia_player_clothes_legs").Split(';'));
+			splitClothes.AddRange(Client.GetClientData("ia_player_clothes_head").Split(';'));
+			splitClothes.AddRange(Client.GetClientData("ia_player_clothes_torso").Split(';'));
+			splitClothes.AddRange(Client.GetClientData("ia_player_clothes_legs").Split(';'));
 
 			foreach (string modelStr in splitClothes)
 			{
@@ -127,9 +129,9 @@ namespace infinitearcade
 				Clothing.Add(model);
 
 				ModelPropData propInfo = model.GetModel().GetPropData();
-				if (propInfo.ParentBodyGroupName != null)
+				if (propInfo?.ParentBodygroupName != null)
 				{
-					SetBodyGroup(propInfo.ParentBodyGroupName, propInfo.ParentBodyGroupValue);
+					SetBodyGroup(propInfo.ParentBodygroupName, propInfo.ParentBodygroupValue);
 				}
 			}
 		}
@@ -140,6 +142,11 @@ namespace infinitearcade
 			Clothing?.Clear();
 
 			m_clothed = false;
+		}
+
+		public void ClothesSetVisiblity(bool visible)
+		{
+			Clothing?.ForEach(entity => entity.EnableDrawing = visible);
 		}
 
 		public virtual Transform GetSpawnpoint()
@@ -406,7 +413,7 @@ namespace infinitearcade
 			bubbleUp.Reverse();
 			bubbleUp.ForEach(x => x.ExitMachine());
 
-			//Inventory?.DropActive();
+			Inventory?.DropActive();
 			Inventory?.DeleteContents();
 		}
 
@@ -437,7 +444,7 @@ namespace infinitearcade
 			ent.CopyBodyGroups(this);
 			ent.CopyMaterialGroup(this);
 			ent.TakeDecalsFrom(this);
-			ent.RenderColorAndAlpha = RenderColorAndAlpha;
+			ent.RenderColor = RenderColor;
 
 			foreach (var child in Children)
 			{
@@ -450,9 +457,12 @@ namespace infinitearcade
 					var clothing = new ModelEntity();
 					clothing.SetModel(model);
 					clothing.SetParent(ent, true);
-					clothing.RenderColorAndAlpha = e.RenderColorAndAlpha;
+					clothing.TakeDecalsFrom(e);
+					clothing.RenderColor = e.RenderColor;
 				}
 			}
+
+			ClothesSetVisiblity(false);
 
 			ent.PhysicsGroup.Velocity = velocity;
 
