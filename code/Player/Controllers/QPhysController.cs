@@ -21,7 +21,14 @@ namespace infinitearcade
 		public static bool player_movement_bhop { get; set; } = true;
 
 		private ArcadePlayer m_player;
-		private int m_debugLineOffset = 0;
+		private string m_debugHopName;
+		private HopType m_debugHopType;
+		private enum HopType
+		{
+			None,
+			bhop,
+			ahop
+		};
 
 		public override void FrameSimulate()
 		{
@@ -181,27 +188,29 @@ namespace infinitearcade
 				EyeRot = Rotation.From(Input.VR.Head.Rotation.Pitch(), EyeRot.Yaw(), EyeRot.Roll());
 			}
 
-			m_debugLineOffset = 0;
+			const int pad = 16;
 			if (Debug && Host.IsServer)
 			{
-				DebugOverlay.Box(Position + TraceOffset, mins, maxs, Color.Red);
-				DebugOverlay.Box(Position, mins, maxs, Color.Blue);
+				//DebugOverlay.Box(Position + TraceOffset, mins, maxs, Color.Red);
+				//DebugOverlay.Box(Position, mins, maxs, Color.Blue);
 
-				//if (m_player.Camera is not FirstPersonCamera)
+				if (m_player.Camera is not FirstPersonCamera)
 				{
-					DebugOverlay.Line(m_player.EyePos, m_player.EyePos + m_player.EyeRot.Forward * 8, Color.White);
-					//DebugOverlay.Line(m_player.EyePos, m_player.EyePos + m_player.Rotation.Forward * 8, Color.Orange);
+					//DebugOverlay.Line(m_player.EyePos, m_player.EyePos + m_player.EyeRot.Forward * 8, Color.White);
 				}
 
-				//if (Host.IsServer) m_debugLineOffset = 10;
+				IADebugging.LineOffset++;
 
-				DebugOverlay.ScreenText(m_debugLineOffset++, $"        Position: {Position:F2}");
-				//DebugOverlay.ScreenText(m_debugLineOffset++, $"        Velocity: {Velocity:F2}");
-				DebugOverlay.ScreenText(m_debugLineOffset++, $" Velocity (hu/s): {Velocity.Length:F2}");
-				//DebugOverlay.ScreenText(m_debugLineOffset++, $"    BaseVelocity: {BaseVelocity}");
-				DebugOverlay.ScreenText(m_debugLineOffset++, $"    GroundEntity: {GroundEntity} [{GroundEntity?.Velocity}]");
-				//DebugOverlay.ScreenText(m_debugLineOffset++, $" SurfaceFriction: {SurfaceFriction}");
-				DebugOverlay.ScreenText(m_debugLineOffset++, $"    WishVelocity: {WishVelocity}");
+				IADebugging.ScreenText($"{"Position".PadLeft(pad)}: {Position:F2}");
+				//IADebugging.ScreenText($"{"Velocity".PadLeft(pad)}: {Velocity:F2}");
+				IADebugging.ScreenText($"{"Velocity (hu/s)".PadLeft(pad)}: {Velocity.Length:F2}");
+				//IADebugging.ScreenText($"{"BaseVelocity".PadLeft(pad)}: {BaseVelocity}");
+				IADebugging.ScreenText($"{"GroundEntity".PadLeft(pad)}: {(GroundEntity != null ? $"{GroundEntity} [vel {GroundEntity?.Velocity}]" : "null")}");
+				//IADebugging.ScreenText($"{"SurfaceFriction".PadLeft(pad)}: {SurfaceFriction}");
+				IADebugging.ScreenText($"{"WishVelocity".PadLeft(pad)}: {WishVelocity}");
+
+				if (GroundEntity == null && m_debugHopType != HopType.None)
+					IADebugging.ScreenText($"{"Hopping Type".PadLeft(pad)}: {m_debugHopName}");
 			}
 
 		}
@@ -284,19 +293,17 @@ namespace infinitearcade
 
 						if (Debug && Host.IsServer)
 						{
-							string ahopType = "";
-
 							if (Input.Forward < 0.0f)
 							{
 								if (Input.Left != 0.0f)
-									ahopType = "Accelerated Side Hop (ASH)";
+									m_debugHopName = "Accelerated Side Hop (ASH)";
 								else
-									ahopType = "Accelerated Forward Hop (AFH)";
+									m_debugHopName = "Accelerated Forward Hop (AFH)";
 							}
 							else
-								ahopType = "Accelerated Back Hop (ABH)";
+								m_debugHopName = "Accelerated Back Hop (ABH)";
 
-							DebugOverlay.ScreenText(m_debugLineOffset++, "we're ahopping I think, it's an " + ahopType, 1f);
+							m_debugHopType = HopType.ahop;
 						}
 					}
 				}
@@ -304,11 +311,15 @@ namespace infinitearcade
 				{
 					Velocity += (vecForward * flSpeedAddition);
 				}
-				else
+				else if (Debug)
 				{
-					if (Debug && Host.IsServer)
-						DebugOverlay.ScreenText(m_debugLineOffset++, "we're bhopping I think", 1f);
+					m_debugHopName = "Bunny Hop";
+					m_debugHopType = HopType.bhop;
 				}
+				
+				// if we're not gaining any speed, just say we aren't hopping
+				if (flNewSpeed < flMaxSpeed)
+					m_debugHopType = HopType.None;
 			}
 
 			// why isn't this FinishGravity anymore?
