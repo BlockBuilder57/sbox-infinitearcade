@@ -67,7 +67,7 @@ namespace infinitearcade
 
 		public override Transform GetSpawnpoint()
 		{
-			PlayerSpawnpoint spawnpoint = Entity.All.OfType<PlayerSpawnpoint>().Where(x => x.PlayerType == PlayerSpawnpoint.SpawnType.MachinePlayer && x.EntityName == ParentMachine.SpawnpointName).OrderBy(x => Guid.NewGuid()).FirstOrDefault();
+			PlayerSpawnpoint spawnpoint = Entity.All.OfType<PlayerSpawnpoint>().Where(x => x.PlayerType == PlayerSpawnpoint.SpawnType.MachinePlayer && x.Name == ParentMachine.SpawnpointName).OrderBy(x => Guid.NewGuid()).FirstOrDefault();
 			Transform transform = Transform.Zero;
 
 			if (spawnpoint != null)

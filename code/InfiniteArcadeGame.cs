@@ -52,10 +52,10 @@ namespace infinitearcade
 			Host.AssertClient();
 
 			Entity pawn = cl.Pawn;
-			
+
 			if (pawn is ArcadePlayer player)
 				player.FrameSimulate(cl);
-				
+
 		}
 
 		public override void MoveToSpawnpoint(Entity pawn)
@@ -90,7 +90,7 @@ namespace infinitearcade
 		public override void ClientDisconnect(Client cl, NetworkDisconnectionReason reason)
 		{
 			Log.Info($"\"{cl.Name}\" has left the game ({reason})");
-			ChatBox.AddInformation(To.Everyone, $"{cl.Name} has left ({reason})", $"avatar:{cl.SteamId}");
+			ChatBox.AddInformation(To.Everyone, $"{cl.Name} has left ({reason})", $"avatar:{cl.PlayerId}");
 
 			foreach (ArcadeMachine machine in Entity.All.OfType<ArcadeMachine>().Where(x => x.CurrentClient == cl))
 			{

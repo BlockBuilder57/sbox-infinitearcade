@@ -133,7 +133,7 @@ namespace infinitearcade
 		}
 	}
 
-	public partial class WeaponAmmo : NetworkComponent
+	public partial class WeaponAmmo : BaseNetworkable
 	{
 		[Net] public int Clip { get; set; }
 		[Net] public int MaxClip { get; set; }
