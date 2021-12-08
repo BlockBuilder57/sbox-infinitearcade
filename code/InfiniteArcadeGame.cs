@@ -9,19 +9,19 @@ using System.Threading.Tasks;
 
 namespace infinitearcade
 {
-	[Library("infinitearcade")]
 	public partial class InfiniteArcadeGame : Sandbox.Game
 	{
 		public InfiniteArcadeGame()
 		{
 			if (IsServer)
 			{
-				new InfiniteArcadeHud();
+				// serverside gubbins
 			}
 
 			if (IsClient)
 			{
-				//clientside gubbins
+				// clientside gubbins
+				Local.Hud = new InfiniteArcadeHud();
 			}
 		}
 

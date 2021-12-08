@@ -8,37 +8,39 @@ using System.Threading.Tasks;
 
 namespace infinitearcade.UI
 {
-	public partial class InfiniteArcadeHud : Sandbox.HudEntity<RootPanel>
+	public partial class InfiniteArcadeHud : RootPanel
 	{
 		public static InfiniteArcadeHud Current { get; set; }
 
 		public InfiniteArcadeHud()
 		{
-			if (!IsClient)
+			if (!Host.IsClient)
 				return;
 
 			Current = this;
 
-			RootPanel.StyleSheet.Load("UI/InfiniteArcadeHud.scss");
+			StyleSheet.Load("UI/InfiniteArcadeHud.scss");
 
 			// s&box base things
-			RootPanel.AddChild<ChatBox>();
-			RootPanel.AddChild<VoiceList>();
-			RootPanel.AddChild<KillFeed>();
+			AddChild<CrosshairCanvas>();
+			CrosshairCanvas.SetCrosshair(new StandardCrosshair());
+			AddChild<ChatBox>();
+			AddChild<VoiceList>();
+			AddChild<KillFeed>();
 
 			// custom stuff
-			RootPanel.AddChild<PlayerStatus>();
-			RootPanel.AddChild<WeaponStatus>();
+			AddChild<PlayerStatus>();
+			AddChild<WeaponStatus>();
 		}
 
 		[Event.Hotload]
 		public static void OnHotReloaded()
 		{
-			if (Host.IsClient)
-			{
-				Local.Hud?.Delete();
-				new InfiniteArcadeHud();
-			}
+			if (!Host.IsClient)
+				return;
+
+			InfiniteArcadeHud.Current?.Delete();
+			InfiniteArcadeHud hud = new();
 		}
 	}
 }
