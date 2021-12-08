@@ -9,11 +9,11 @@ code/Properties/launchSettings.json
 config/infinitearcade.fgd
 
 # considering the vmaps get downloaded, might not be the best idea to push them
-maps/
+maps/*
 # map generation
-#_bakeresourcecache
-#maps/*.vpk
-#maps/*.los
+_bakeresourcecache
+maps/*.vpk
+maps/*.los
 
 # asset browser info
 tools_asset_info.bin
