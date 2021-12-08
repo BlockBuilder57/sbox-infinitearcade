@@ -44,18 +44,23 @@ namespace infinitearcade
 			if (IsClient)
 				ClientSim++;
 			else if (IsServer)
+			{
 				ServerSim++;
+				IADebugging.ResetOffset();
+			}
 		}
 
 		public override void FrameSimulate(Client cl)
 		{
 			Host.AssertClient();
+			IADebugging.ResetOffset();
 
 			Entity pawn = cl.Pawn;
 
 			if (pawn is ArcadePlayer player)
 				player.FrameSimulate(cl);
 
+			IADebugging.FrameSimulate(cl);
 		}
 
 		public override void MoveToSpawnpoint(Entity pawn)
@@ -109,25 +114,6 @@ namespace infinitearcade
 			{
 				float damage = player.Health + (player.Armor * player.ArmorMultiplier);
 				player.TakeDamage(DamageInfo.Generic(damage * 100f));
-			}
-		}
-
-		[ServerCmd("hurtme2")]
-		public static void HurtMeCommand(float amount)
-		{
-			Client client = ConsoleSystem.Caller;
-
-			client?.Pawn?.TakeDamage(DamageInfo.Generic(amount));
-		}
-
-		[ServerCmd("vr_reset_seated_pos")]
-		public static void VRResetSeatedCommand()
-		{
-			Client client = ConsoleSystem.Caller;
-
-			if (client?.Pawn is ArcadePlayer player)
-			{
-				player.ResetSeatedPos();
 			}
 		}
 	}
