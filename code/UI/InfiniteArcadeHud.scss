@@ -1,19 +1,21 @@
-PlayerStatus {
-    position: absolute;
-    bottom: 25px;
-    left: 25px;
+.hidden {
+	display: none;
+}
 
-    &.hidden {
-        display: none;
-    }
+InfiniteArcadeHud {
+	&.devcamera {
+		display: none;
+	}
+}
+
+PlayerStatus {
+	position: absolute;
+	bottom: 25px;
+	left: 25px;
 }
 
 WeaponStatus {
-    position: absolute;
-    bottom: 25px;
-    right: 25px;
-
-    &.hidden {
-        display: none;
-    }
+	position: absolute;
+	bottom: 25px;
+	right: 25px;
 }

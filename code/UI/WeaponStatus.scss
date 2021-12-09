@@ -1,32 +1,26 @@
 WeaponStatus {
 
-    & {
-        /*background-color: red;*/
-        display: flex;
-        justify-content: flex-end;
-        width: 320px;
-        overflow: hidden;
-    }
+	/*background-color: red;*/
+	display: flex;
+	justify-content: flex-end;
+	width: 320px;
+	overflow: hidden;
 
-    WeaponAmmoDisplay {
-        background-color: rgba( black, 0.5 );
-        border-radius: 8px;
-        padding: 0 8px 0 8px;
-        color: white;
-        align-items: flex-end;
-    }
+	WeaponAmmoDisplay {
+		background-color: rgba( black, 0.5 );
+		border-radius: 8px;
+		padding: 0 8px 0 8px;
+		color: white;
+		align-items: flex-end;
+	}
 
-    .clip {
-        font-size: 50px;
-    }
+	.clip {
+		font-size: 50px;
+	}
 
-    .ammo {
-        font-size: 20px;
-        margin-bottom: 7px;
-        margin-left: 10px;
-    }
-
-    .hidden {
-        display: none;
-    }
+	.ammo {
+		font-size: 20px;
+		margin-bottom: 7px;
+		margin-left: 10px;
+	}
 }
