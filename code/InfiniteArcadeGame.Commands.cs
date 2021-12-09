@@ -9,8 +9,8 @@ namespace infinitearcade
 {
 	public partial class InfiniteArcadeGame : Sandbox.Game
 	{
-		[ServerCmd("prop_spawn")]
-		public static void Spawn(string modelname)
+		[ServerCmd("spawn")]
+		public static void SpawnCommand(string modelname)
 		{
 			var owner = ConsoleSystem.Caller?.Pawn;
 
