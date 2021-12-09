@@ -119,9 +119,12 @@ namespace infinitearcade
 
 			if (input.Pressed(InputButton.Walk))
 			{
-				var tr = Trace.Ray(Position, Position + Rotation.Forward * 4096).HitLayer(CollisionLayer.All).UseHitboxes().Run();
-				PivotPos = tr.EndPos;
-				PivotDist = Vector3.DistanceBetween(tr.EndPos, Position);
+				var tr = Trace.Ray(Position, Position + Rotation.Forward * Int32.MaxValue).HitLayer(CollisionLayer.All).UseHitboxes().Run();
+				if (tr.Hit)
+				{
+					PivotPos = tr.EndPos;
+					PivotDist = Vector3.DistanceBetween(tr.EndPos, Position);
+				}
 			}
 
 			if (input.Down(InputButton.Jump))
