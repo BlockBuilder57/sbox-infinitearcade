@@ -93,6 +93,29 @@ namespace infinitearcade
 			SetBBox(mins, maxs);
 		}
 
+		public virtual void StartGravity()
+		{
+			float ent_gravity = 1.0f;
+
+			if (m_player.PhysicsBody?.GravityScale != ent_gravity)
+				ent_gravity = (float)m_player.PhysicsBody?.GravityScale;
+
+			Velocity -= new Vector3(0, 0, ent_gravity * Gravity * 0.5f) * Time.Delta;
+			Velocity += new Vector3(0, 0, BaseVelocity.z) * Time.Delta;
+
+			BaseVelocity = BaseVelocity.WithZ(0);
+		}
+
+		public virtual void FinishGravity()
+		{
+			float ent_gravity = 1.0f;
+
+			if (m_player.PhysicsBody?.GravityScale != ent_gravity)
+				ent_gravity = (float)m_player.PhysicsBody?.GravityScale;
+
+			Velocity -= new Vector3(0, 0, ent_gravity * Gravity * 0.5f) * Time.Delta;
+		}
+
 		protected float SurfaceFriction;
 
 
@@ -144,8 +167,11 @@ namespace infinitearcade
 
 			// if not on ground, store fall velocity
 
-			// player->UpdateStepSound( player->m_pSurfaceData, mv->GetAbsOrigin(), mv->m_vecVelocity )
+			//player->UpdateStepSound( player->m_pSurfaceData, mv->GetAbsOrigin(), mv->m_vecVelocity )
 
+			//
+			// block: here on out is CGameMovement::FulLWalkMove
+			//
 
 			// RunLadderMode
 
@@ -157,12 +183,8 @@ namespace infinitearcade
 			//
 			if (!Swimming && !IsTouchingLadder)
 			{
-				Velocity -= new Vector3(0, 0, Gravity * 0.5f) * Time.Delta;
-				Velocity += new Vector3(0, 0, BaseVelocity.z) * Time.Delta;
-
-				BaseVelocity = BaseVelocity.WithZ(0);
+				StartGravity();
 			}
-
 
 			/*
 			 if (player->m_flWaterJumpTime)
@@ -182,7 +204,7 @@ namespace infinitearcade
 				CheckJumpButton();
 			}
 
-			// Fricion is handled before we add in any base velocity. That way, if we are on a conveyor,
+			// Friction is handled before we add in any base velocity. That way, if we are on a conveyor,
 			//  we don't slow when standing still, relative to the conveyor.
 			bool bStartOnGround = GroundEntity != null;
 			//bool bDropSound = false;
@@ -193,10 +215,7 @@ namespace infinitearcade
 				Velocity = Velocity.WithZ(0);
 				//player->m_Local.m_flFallVelocity = 0.0f;
 
-				if (GroundEntity != null)
-				{
-					ApplyFriction(GroundFriction * SurfaceFriction);
-				}
+				Friction();
 			}
 
 			//
@@ -219,7 +238,7 @@ namespace infinitearcade
 			bool bStayOnGround = false;
 			if (Swimming)
 			{
-				ApplyFriction(1);
+				Friction();
 				WaterMove();
 			}
 			else if (IsTouchingLadder)
@@ -241,7 +260,7 @@ namespace infinitearcade
 			// FinishGravity
 			if (!Swimming && !IsTouchingLadder)
 			{
-				Velocity -= new Vector3(0, 0, Gravity * 0.5f) * Time.Delta;
+				FinishGravity();
 			}
 
 
@@ -250,7 +269,7 @@ namespace infinitearcade
 				Velocity = Velocity.WithZ(0);
 			}
 
-			// CheckFalling(); // fall damage etc
+			//CheckFalling(); // block: fall damage effects, calls CGameMovement::PlayerRoughLandingEffects which sets the view punch
 
 			// Land Sound
 			// Swim Sounds
@@ -265,8 +284,8 @@ namespace infinitearcade
 			const int pad = 16;
 			if (Debug && Host.IsServer)
 			{
-				//DebugOverlay.Box(Position + TraceOffset, mins, maxs, Color.Red);
-				//DebugOverlay.Box(Position, mins, maxs, Color.Blue);
+				DebugOverlay.Box(Position + TraceOffset, mins, maxs, Color.Red);
+				DebugOverlay.Box(Position, mins, maxs, Color.Blue);
 
 				if (m_player.Camera is not FirstPersonCamera)
 				{
@@ -334,6 +353,7 @@ namespace infinitearcade
 				// first try just moving to the destination
 				var dest = (Position + Velocity * Time.Delta).WithZ(Position.z);
 
+				// first try moving directly to the next spot
 				var pm = TraceBBox(Position, dest);
 
 				if (pm.Fraction == 1)
@@ -347,7 +367,6 @@ namespace infinitearcade
 			}
 			finally
 			{
-
 				// Now pull the base velocity back out.   Base velocity is set if you are on a moving object, like a conveyor (or maybe another monster?)
 				Velocity -= BaseVelocity;
 			}
@@ -415,7 +434,7 @@ namespace infinitearcade
 		/// <summary>
 		/// Remove ground friction from velocity
 		/// </summary>
-		public virtual void ApplyFriction(float frictionAmount = 1.0f)
+		public virtual void Friction()
 		{
 			// If we are in water jump cycle, don't apply friction
 			//if ( player->m_flWaterJumpTime )
@@ -425,15 +444,22 @@ namespace infinitearcade
 
 
 			// Calculate speed
-			var speed = Velocity.Length;
+			float speed = Velocity.Length;
 			if (speed < 0.1f) return;
 
-			// Bleed off some speed, but if we have less than the bleed
-			//  threshold, bleed the threshold amount.
-			float control = (speed < StopSpeed) ? StopSpeed : speed;
+			float drop = 0;
 
-			// Add the amount to the drop amount.
-			var drop = control * Time.Delta * frictionAmount;
+			if (GroundEntity != null)
+			{
+				float friction = GroundFriction * SurfaceFriction;
+
+				// Bleed off some speed, but if we have less than the bleed
+				//  threshold, bleed the threshold amount.
+				float control = (speed < StopSpeed) ? StopSpeed : speed;
+
+				// Add the amount to the drop amount.
+				drop = control * friction * Time.Delta;
+			}
 
 			// scale the velocity
 			float newspeed = speed - drop;
@@ -829,8 +855,8 @@ namespace infinitearcade
 		/// </summary>
 		public virtual void StayOnGround()
 		{
-			var start = Position + Vector3.Up * 2;
-			var end = Position + Vector3.Down * StepSize;
+			var start = Position + (Vector3.Up * 2);
+			var end = Position + (Vector3.Down * StepSize);
 
 			// See how far up we can go without getting stuck
 			var trace = TraceBBox(Position, start);
@@ -839,14 +865,10 @@ namespace infinitearcade
 			// Now trace down from a known safe position
 			trace = TraceBBox(start, end);
 
-			if (trace.Fraction <= 0) return;
-			if (trace.Fraction >= 1) return;
-			if (trace.StartedSolid) return;
-			if (Vector3.GetAngle(Vector3.Up, trace.Normal) > GroundAngle) return;
-
-			// This is incredibly hacky. The real problem is that trace returning that strange value we can't network over.
-			// float flDelta = fabs( mv->GetAbsOrigin().z - trace.m_vEndPos.z );
-			// if ( flDelta > 0.5f * DIST_EPSILON )
+			if (trace.Fraction <= 0) return; // must go somewhere
+			if (trace.Fraction >= 1) return; // must hit something
+			if (trace.StartedSolid) return; // can't be embedded in a solid
+			if (Vector3.GetAngle(Vector3.Up, trace.Normal) > GroundAngle) return; // can't hit a steep slope that we can't stand on anyway
 
 			Position = trace.EndPos;
 		}
