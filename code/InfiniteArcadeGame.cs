@@ -94,9 +94,6 @@ namespace infinitearcade
 
 		public override void ClientDisconnect(Client cl, NetworkDisconnectionReason reason)
 		{
-			Log.Info($"\"{cl.Name}\" has left the game ({reason})");
-			ChatBox.AddInformation(To.Everyone, $"{cl.Name} has left ({reason})", $"avatar:{cl.PlayerId}");
-
 			foreach (ArcadeMachine machine in Entity.All.OfType<ArcadeMachine>().Where(x => x.CurrentClient == cl))
 			{
 				if (machine.CreatorPlayer.IsValid() && machine.CreatorPlayer is not ArcadeMachinePlayer)
@@ -104,6 +101,8 @@ namespace infinitearcade
 
 				machine.CurrentClient = null;
 			}
+
+			base.ClientDisconnect(cl, reason);
 		}
 
 		public override void DoPlayerSuicide(Client cl)
