@@ -9,21 +9,14 @@ namespace infinitearcade
 {
 	public partial class ArcadePlayer : Sandbox.Player
 	{
-		[Net]
-		public new float Health { get; set; }
-		[Net]
-		public float MaxHealth { get; set; }
+		[Net] public new float Health { get; set; }
+		[Net] public float MaxHealth { get; set; }
 
-		[Net]
-		public float Armor { get; set; }
-		[Net]
-		public float MaxArmor { get; set; }
-		[Net]
-		public float ArmorMultiplier { get; set; }
+		[Net] public float Armor { get; set; }
+		[Net] public float MaxArmor { get; set; }
+		[Net] public float ArmorMultiplier { get; set; }
 
-		[Net]
-		public ArcadeMachine UsingMachine { get; set; }
-
+		[Net] public ArcadeMachine UsingMachine { get; set; }
 		protected BasePlayerController m_machineController;
 
 		public Transform VRSeatedOffset { private get; set; } = Transform.Zero;
@@ -413,7 +406,8 @@ namespace infinitearcade
 			bubbleUp.Reverse();
 			bubbleUp.ForEach(x => x.ExitMachine());
 
-			Inventory?.DropActive();
+			if (this is not ArcadeMachinePlayer)
+				Inventory?.DropActive();
 			Inventory?.DeleteContents();
 		}
 

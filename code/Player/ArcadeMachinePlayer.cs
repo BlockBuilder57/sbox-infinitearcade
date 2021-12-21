@@ -42,7 +42,8 @@ namespace infinitearcade
 		{
 			base.Respawn();
 
-			Inventory.Add(new Pistol(), true);
+			if (!(bool)(Inventory as IAInventory)?.IsCarryingType(typeof(Pistol)))
+				Inventory?.Add(new Pistol(), true);
 		}
 
 		public override void InitStats()
