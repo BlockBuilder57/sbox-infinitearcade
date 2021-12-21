@@ -98,14 +98,14 @@ namespace infinitearcade
 
 			foreach (var tr in TraceBullet(pos, pos + forward * short.MaxValue, bulletSize))
 			{
-				tr.Surface.DoBulletImpact(tr);
-
 				if (!IsServer || !tr.Entity.IsValid())
 					continue;
 
-				// why is prediction turned off here
+				// prediction is turned off here to prevent bullet traces from being different
 				using (Prediction.Off())
 				{
+					tr.Surface.DoBulletImpact(tr);
+
 					var damageInfo = DamageInfo.FromBullet(tr.EndPos, forward * 100 * force * Scale, damage * Scale)
 						.UsingTraceResult(tr).WithAttacker(Owner).WithWeapon(this);
 
