@@ -75,8 +75,6 @@ namespace infinitearcade
 
 			m_hullNormal = new BBox(mins, maxs);
 			m_hullDucked = new BBox(mins, maxsDucked);
-
-			EyePosLocal = Vector3.Up * EyeHeight * Pawn.Scale;
 		}
 
 		public BBox GetHull(bool ducked)
@@ -589,12 +587,12 @@ namespace infinitearcade
 			// HACKHACK - Fudge for collision bug - no time to fix this properly
 			if (GroundEntity != null)
 			{
-				Position -= (m_hullDucked.Mins - m_hullNormal.Mins);
+				Position -= (m_hullDucked.Mins - m_hullNormal.Mins) * Pawn.Scale;
 			}
 			else
 			{
-				Vector3 hullSizeNormal = m_hullNormal.Maxs - m_hullNormal.Mins;
-				Vector3 hullSizeCrouch = m_hullDucked.Maxs - m_hullDucked.Mins;
+				Vector3 hullSizeNormal = (m_hullNormal.Maxs - m_hullNormal.Mins) * Pawn.Scale;
+				Vector3 hullSizeCrouch = (m_hullDucked.Maxs - m_hullDucked.Mins) * Pawn.Scale;
 				Vector3 viewDelta = (hullSizeNormal - hullSizeCrouch);
 				Position += viewDelta;
 			}
@@ -611,14 +609,14 @@ namespace infinitearcade
 
 			if (GroundEntity != null)
 			{
-				newOrigin += (m_hullDucked.Mins - m_hullNormal.Mins);
+				newOrigin += (m_hullDucked.Mins - m_hullNormal.Mins) * Pawn.Scale;
 			}
 			else
 			{
 				// If in air an letting go of crouch, make sure we can offset origin to make
 				//  up for uncrouching
-				Vector3 hullSizeNormal = m_hullNormal.Maxs - m_hullNormal.Mins;
-				Vector3 hullSizeCrouch = m_hullDucked.Maxs - m_hullDucked.Mins;
+				Vector3 hullSizeNormal = (m_hullNormal.Maxs - m_hullNormal.Mins) * Pawn.Scale;
+				Vector3 hullSizeCrouch = (m_hullDucked.Maxs - m_hullDucked.Mins) * Pawn.Scale;
 				Vector3 viewDelta = (hullSizeNormal - hullSizeCrouch);
 				newOrigin -= viewDelta;
 			}
@@ -639,14 +637,14 @@ namespace infinitearcade
 
 			if (GroundEntity != null)
 			{
-				newOrigin += (m_hullDucked.Mins - m_hullNormal.Mins);
+				newOrigin += (m_hullDucked.Mins - m_hullNormal.Mins) * Pawn.Scale;
 			}
 			else
 			{
 				// If in air an letting go of crouch, make sure we can offset origin to make
 				//  up for uncrouching
-				Vector3 hullSizeNormal = m_hullNormal.Maxs - m_hullNormal.Mins;
-				Vector3 hullSizeCrouch = m_hullDucked.Maxs - m_hullDucked.Mins;
+				Vector3 hullSizeNormal = (m_hullNormal.Maxs - m_hullNormal.Mins) * Pawn.Scale;
+				Vector3 hullSizeCrouch = (m_hullDucked.Maxs - m_hullDucked.Mins) * Pawn.Scale;
 				Vector3 viewDelta = (hullSizeNormal - hullSizeCrouch);
 				newOrigin -= viewDelta;
 			}
@@ -670,8 +668,8 @@ namespace infinitearcade
 
 			EyePosLocal = GetPlayerViewOffset(true) * Pawn.Scale;
 
-			Vector3 hullSizeNormal = m_hullNormal.Maxs - m_hullNormal.Mins;
-			Vector3 hullSizeCrouch = m_hullDucked.Maxs - m_hullDucked.Mins;
+			Vector3 hullSizeNormal = (m_hullNormal.Maxs - m_hullNormal.Mins) * Pawn.Scale;
+			Vector3 hullSizeCrouch = (m_hullDucked.Maxs - m_hullDucked.Mins) * Pawn.Scale;
 			Vector3 viewDelta = (hullSizeNormal - hullSizeCrouch);
 			Position += viewDelta;
 
@@ -687,16 +685,19 @@ namespace infinitearcade
 			// a trace is made
 
 			Vector3 vecEnd = Position.WithZ(Position.z - DuckHullHeight);
+			// Trace down to the stand position and see if we can stand.
 			trace = TraceBBox(Position, vecEnd);
 			if (trace.Fraction < 1.0f)
 			{
+				// Find the endpoint.
 				vecEnd.z = Position.z + (-DuckHullHeight * trace.Fraction);
 
+				// Test a normal hull.
 				bool wasDucked = Ducked;
 				Ducked = false;
 				TraceResult tr = TraceBBox(vecEnd, vecEnd);
 				Ducked = wasDucked;
-				if (tr.StartedSolid)
+				if (!tr.StartedSolid)
 					return true;
 			}
 
@@ -705,8 +706,8 @@ namespace infinitearcade
 
 		public virtual void FinishUnDuckJump(ref TraceResult trace)
 		{
-			Vector3 hullSizeNormal = m_hullNormal.Maxs - m_hullNormal.Mins;
-			Vector3 hullSizeCrouch = m_hullDucked.Maxs - m_hullDucked.Mins;
+			Vector3 hullSizeNormal = (m_hullNormal.Maxs - m_hullNormal.Mins) * Pawn.Scale;
+			Vector3 hullSizeCrouch = (m_hullDucked.Maxs - m_hullDucked.Mins) * Pawn.Scale;
 			Vector3 viewDelta = (hullSizeNormal - hullSizeCrouch);
 
 			float flDeltaZ = viewDelta.z;
@@ -748,7 +749,12 @@ namespace infinitearcade
 					float flDuckFraction = SimpleSpline(1.0f - (flDuckSeconds / TIME_TO_UNDUCK));
 					SetDuckedEyeOffset(flDuckFraction);
 				}
+
+				return;
 			}
+
+			if (EyePosLocal == Vector3.Zero)
+				EyePosLocal = Vector3.Up * EyeHeight * Pawn.Scale;
 		}
 
 		public void SetDuckedEyeOffset(float duckFraction)

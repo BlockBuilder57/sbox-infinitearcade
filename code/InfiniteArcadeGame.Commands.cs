@@ -77,7 +77,14 @@ namespace infinitearcade
 			if (!client.HasPermission("debug"))
 				return;
 
-			(client?.Pawn).LocalScale = amount;
+			Player player = (client?.Pawn) as Player;
+			if (!player.IsValid())
+				return;
+
+			player.LocalScale = amount;
+
+			if (player.Controller is QPhysController)
+				player.EyePosLocal = Vector3.Up * (player.Controller as QPhysController).EyeHeight * amount;
 		}
 
 		[ServerCmd("vr_reset_seated_pos")]
