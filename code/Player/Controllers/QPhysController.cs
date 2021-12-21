@@ -41,11 +41,12 @@ namespace infinitearcade
 		[Net] public float DuckHullHeight { get; set; } = 36.0f;
 		[Net] public float EyeHeight { get; set; } = 64.0f;
 		[Net] public float DuckEyeHeight { get; set; } = 28.0f;
-		private BBox m_hullStanding;
-		private BBox m_hullCrouched;
+		private BBox m_hullNormal;
+		private BBox m_hullDucked;
 
 		public bool Ducking { get; set; } = false;
 		public bool Ducked { get; set; } = false;
+		public bool InDuckJump { get; set; } = false;
 		private float m_flDucktime = 0.0f;
 		private float m_flJumpTime = 0.0f;
 		private float m_flDuckJumpTime = 0.0f;
@@ -72,13 +73,15 @@ namespace infinitearcade
 			var maxs = new Vector3(+halfGirth, +halfGirth, HullHeight);
 			var maxsDucked = new Vector3(+halfGirth, +halfGirth, DuckHullHeight);
 
-			m_hullStanding = new BBox(mins, maxs);
-			m_hullCrouched = new BBox(mins, maxsDucked);
+			m_hullNormal = new BBox(mins, maxs);
+			m_hullDucked = new BBox(mins, maxsDucked);
+
+			EyePosLocal = Vector3.Up * EyeHeight * Pawn.Scale;
 		}
 
 		public BBox GetHull(bool ducked)
 		{
-			return ducked ? m_hullCrouched : m_hullStanding;
+			return (ducked ? m_hullDucked : m_hullNormal) * Pawn.Scale;
 		}
 
 		public override BBox GetHull()
@@ -134,10 +137,12 @@ namespace infinitearcade
 
 			Gravity = float.Parse(ConsoleSystem.GetValue("sv_gravity"));
 
-			EyePosLocal = Vector3.Up * (EyeHeight * Pawn.Scale);
+			//EyePosLocal = Vector3.Up * (Ducked ? DuckEyeHeight : EyeHeight);
 
 			EyePosLocal += TraceOffset;
 			EyeRot = Input.Rotation;
+
+			ReduceTimers();
 
 			//Velocity += BaseVelocity * ( 1 + Time.Delta * 0.5f );
 			//BaseVelocity = Vector3.Zero;
@@ -159,7 +164,7 @@ namespace infinitearcade
 
 			//player->UpdateStepSound( player->m_pSurfaceData, mv->GetAbsOrigin(), mv->m_vecVelocity )
 
-			//UpdateDuckJumpEyeOffset();
+			UpdateDuckJumpEyeOffset();
 			Duck();
 
 			//
@@ -270,7 +275,7 @@ namespace infinitearcade
 				EyeRot = Rotation.From(Input.VR.Head.Rotation.Pitch(), EyeRot.Yaw(), EyeRot.Roll());
 			}
 
-			const int pad = 16;
+			const int pad = 20;
 			if (Debug && Host.IsServer)
 			{
 				DebugOverlay.Box(Position + TraceOffset, GetHull().Mins, GetHull().Maxs, Color.Red);
@@ -287,14 +292,35 @@ namespace infinitearcade
 				//IADebugging.ScreenText($"{"Velocity".PadLeft(pad)}: {Velocity:F2}");
 				IADebugging.ScreenText($"{"Velocity (hu/s)".PadLeft(pad)}: {Velocity.Length:F2}");
 				//IADebugging.ScreenText($"{"BaseVelocity".PadLeft(pad)}: {BaseVelocity}");
-				IADebugging.ScreenText($"{"GroundEntity".PadLeft(pad)}: {(GroundEntity != null ? $"{GroundEntity} [vel {GroundEntity?.Velocity}]" : "null")}");
+				//IADebugging.ScreenText($"{"GroundEntity".PadLeft(pad)}: {(GroundEntity != null ? $"{GroundEntity} [vel {GroundEntity?.Velocity}]" : "null")}");
 				//IADebugging.ScreenText($"{"SurfaceFriction".PadLeft(pad)}: {SurfaceFriction}");
-				IADebugging.ScreenText($"{"WishVelocity".PadLeft(pad)}: {WishVelocity}");
+				//IADebugging.ScreenText($"{"WishVelocity".PadLeft(pad)}: {WishVelocity}");
+
+				IADebugging.ScreenText($"{"Ducked (FL_DUCKING)".PadLeft(pad)}: {Ducked}");
+				IADebugging.ScreenText($"{"Ducking".PadLeft(pad)}: {Ducking}");
+				IADebugging.ScreenText($"{"InDuckJump".PadLeft(pad)}: {InDuckJump}");
+				IADebugging.ScreenText($"{"m_flDucktime".PadLeft(pad)}: {m_flDucktime}");
+				IADebugging.ScreenText($"{"m_flJumpTime".PadLeft(pad)}: {m_flJumpTime}");
+				IADebugging.ScreenText($"{"m_flDuckJumpTime".PadLeft(pad)}: {m_flDuckJumpTime}");
 
 				if (GroundEntity == null && m_debugHopType != HopType.None)
 					IADebugging.ScreenText($"{"Hopping Type".PadLeft(pad)}: {m_debugHopName}");
 			}
 
+		}
+
+		public void ReduceTimers()
+		{
+			float frame_msec = 1000.0f * Time.Delta;
+
+			m_flDucktime = Math.Max(0, m_flDucktime - frame_msec);
+			m_flDuckJumpTime = Math.Max(0, m_flDuckJumpTime - frame_msec);
+			m_flJumpTime = Math.Max(0, m_flJumpTime - frame_msec);
+		}
+
+		public Vector3 GetPlayerViewOffset(bool ducked)
+		{
+			return Vector3.Up * (ducked ? DuckEyeHeight : EyeHeight);
 		}
 
 		public virtual float GetWishSpeed()
@@ -395,20 +421,30 @@ namespace infinitearcade
 		public virtual void Duck()
 		{
 			bool bInAir = GroundEntity == null;
+			bool bInDuck = Ducked; // FL_DUCKING is tied to Ducked's value
 			bool bDuckJump = m_flJumpTime > 0.0f;
 			bool bDuckJumpTime = m_flDuckJumpTime > 0.0f;
 
-			bool bBindPressed = Input.Down(InputButton.Duck);
+			bool bBindDown = Input.Down(InputButton.Duck);
 			bool bBindReleased = Input.Released(InputButton.Duck);
 
+			// Slow down ducked players.
+			if (bInDuck)
+			{
+				float duckFrac = 0.33333333f;
+				Input.Forward *= duckFrac;
+				Input.Left *= duckFrac;
+				Input.Up *= duckFrac;
+			}
+
 			// If the player is holding down the duck button, the player is in duck transition, ducking, or duck-jumping.
-			if (bBindPressed || Ducking || bDuckJump)
+			if (bBindDown || Ducking || bInDuck || bDuckJump)
 			{
 				// DUCK
-				if (bBindPressed || bDuckJump)
+				if (bBindDown || bDuckJump)
 				{
 					// Have the duck button pressed, but the player currently isn't in the duck position.
-					if (bBindPressed && !Ducking && !bDuckJump && !bDuckJumpTime)
+					if (bBindDown && !Ducking && !bDuckJump && !bDuckJumpTime)
 					{
 						m_flDucktime = GAMEMOVEMENT_DUCK_TIME;
 						Ducking = true;
@@ -421,7 +457,7 @@ namespace infinitearcade
 						float flDuckSeconds = flDuckMilliseconds * 0.001f;
 
 						// Finish in duck transition when transition time is over, in "duck", in air.
-						if (flDuckSeconds > TIME_TO_DUCK || Ducking || bInAir)
+						if (flDuckSeconds > TIME_TO_DUCK || bInDuck || bInAir)
 						{
 							FinishDuck();
 						}
@@ -429,20 +465,21 @@ namespace infinitearcade
 						{
 							// Calc parametric time
 							float flDuckFraction = SimpleSpline(flDuckSeconds / TIME_TO_DUCK);
-							//SetDuckedEyeOffset
+							SetDuckedEyeOffset(flDuckFraction);
 						}
 					}
 
 					if (bDuckJump)
 					{
 						// Make the bounding box small immediately.
-						if (!Ducking)
+						if (!bInDuck)
 						{
 							StartUnDuckJump();
 						}
 						else
 						{
-							if (!bBindPressed)
+							// Check for a crouch override.
+							if (!bBindDown)
 							{
 								TraceResult trace = default(TraceResult);
 								if (CanUnDuckJump(ref trace))
@@ -457,16 +494,21 @@ namespace infinitearcade
 				// UNDUCK (or attempt to...)
 				else
 				{
-					if (!bBindPressed)
+					if (InDuckJump)
 					{
-						TraceResult trace = default(TraceResult);
-						if (CanUnDuckJump(ref trace))
+						if (!bBindDown)
 						{
-							FinishUnDuckJump(ref trace);
+							TraceResult trace = default(TraceResult);
+							if (CanUnDuckJump(ref trace))
+							{
+								FinishUnDuckJump(ref trace);
 
-							if (trace.Fraction < 1.0f)
-								m_flDuckJumpTime = (GAMEMOVEMENT_TIME_TO_UNDUCK * (1.0f - trace.Fraction)) + GAMEMOVEMENT_TIME_TO_UNDUCK_INV;
+								if (trace.Fraction < 1.0f)
+									m_flDuckJumpTime = (GAMEMOVEMENT_TIME_TO_UNDUCK * (1.0f - trace.Fraction)) + GAMEMOVEMENT_TIME_TO_UNDUCK_INV;
+							}
 						}
+						else
+							InDuckJump = false;
 					}
 
 					if (bDuckJumpTime)
@@ -476,7 +518,7 @@ namespace infinitearcade
 					{
 						if (bBindReleased)
 						{
-							if (Ducking && !bDuckJump)
+							if (bInDuck && !bDuckJump)
 							{
 								m_flDucktime = GAMEMOVEMENT_DUCK_TIME;
 							}
@@ -510,7 +552,7 @@ namespace infinitearcade
 							{
 								// Calc parametric time
 								float flDuckFraction = SimpleSpline(1.0f - (flDuckSeconds / TIME_TO_UNDUCK));
-								//SetDuckedEyeOffset(flDuckFraction);
+								SetDuckedEyeOffset(flDuckFraction);
 								Ducking = true;
 							}
 						}
@@ -521,43 +563,207 @@ namespace infinitearcade
 						//  that we'll unduck once we exit the tunnel, etc.
 						if (m_flDucktime != GAMEMOVEMENT_DUCK_TIME)
 						{
-							//SetDuckedEyeOffset(1.0f);
+							SetDuckedEyeOffset(1.0f);
+							m_flDucktime = GAMEMOVEMENT_DUCK_TIME;
 							Ducked = true;
 							Ducking = false;
 						}
 					}
 				}
 			}
+
+			if (Ducked || m_flDucktime != 0)
+				m_player.Controller.SetTag("ducked");
 		}
 
 		public virtual void FinishDuck()
 		{
+			if (Ducked)
+				return;
 
+			Ducked = true;
+			Ducking = false;
+
+			EyePosLocal = GetPlayerViewOffset(true) * Pawn.Scale;
+
+			// HACKHACK - Fudge for collision bug - no time to fix this properly
+			if (GroundEntity != null)
+			{
+				Position -= (m_hullDucked.Mins - m_hullNormal.Mins);
+			}
+			else
+			{
+				Vector3 hullSizeNormal = m_hullNormal.Maxs - m_hullNormal.Mins;
+				Vector3 hullSizeCrouch = m_hullDucked.Maxs - m_hullDucked.Mins;
+				Vector3 viewDelta = (hullSizeNormal - hullSizeCrouch);
+				Position += viewDelta;
+			}
+
+			// Valve do a stuck fix here
+
+			// Recategorize position since ducking can change origin
+			CategorizePosition();
 		}
 
 		public virtual bool CanUnduck()
 		{
+			Vector3 newOrigin = Position;
+
+			if (GroundEntity != null)
+			{
+				newOrigin += (m_hullDucked.Mins - m_hullNormal.Mins);
+			}
+			else
+			{
+				// If in air an letting go of crouch, make sure we can offset origin to make
+				//  up for uncrouching
+				Vector3 hullSizeNormal = m_hullNormal.Maxs - m_hullNormal.Mins;
+				Vector3 hullSizeCrouch = m_hullDucked.Maxs - m_hullDucked.Mins;
+				Vector3 viewDelta = (hullSizeNormal - hullSizeCrouch);
+				newOrigin -= viewDelta;
+			}
+
+			bool wasDucked = Ducked;
+			Ducked = false;
+			TraceResult tr = TraceBBox(Position, newOrigin);
+			Ducked = wasDucked;
+			if (tr.StartedSolid || tr.Fraction != 1.0f)
+				return false;
+
 			return true;
 		}
 
 		public virtual void FinishUnDuck()
 		{
+			Vector3 newOrigin = Position;
 
+			if (GroundEntity != null)
+			{
+				newOrigin += (m_hullDucked.Mins - m_hullNormal.Mins);
+			}
+			else
+			{
+				// If in air an letting go of crouch, make sure we can offset origin to make
+				//  up for uncrouching
+				Vector3 hullSizeNormal = m_hullNormal.Maxs - m_hullNormal.Mins;
+				Vector3 hullSizeCrouch = m_hullDucked.Maxs - m_hullDucked.Mins;
+				Vector3 viewDelta = (hullSizeNormal - hullSizeCrouch);
+				newOrigin -= viewDelta;
+			}
+
+			Ducked = false;
+			Ducking = false;
+			InDuckJump = false;
+			EyePosLocal = GetPlayerViewOffset(false) * Pawn.Scale;
+			m_flDucktime = 0;
+
+			Position = newOrigin;
+
+			// Recategorize position since ducking can change origin
+			CategorizePosition();
 		}
 
 		public virtual void StartUnDuckJump()
 		{
+			Ducked = true;
+			Ducking = false;
 
+			EyePosLocal = GetPlayerViewOffset(true) * Pawn.Scale;
+
+			Vector3 hullSizeNormal = m_hullNormal.Maxs - m_hullNormal.Mins;
+			Vector3 hullSizeCrouch = m_hullDucked.Maxs - m_hullDucked.Mins;
+			Vector3 viewDelta = (hullSizeNormal - hullSizeCrouch);
+			Position += viewDelta;
+
+			// Recategorize position since ducking can change origin
+			CategorizePosition();
 		}
 
 		public virtual bool CanUnDuckJump(ref TraceResult trace)
 		{
+			// block: this is the magical thing that causes snapping to surfaces
+			// in at least HL2, if maxplayers = 1, all jumps are considered as crouch jumps
+			// because of this, when the jump finishes, it will try to snap to the nearest surface to finish the duck jump
+			// a trace is made
+
+			Vector3 vecEnd = Position.WithZ(Position.z - DuckHullHeight);
+			trace = TraceBBox(Position, vecEnd);
+			if (trace.Fraction < 1.0f)
+			{
+				vecEnd.z = Position.z + (-DuckHullHeight * trace.Fraction);
+
+				bool wasDucked = Ducked;
+				Ducked = false;
+				TraceResult tr = TraceBBox(vecEnd, vecEnd);
+				Ducked = wasDucked;
+				if (tr.StartedSolid)
+					return true;
+			}
+
 			return false;
 		}
 
 		public virtual void FinishUnDuckJump(ref TraceResult trace)
 		{
+			Vector3 hullSizeNormal = m_hullNormal.Maxs - m_hullNormal.Mins;
+			Vector3 hullSizeCrouch = m_hullDucked.Maxs - m_hullDucked.Mins;
+			Vector3 viewDelta = (hullSizeNormal - hullSizeCrouch);
 
+			float flDeltaZ = viewDelta.z;
+			viewDelta.z *= trace.Fraction;
+			flDeltaZ -= viewDelta.z;
+
+			Ducked = false;
+			Ducking = false;
+			InDuckJump = false;
+			m_flDucktime = 0;
+			m_flDuckJumpTime = 0;
+			m_flJumpTime = 0;
+
+			EyePosLocal = EyePosLocal.WithZ(EyePosLocal.z - flDeltaZ) * Pawn.Scale;
+			Position -= viewDelta;
+
+			// block: this is where that snapping to a surface after jumping thing comes from
+			// check CanUnDuckJump for more info
+
+			// Recategorize position since ducking can change origin
+			CategorizePosition();
+		}
+
+		public void UpdateDuckJumpEyeOffset()
+		{
+			if (m_flDuckJumpTime != 0)
+			{
+				float flDuckMilliseconds = Math.Max(0.0f, GAMEMOVEMENT_DUCK_TIME - m_flDuckJumpTime);
+				float flDuckSeconds = flDuckMilliseconds / GAMEMOVEMENT_DUCK_TIME;
+
+				// Finish in duck transition when transition time is over, in "duck", in air.
+				if (flDuckSeconds > TIME_TO_UNDUCK)
+				{
+					m_flDuckJumpTime = 0;
+					SetDuckedEyeOffset(0);
+				}
+				else
+				{
+					float flDuckFraction = SimpleSpline(1.0f - (flDuckSeconds / TIME_TO_UNDUCK));
+					SetDuckedEyeOffset(flDuckFraction);
+				}
+			}
+		}
+
+		public void SetDuckedEyeOffset(float duckFraction)
+		{
+			Vector3 vDuckHullMin = GetHull(true).Mins;
+			Vector3 vStandHullMin = GetHull(false).Mins;
+
+			float fMore = (vDuckHullMin.z - vStandHullMin.z);
+
+			Vector3 vecDuckViewOffset = GetPlayerViewOffset(true);
+			Vector3 vecStandViewOffset = GetPlayerViewOffset(false);
+			Vector3 temp = EyePosLocal;
+			temp.z = ((vecDuckViewOffset.z - fMore) * duckFraction) +
+				(vecStandViewOffset.z * (1 - duckFraction));
+			EyePosLocal = temp * Pawn.Scale;
 		}
 
 		/// <summary>
@@ -799,6 +1005,10 @@ namespace infinitearcade
 			// mv->m_outJumpVel.z += mv->m_vecVelocity[2] - startz;
 			// mv->m_outStepHeight += 0.15f;
 
+			// HL2 does this when maxplayers = 1
+			//m_flJumpTime = GAMEMOVEMENT_JUMP_TIME;
+			//InDuckJump = true;
+
 			// don't jump again until released
 			//mv->m_nOldButtons |= IN_JUMP;
 
@@ -994,6 +1204,13 @@ namespace infinitearcade
 		/// </summary>
 		public override TraceResult TraceBBox(Vector3 start, Vector3 end, float liftFeet = 0.0f)
 		{
+			/*if (Debug && Host.IsServer)
+			{
+				Vector3 center = start - end;
+				DebugOverlay.Box(start, GetHull().Mins, GetHull().Maxs, Color.Cyan);
+				DebugOverlay.Box(end, GetHull().Mins, GetHull().Maxs, Color.Cyan);
+			}*/
+
 			return TraceBBox(start, end, GetHull().Mins, GetHull().Maxs, liftFeet);
 		}
 
