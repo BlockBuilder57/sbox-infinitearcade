@@ -10,6 +10,14 @@ namespace infinitearcade
 	[Library]
 	public partial class QPhysController : BasePlayerController
 	{
+		private const float TIME_TO_DUCK = 0.4f; // 0.2f in TF2 apparently
+		private const float TIME_TO_UNDUCK = 0.2f;
+		private const float GAMEMOVEMENT_DUCK_TIME = 1000.0f; // ms
+		private const float GAMEMOVEMENT_JUMP_TIME = 510.0f; // ms approx - based on the 21 unit height jump
+		private const float GAMEMOVEMENT_JUMP_HEIGHT = 21.0f; // units
+		private const float GAMEMOVEMENT_TIME_TO_UNDUCK = (TIME_TO_UNDUCK * 1000.0f); // ms
+		private const float GAMEMOVEMENT_TIME_TO_UNDUCK_INV = (GAMEMOVEMENT_DUCK_TIME - GAMEMOVEMENT_TIME_TO_UNDUCK);
+
 		[Net] public float SprintSpeed { get; set; } = 320.0f;
 		[Net] public float WalkSpeed { get; set; } = 150.0f;
 		[Net] public float DefaultSpeed { get; set; } = 190.0f;
@@ -24,12 +32,17 @@ namespace infinitearcade
 		[Net] public float MoveFriction { get; set; } = 1.0f;
 		[Net] public float StepSize { get; set; } = 18.0f;
 		[Net] public float MaxNonJumpVelocity { get; set; } = 140.0f;
-		[Net] public float BodyGirth { get; set; } = 32.0f;
-		[Net] public float BodyHeight { get; set; } = 72.0f;
-		[Net] public float EyeHeight { get; set; } = 64.0f;
 		[Net] public float Gravity { get; set; } = 800.0f;
 		[Net] public float AirControl { get; set; } = 30.0f;
 		public bool Swimming { get; set; } = false;
+
+		[Net] public float HullGirth { get; set; } = 32.0f;
+		[Net] public float HullHeight { get; set; } = 72.0f;
+		[Net] public float DuckHullHeight { get; set; } = 36.0f;
+		[Net] public float EyeHeight { get; set; } = 64.0f;
+		[Net] public float DuckEyeHeight { get; set; } = 28.0f;
+		private BBox m_hullStanding;
+		private BBox m_hullCrouched;
 
 		public bool Ducking { get; set; } = false;
 		public bool Ducked { get; set; } = false;
@@ -39,13 +52,6 @@ namespace infinitearcade
 
 		public Unstuck Unstuck;
 
-		private const float TIME_TO_DUCK = 0.4f; // 0.2f in TF2 apparently
-		private const float TIME_TO_UNDUCK = 0.2f;
-		private const float GAMEMOVEMENT_DUCK_TIME = 1000.0f; // ms
-		private const float GAMEMOVEMENT_JUMP_TIME = 510.0f; // ms approx - based on the 21 unit height jump
-		private const float GAMEMOVEMENT_JUMP_HEIGHT = 21.0f; // units
-		private const float GAMEMOVEMENT_TIME_TO_UNDUCK = (TIME_TO_UNDUCK * 1000.0f); // ms
-		private const float GAMEMOVEMENT_TIME_TO_UNDUCK_INV = (GAMEMOVEMENT_DUCK_TIME - GAMEMOVEMENT_TIME_TO_UNDUCK);
 
 		private ArcadePlayer m_player;
 		private string m_debugHopName;
@@ -60,50 +66,24 @@ namespace infinitearcade
 		public QPhysController()
 		{
 			Unstuck = new Unstuck(this);
+
+			var halfGirth = HullGirth / 2f;
+			var mins = new Vector3(-halfGirth, -halfGirth, 0);
+			var maxs = new Vector3(+halfGirth, +halfGirth, HullHeight);
+			var maxsDucked = new Vector3(+halfGirth, +halfGirth, DuckHullHeight);
+
+			m_hullStanding = new BBox(mins, maxs);
+			m_hullCrouched = new BBox(mins, maxsDucked);
 		}
 
-		/// <summary>
-		/// This is temporary, get the hull size for the player's collision
-		/// </summary>
+		public BBox GetHull(bool ducked)
+		{
+			return ducked ? m_hullCrouched : m_hullStanding;
+		}
+
 		public override BBox GetHull()
 		{
-			var girth = BodyGirth * 0.5f;
-			var mins = new Vector3(-girth, -girth, 0);
-			var maxs = new Vector3(+girth, +girth, BodyHeight);
-
-			return new BBox(mins, maxs);
-		}
-
-
-		// Duck body height 32
-		// Eye Height 64
-		// Duck Eye Height 28
-
-		protected Vector3 mins;
-		protected Vector3 maxs;
-
-		public virtual void SetBBox(Vector3 mins, Vector3 maxs)
-		{
-			if (this.mins == mins && this.maxs == maxs)
-				return;
-
-			this.mins = mins;
-			this.maxs = maxs;
-		}
-
-		/// <summary>
-		/// Update the size of the bbox. We should really trigger some shit if this changes.
-		/// </summary>
-		public virtual void UpdateBBox()
-		{
-			var girth = BodyGirth * 0.5f;
-
-			var mins = new Vector3(-girth, -girth, 0) * Pawn.Scale;
-			var maxs = new Vector3(+girth, +girth, BodyHeight) * Pawn.Scale;
-
-			//Duck.UpdateBBox(ref mins, ref maxs, Pawn.Scale);
-
-			SetBBox(mins, maxs);
+			return GetHull(Ducked);
 		}
 
 		public virtual void StartGravity()
@@ -155,7 +135,6 @@ namespace infinitearcade
 			Gravity = float.Parse(ConsoleSystem.GetValue("sv_gravity"));
 
 			EyePosLocal = Vector3.Up * (EyeHeight * Pawn.Scale);
-			UpdateBBox();
 
 			EyePosLocal += TraceOffset;
 			EyeRot = Input.Rotation;
@@ -294,8 +273,8 @@ namespace infinitearcade
 			const int pad = 16;
 			if (Debug && Host.IsServer)
 			{
-				DebugOverlay.Box(Position + TraceOffset, mins, maxs, Color.Red);
-				DebugOverlay.Box(Position, mins, maxs, Color.Blue);
+				DebugOverlay.Box(Position + TraceOffset, GetHull().Mins, GetHull().Maxs, Color.Red);
+				DebugOverlay.Box(Position, GetHull().Mins, GetHull().Maxs, Color.Blue);
 
 				if (m_player.Camera is not FirstPersonCamera)
 				{
@@ -388,7 +367,7 @@ namespace infinitearcade
 		public virtual void StepMove()
 		{
 			MoveHelper mover = new MoveHelper(Position, Velocity);
-			mover.Trace = mover.Trace.Size(mins, maxs).Ignore(Pawn);
+			mover.Trace = mover.Trace.Size(GetHull().Mins, GetHull().Maxs).Ignore(Pawn);
 			mover.MaxStandableAngle = GroundAngle;
 
 			// block: this is essentially a minified version of CGameMovement::TryPlayerMove
@@ -404,7 +383,7 @@ namespace infinitearcade
 		public virtual void Move()
 		{
 			MoveHelper mover = new MoveHelper(Position, Velocity);
-			mover.Trace = mover.Trace.Size(mins, maxs).Ignore(Pawn);
+			mover.Trace = mover.Trace.Size(GetHull().Mins, GetHull().Maxs).Ignore(Pawn);
 			mover.MaxStandableAngle = GroundAngle;
 
 			mover.TryMove(Time.Delta);
@@ -888,7 +867,7 @@ namespace infinitearcade
 			Vector3 end = start + (m_isTouchingLadder ? (m_ladderNormal * -1.0f) : wishvel) * ladderDistance;
 
 			var pm = Trace.Ray(start, end)
-						.Size(mins, maxs)
+						.Size(GetHull().Mins, GetHull().Maxs)
 						.HitLayer(CollisionLayer.All, false)
 						.HitLayer(CollisionLayer.LADDER, true)
 						.Ignore(Pawn)
@@ -1015,7 +994,7 @@ namespace infinitearcade
 		/// </summary>
 		public override TraceResult TraceBBox(Vector3 start, Vector3 end, float liftFeet = 0.0f)
 		{
-			return TraceBBox(start, end, mins, maxs, liftFeet);
+			return TraceBBox(start, end, GetHull().Mins, GetHull().Maxs, liftFeet);
 		}
 
 		/// <summary>
