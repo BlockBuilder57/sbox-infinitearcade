@@ -104,30 +104,30 @@ namespace infinitearcade
 		{
 			// Move Speed
 			{
-				var dir = Velocity;
+				var dir = Velocity * 1/Pawn.Scale;
 				var forward = Rotation.Forward.Dot(dir);
 				var sideward = Rotation.Right.Dot(dir);
 
 				var angle = MathF.Atan2(sideward, forward).RadianToDegree().NormalizeDegrees();
 
 				SetParam("move_direction", angle);
-				SetParam("move_speed", Velocity.Length);
-				SetParam("move_groundspeed", Velocity.WithZ(0).Length);
+				SetParam("move_speed", dir.Length);
+				SetParam("move_groundspeed", dir.WithZ(0).Length);
 				SetParam("move_y", sideward);
 				SetParam("move_x", forward);
 			}
 
 			// Wish Speed
 			{
-				var dir = WishVelocity;
+				var dir = WishVelocity * 1/Pawn.Scale;
 				var forward = Rotation.Forward.Dot(dir);
 				var sideward = Rotation.Right.Dot(dir);
 
 				var angle = MathF.Atan2(sideward, forward).RadianToDegree().NormalizeDegrees();
 
 				SetParam("wish_direction", angle);
-				SetParam("wish_speed", WishVelocity.Length);
-				SetParam("wish_groundspeed", WishVelocity.WithZ(0).Length);
+				SetParam("wish_speed", dir.Length);
+				SetParam("wish_groundspeed", dir.WithZ(0).Length);
 				SetParam("wish_y", sideward);
 				SetParam("wish_x", forward);
 			}

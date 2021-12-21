@@ -13,6 +13,9 @@ namespace infinitearcade
 	{
 		public InfiniteArcadeGame()
 		{
+			// dunno why this isn't default, but
+			Global.TickRate = 66;
+
 			if (IsServer)
 			{
 				// serverside gubbins

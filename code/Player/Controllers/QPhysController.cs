@@ -18,7 +18,6 @@ namespace infinitearcade
 		[Net] public float FallSoundZ { get; set; } = -30.0f;
 		[Net] public float GroundFriction { get; set; } = 4.0f;
 		[Net] public float StopSpeed { get; set; } = 100.0f;
-		[Net] public float Size { get; set; } = 20.0f;
 		[Net] public float DistEpsilon { get; set; } = 0.03125f;
 		[Net] public float GroundAngle { get; set; } = 46.0f;
 		[Net] public float Bounce { get; set; } = 0.0f;
@@ -32,7 +31,21 @@ namespace infinitearcade
 		[Net] public float AirControl { get; set; } = 30.0f;
 		public bool Swimming { get; set; } = false;
 
+		public bool Ducking { get; set; } = false;
+		public bool Ducked { get; set; } = false;
+		private float m_flDucktime = 0.0f;
+		private float m_flJumpTime = 0.0f;
+		private float m_flDuckJumpTime = 0.0f;
+
 		public Unstuck Unstuck;
+
+		private const float TIME_TO_DUCK = 0.4f; // 0.2f in TF2 apparently
+		private const float TIME_TO_UNDUCK = 0.2f;
+		private const float GAMEMOVEMENT_DUCK_TIME = 1000.0f; // ms
+		private const float GAMEMOVEMENT_JUMP_TIME = 510.0f; // ms approx - based on the 21 unit height jump
+		private const float GAMEMOVEMENT_JUMP_HEIGHT = 21.0f; // units
+		private const float GAMEMOVEMENT_TIME_TO_UNDUCK = (TIME_TO_UNDUCK * 1000.0f); // ms
+		private const float GAMEMOVEMENT_TIME_TO_UNDUCK_INV = (GAMEMOVEMENT_DUCK_TIME - GAMEMOVEMENT_TIME_TO_UNDUCK);
 
 		private ArcadePlayer m_player;
 		private string m_debugHopName;
@@ -147,8 +160,6 @@ namespace infinitearcade
 			EyePosLocal += TraceOffset;
 			EyeRot = Input.Rotation;
 
-			RestoreGroundPos();
-
 			//Velocity += BaseVelocity * ( 1 + Time.Delta * 0.5f );
 			//BaseVelocity = Vector3.Zero;
 
@@ -169,6 +180,9 @@ namespace infinitearcade
 
 			//player->UpdateStepSound( player->m_pSurfaceData, mv->GetAbsOrigin(), mv->m_vecVelocity )
 
+			//UpdateDuckJumpEyeOffset();
+			Duck();
+
 			//
 			// block: here on out is CGameMovement::FulLWalkMove
 			//
@@ -181,7 +195,7 @@ namespace infinitearcade
 			//
 			// Start Gravity
 			//
-			if (!Swimming && !IsTouchingLadder)
+			if (!Swimming && !m_isTouchingLadder)
 			{
 				StartGravity();
 			}
@@ -225,7 +239,7 @@ namespace infinitearcade
 			var inSpeed = WishVelocity.Length.Clamp(0, 1);
 			WishVelocity *= Input.Rotation.Angles().WithPitch(0).ToRotation();
 
-			if (!Swimming && !IsTouchingLadder)
+			if (!Swimming && !m_isTouchingLadder)
 			{
 				WishVelocity = WishVelocity.WithZ(0);
 			}
@@ -235,19 +249,17 @@ namespace infinitearcade
 
 			//Duck.PreTick();
 
-			bool bStayOnGround = false;
 			if (Swimming)
 			{
 				Friction();
 				WaterMove();
 			}
-			else if (IsTouchingLadder)
+			else if (m_isTouchingLadder)
 			{
 				LadderMove();
 			}
 			else if (GroundEntity != null)
 			{
-				bStayOnGround = true;
 				WalkMove();
 			}
 			else
@@ -255,10 +267,10 @@ namespace infinitearcade
 				AirMove();
 			}
 
-			CategorizePosition(bStayOnGround);
+			CategorizePosition();
 
 			// FinishGravity
-			if (!Swimming && !IsTouchingLadder)
+			if (!Swimming && !m_isTouchingLadder)
 			{
 				FinishGravity();
 			}
@@ -273,8 +285,6 @@ namespace infinitearcade
 
 			// Land Sound
 			// Swim Sounds
-
-			SaveGroundPos();
 
 			if (VR.Enabled)
 			{
@@ -310,13 +320,14 @@ namespace infinitearcade
 
 		public virtual float GetWishSpeed()
 		{
-			var ws = -1;
+			float ws = -1;
 			if (ws >= 0) return ws;
 
-			if (Input.Down(InputButton.Run)) return SprintSpeed;
-			if (Input.Down(InputButton.Walk)) return WalkSpeed;
+			if (Input.Down(InputButton.Run)) ws = SprintSpeed;
+			else if (Input.Down(InputButton.Walk)) ws = WalkSpeed;
+			else ws = DefaultSpeed;
 
-			return DefaultSpeed;
+			return ws * Pawn.Scale;
 		}
 
 		public virtual void WalkMove()
@@ -380,7 +391,11 @@ namespace infinitearcade
 			mover.Trace = mover.Trace.Size(mins, maxs).Ignore(Pawn);
 			mover.MaxStandableAngle = GroundAngle;
 
-			mover.TryMoveWithStep(Time.Delta, StepSize);
+			// block: this is essentially a minified version of CGameMovement::TryPlayerMove
+			// a lot of the functionality is split into other parts of this class (MoveHelper)
+			// it simplifies a lot of it down, but it all does look correct
+			// the only thing that seems to be missing is the ability to slam into a wall at the end
+			mover.TryMoveWithStep(Time.Delta, StepSize + 0.03125f);
 
 			Position = mover.Position;
 			Velocity = mover.Velocity;
@@ -396,6 +411,174 @@ namespace infinitearcade
 
 			Position = mover.Position;
 			Velocity = mover.Velocity;
+		}
+
+		public virtual void Duck()
+		{
+			bool bInAir = GroundEntity == null;
+			bool bDuckJump = m_flJumpTime > 0.0f;
+			bool bDuckJumpTime = m_flDuckJumpTime > 0.0f;
+
+			bool bBindPressed = Input.Down(InputButton.Duck);
+			bool bBindReleased = Input.Released(InputButton.Duck);
+
+			// If the player is holding down the duck button, the player is in duck transition, ducking, or duck-jumping.
+			if (bBindPressed || Ducking || bDuckJump)
+			{
+				// DUCK
+				if (bBindPressed || bDuckJump)
+				{
+					// Have the duck button pressed, but the player currently isn't in the duck position.
+					if (bBindPressed && !Ducking && !bDuckJump && !bDuckJumpTime)
+					{
+						m_flDucktime = GAMEMOVEMENT_DUCK_TIME;
+						Ducking = true;
+					}
+
+					// The player is in duck transition and not duck-jumping.
+					if (Ducking && !bDuckJump && !bDuckJumpTime)
+					{
+						float flDuckMilliseconds = Math.Max(0.0f, GAMEMOVEMENT_DUCK_TIME - m_flDucktime);
+						float flDuckSeconds = flDuckMilliseconds * 0.001f;
+
+						// Finish in duck transition when transition time is over, in "duck", in air.
+						if (flDuckSeconds > TIME_TO_DUCK || Ducking || bInAir)
+						{
+							FinishDuck();
+						}
+						else
+						{
+							// Calc parametric time
+							float flDuckFraction = SimpleSpline(flDuckSeconds / TIME_TO_DUCK);
+							//SetDuckedEyeOffset
+						}
+					}
+
+					if (bDuckJump)
+					{
+						// Make the bounding box small immediately.
+						if (!Ducking)
+						{
+							StartUnDuckJump();
+						}
+						else
+						{
+							if (!bBindPressed)
+							{
+								TraceResult trace = default(TraceResult);
+								if (CanUnDuckJump(ref trace))
+								{
+									FinishUnDuckJump(ref trace);
+									m_flDuckJumpTime = (GAMEMOVEMENT_TIME_TO_UNDUCK * (1.0f - trace.Fraction)) + GAMEMOVEMENT_TIME_TO_UNDUCK_INV;
+								}
+							}
+						}
+					}
+				}
+				// UNDUCK (or attempt to...)
+				else
+				{
+					if (!bBindPressed)
+					{
+						TraceResult trace = default(TraceResult);
+						if (CanUnDuckJump(ref trace))
+						{
+							FinishUnDuckJump(ref trace);
+
+							if (trace.Fraction < 1.0f)
+								m_flDuckJumpTime = (GAMEMOVEMENT_TIME_TO_UNDUCK * (1.0f - trace.Fraction)) + GAMEMOVEMENT_TIME_TO_UNDUCK_INV;
+						}
+					}
+
+					if (bDuckJumpTime)
+						return;
+
+					if (bInAir || Ducking)
+					{
+						if (bBindReleased)
+						{
+							if (Ducking && !bDuckJump)
+							{
+								m_flDucktime = GAMEMOVEMENT_DUCK_TIME;
+							}
+							else if (Ducking && !Ducked)
+							{
+								// Invert time if release before fully ducked!!!
+								float unduckMilliseconds = 1000.0f * TIME_TO_UNDUCK;
+								float duckMilliseconds = 1000.0f * TIME_TO_DUCK;
+								float elapsedMilliseconds = GAMEMOVEMENT_DUCK_TIME - m_flDucktime;
+
+								float fracDucked = elapsedMilliseconds / duckMilliseconds;
+								float remainingUnduckMilliseconds = fracDucked * unduckMilliseconds;
+
+								m_flDucktime = GAMEMOVEMENT_DUCK_TIME - unduckMilliseconds + remainingUnduckMilliseconds;
+							}
+						}
+					}
+
+					if (CanUnduck())
+					{
+						if (Ducking || Ducked)
+						{
+							float flDuckMilliseconds = Math.Max(0.0f, GAMEMOVEMENT_DUCK_TIME - m_flDucktime);
+							float flDuckSeconds = flDuckMilliseconds * 0.001f;
+
+							if (flDuckSeconds > TIME_TO_UNDUCK || (bInAir && !bDuckJump))
+							{
+								FinishUnDuck();
+							}
+							else
+							{
+								// Calc parametric time
+								float flDuckFraction = SimpleSpline(1.0f - (flDuckSeconds / TIME_TO_UNDUCK));
+								//SetDuckedEyeOffset(flDuckFraction);
+								Ducking = true;
+							}
+						}
+					}
+					else
+					{
+						// Still under something where we can't unduck, so make sure we reset this timer so
+						//  that we'll unduck once we exit the tunnel, etc.
+						if (m_flDucktime != GAMEMOVEMENT_DUCK_TIME)
+						{
+							//SetDuckedEyeOffset(1.0f);
+							Ducked = true;
+							Ducking = false;
+						}
+					}
+				}
+			}
+		}
+
+		public virtual void FinishDuck()
+		{
+
+		}
+
+		public virtual bool CanUnduck()
+		{
+			return true;
+		}
+
+		public virtual void FinishUnDuck()
+		{
+
+		}
+
+		public virtual void StartUnDuckJump()
+		{
+
+		}
+
+		public virtual bool CanUnDuckJump(ref TraceResult trace)
+		{
+			return false;
+		}
+
+		public virtual void FinishUnDuckJump(ref TraceResult trace)
+		{
+
 		}
 
 		/// <summary>
@@ -424,6 +607,9 @@ namespace infinitearcade
 			// Determine amount of acceleration.
 			var accelspeed = acceleration * Time.Delta * wishspeed * SurfaceFriction;
 
+			// account for pawn size
+			accelspeed *= 1f / Pawn.Scale;
+
 			// Cap at addspeed
 			if (accelspeed > addspeed)
 				accelspeed = addspeed;
@@ -445,7 +631,7 @@ namespace infinitearcade
 
 			// Calculate speed
 			float speed = Velocity.Length;
-			if (speed < 0.1f) return;
+			//if (speed < 0.1f) return;
 
 			float drop = 0;
 
@@ -564,9 +750,9 @@ namespace infinitearcade
 
 			float startz = Velocity.z;
 
-			//if (Duck.IsActive)
-				//Velocity = Velocity.WithZ(flGroundFactor * flMul);
-			//else
+			if (Ducked)
+				Velocity = Velocity.WithZ(flGroundFactor * flMul);
+			else
 				Velocity = Velocity.WithZ(startz + (flGroundFactor * flMul));
 
 			// ahopping and bhopping
@@ -629,7 +815,7 @@ namespace infinitearcade
 					m_debugHopType = HopType.None;
 			}
 
-			Velocity -= new Vector3(0, 0, Gravity * 0.5f) * Time.Delta;
+			FinishGravity();
 
 			// mv->m_outJumpVel.z += mv->m_vecVelocity[2] - startz;
 			// mv->m_outStepHeight += 0.15f;
@@ -671,28 +857,27 @@ namespace infinitearcade
 			Velocity -= BaseVelocity;
 		}
 
-		bool IsTouchingLadder = false;
-		Vector3 LadderNormal;
-
+		bool m_isTouchingLadder = false;
+		Vector3 m_ladderNormal;
 		public virtual void CheckLadder()
 		{
 			var wishvel = new Vector3(Input.Forward, Input.Left, 0);
 			wishvel *= Input.Rotation.Angles().WithPitch(0).ToRotation();
 			wishvel = wishvel.Normal;
 
-			if (IsTouchingLadder)
+			if (m_isTouchingLadder)
 			{
 				if (Input.Pressed(InputButton.Jump))
 				{
-					Velocity = LadderNormal * 100.0f;
-					IsTouchingLadder = false;
+					Velocity = m_ladderNormal * 100.0f;
+					m_isTouchingLadder = false;
 
 					return;
 
 				}
-				else if (GroundEntity != null && LadderNormal.Dot(wishvel) > 0)
+				else if (GroundEntity != null && m_ladderNormal.Dot(wishvel) > 0)
 				{
-					IsTouchingLadder = false;
+					m_isTouchingLadder = false;
 
 					return;
 				}
@@ -700,7 +885,7 @@ namespace infinitearcade
 
 			const float ladderDistance = 1.0f;
 			var start = Position;
-			Vector3 end = start + (IsTouchingLadder ? (LadderNormal * -1.0f) : wishvel) * ladderDistance;
+			Vector3 end = start + (m_isTouchingLadder ? (m_ladderNormal * -1.0f) : wishvel) * ladderDistance;
 
 			var pm = Trace.Ray(start, end)
 						.Size(mins, maxs)
@@ -709,27 +894,27 @@ namespace infinitearcade
 						.Ignore(Pawn)
 						.Run();
 
-			IsTouchingLadder = false;
+			m_isTouchingLadder = false;
 
 			if (pm.Hit && !(pm.Entity is ModelEntity me && me.CollisionGroup == CollisionGroup.Always))
 			{
-				IsTouchingLadder = true;
-				LadderNormal = pm.Normal;
+				m_isTouchingLadder = true;
+				m_ladderNormal = pm.Normal;
 			}
 		}
 
 		public virtual void LadderMove()
 		{
 			var velocity = WishVelocity;
-			float normalDot = velocity.Dot(LadderNormal);
-			var cross = LadderNormal * normalDot;
-			Velocity = (velocity - cross) + (-normalDot * LadderNormal.Cross(Vector3.Up.Cross(LadderNormal).Normal));
+			float normalDot = velocity.Dot(m_ladderNormal);
+			var cross = m_ladderNormal * normalDot;
+			Velocity = (velocity - cross) + (-normalDot * m_ladderNormal.Cross(Vector3.Up.Cross(m_ladderNormal).Normal));
 
 			Move();
 		}
 
 
-		public virtual void CategorizePosition(bool bStayOnGround)
+		public virtual void CategorizePosition()
 		{
 			SurfaceFriction = 1.0f;
 
@@ -740,27 +925,11 @@ namespace infinitearcade
 			// water on each call, and the converse case will correct itself if called twice.
 			//CheckWater();
 
-			var point = Position - Vector3.Up * 2;
-			var vBumpOrigin = Position;
+			var point = Position.WithZ(Position.z - 2.0f);
+			var bumpOrigin = Position;
 
-			//
-			//  Shooting up really fast.  Definitely not on ground trimed until ladder shit
-			//
-			bool bMovingUpRapidly = Velocity.z > MaxNonJumpVelocity;
 			bool bMovingUp = Velocity.z > 0;
-
-			bool bMoveToEndPos = false;
-
-			if (GroundEntity != null) // and not underwater
-			{
-				bMoveToEndPos = true;
-				point.z -= StepSize;
-			}
-			else if (bStayOnGround)
-			{
-				bMoveToEndPos = true;
-				point.z -= StepSize;
-			}
+			bool bMovingUpRapidly = Velocity.z > MaxNonJumpVelocity;
 
 			if (bMovingUpRapidly || Swimming) // or ladder and moving up
 			{
@@ -768,12 +937,11 @@ namespace infinitearcade
 				return;
 			}
 
-			var pm = TraceBBox(vBumpOrigin, point, 4.0f);
+			var pm = TraceBBox(bumpOrigin, point);
 
 			if (pm.Entity == null || Vector3.GetAngle(Vector3.Up, pm.Normal) > GroundAngle)
 			{
 				ClearGroundEntity();
-				bMoveToEndPos = false;
 
 				if (Velocity.z > 0)
 					SurfaceFriction = 0.25f;
@@ -783,7 +951,7 @@ namespace infinitearcade
 				UpdateGroundEntity(pm);
 			}
 
-			if (bMoveToEndPos && !pm.StartedSolid && pm.Fraction > 0.0f && pm.Fraction < 1.0f)
+			if (!pm.StartedSolid && pm.Fraction > 0.0f && pm.Fraction < 1.0f)
 			{
 				Position = pm.EndPos;
 			}
@@ -797,12 +965,6 @@ namespace infinitearcade
 		{
 			GroundNormal = tr.Normal;
 
-			// VALVE HACKHACK: Scale this to fudge the relationship between vphysics friction values and player friction values.
-			// A value of 0.8f feels pretty normal for vphysics, whereas 1.0f is normal for players.
-			// This scaling trivially makes them equivalent.  REVISIT if this affects low friction surfaces too much.
-			SurfaceFriction = tr.Surface.Friction * 1.25f;
-			if (SurfaceFriction > 1) SurfaceFriction = 1;
-
 			//if ( tr.Entity == GroundEntity ) return;
 
 			Vector3 oldGroundVelocity = default;
@@ -815,6 +977,12 @@ namespace infinitearcade
 			if (GroundEntity != null)
 			{
 				BaseVelocity = GroundEntity.Velocity;
+
+				// VALVE HACKHACK: Scale this to fudge the relationship between vphysics friction values and player friction values.
+				// A value of 0.8f feels pretty normal for vphysics, whereas 1.0f is normal for players.
+				// This scaling trivially makes them equivalent.  REVISIT if this affects low friction surfaces too much.
+				SurfaceFriction = tr.Surface.Friction * 1.25f;
+				if (SurfaceFriction > 1) SurfaceFriction = 1;
 			}
 
 			/*
@@ -873,22 +1041,13 @@ namespace infinitearcade
 			Position = trace.EndPos;
 		}
 
-		void RestoreGroundPos()
+		// misc Valve functions
+		public float SimpleSpline(float value)
 		{
-			if (GroundEntity == null || GroundEntity.IsWorld)
-				return;
+			float valueSquared = value * value;
 
-			//var Position = GroundEntity.Transform.ToWorld( GroundTransform );
-			//Pos = Position.Position;
+			// Nice little ease-in, ease-out spline-like curve
+			return (3 * valueSquared - 2 * valueSquared * value);
 		}
-
-		void SaveGroundPos()
-		{
-			if (GroundEntity == null || GroundEntity.IsWorld)
-				return;
-
-			//GroundTransform = GroundEntity.Transform.ToLocal( new Transform( Pos, Rot ) );
-		}
-
 	}
 }
