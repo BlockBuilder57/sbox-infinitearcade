@@ -14,16 +14,13 @@ namespace infinitearcade
 
 		public IAWeaponFirearmDefinition Definition { get; set; }
 
-		[Net]
-		public WeaponAmmo Primary { get; set; }
+		[Net] public WeaponAmmo Primary { get; set; }
 
 		public virtual float ReloadTime => 1.35f;
 		public virtual float ReloadTimeMult => 1.0f;
 
-		[Net]
-		public TimeSince TimeSinceReload { get; set; }
-		[Net]
-		public bool IsReloading { get; set; }
+		[Net] public TimeSince TimeSinceReload { get; set; }
+		[Net] public bool IsReloading { get; set; }
 
 		public override void Simulate(Client owner)
 		{
@@ -40,7 +37,7 @@ namespace infinitearcade
 				if (IsServer)
 					DebugOverlay.Text(Position, "srv: " + Primary.ToString());
 				if (IsClient)
-					DebugOverlay.Text(Position + Vector3.Down * 2, "cli: " + Primary.ToString(), 0.05f);
+					DebugOverlay.Text(Position + Vector3.Down * 2, "cli: " + Primary.ToString());
 			}
 		}
 
@@ -101,7 +98,7 @@ namespace infinitearcade
 				if (!IsServer || !tr.Entity.IsValid())
 					continue;
 
-				// prediction is turned off here to prevent bullet traces from being different
+				// prediction is turned off here to prevent bullet traces from being desynced
 				using (Prediction.Off())
 				{
 					tr.Surface.DoBulletImpact(tr);
@@ -111,6 +108,14 @@ namespace infinitearcade
 
 					tr.Entity.TakeDamage(damageInfo);
 				}
+			}
+		}
+
+		public virtual void ShootBullet(int numBullets, Vector3 pos, Vector3 dir, float spread, float force, float damage, float bulletSize)
+		{
+			for (int i = 0; i < numBullets; i++)
+			{
+				ShootBullet(pos, dir, spread, force / numBullets, damage / numBullets, bulletSize);
 			}
 		}
 
@@ -135,50 +140,77 @@ namespace infinitearcade
 
 	public partial class WeaponAmmo : BaseNetworkable
 	{
-		[Net] public int Clip { get; set; }
-		[Net] public int MaxClip { get; set; }
-		[Net] public int Ammo { get; set; }
-		[Net] public int MaxAmmo { get; set; }
+		[Net] public int Clip { get; private set; }
+		[Net] public int MaxClip { get; private set; }
+		[Net] public int Ammo { get; private set; }
+		[Net] public int MaxAmmo { get; private set; }
 
-		[Net] public bool InfiniteClip { get; set; }
-		[Net] public bool InfiniteAmmo { get; set; }
+		[Net] public bool InfiniteClip { get; set; } = false;
+		[Net] public bool InfiniteAmmo { get; set; } = false;
 
 		public WeaponAmmo()
 		{
 			Clip = MaxClip = 8;
 			Ammo = MaxAmmo = 32;
-
-			InfiniteClip = false;
-			InfiniteAmmo = false;
 		}
 
 		public WeaponAmmo(int clip, int ammo)
 		{
 			Clip = MaxClip = clip;
 			Ammo = MaxAmmo = ammo;
-
-			InfiniteClip = false;
-			InfiniteAmmo = false;
 		}
 
 		public void SetClip(int amount) => Clip = amount;
 		public void SetAmmo(int amount) => Ammo = amount;
 
-		public void TryReload()
-		{
-			int clipDiff = MaxClip - Clip;
+		public int TakeClip(int amount = 1) { if (!InfiniteClip) { Clip -= amount; } return Clip; }
+		public int TakeAmmo(int amount = 1) { if (!InfiniteAmmo) { Ammo -= amount; } return Ammo; }
+		public int GiveClip(int amount = 1) { if (!InfiniteClip) { Clip += amount; } return Clip; }
+		public int GiveAmmo(int amount = 1) { if (!InfiniteAmmo) { Ammo += amount; } return Ammo; }
 
-			if (Ammo >= clipDiff)
+		public bool TryReload(int thisMany = -1)
+		{
+			int neededRounds = MaxClip - Clip;
+
+			if (thisMany != -1)
+				neededRounds = thisMany;
+
+			if (neededRounds == 0)
+				return false;
+
+			// if we're overfilled, give the ammo back
+			if (Clip > MaxClip)
 			{
-				if (!InfiniteAmmo)
-					Ammo -= clipDiff;
+				GiveAmmo(Clip - MaxClip);
 				Clip = MaxClip;
+				return false;
+			}
+
+			if (Ammo >= neededRounds)
+			{
+				// if the clip needs ammo and we're doing a full reload
+				TakeAmmo(neededRounds);
+
+				// if clip + needed is less than max clip, add them
+				if (Clip + neededRounds <= MaxClip)
+				{
+					GiveClip(neededRounds);
+					// do we need to continue or not?
+					return Clip != MaxClip;
+				}
+
+				return false;
 			}
 			else
 			{
-				Clip += Math.Clamp(Ammo, 0, Ammo);
+				// clamp the ammo we're taking out
+				GiveClip(Math.Clamp(Ammo, 0, Ammo));
+
 				if (!InfiniteAmmo)
-					Ammo = 0;
+					SetAmmo(0);
+
+				// done reloading
+				return false;
 			}
 		}
 

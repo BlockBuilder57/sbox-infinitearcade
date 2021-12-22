@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 namespace infinitearcade
 {
 	[Library("weapon_pistol", Title = "Pistol", Spawnable = true)]
-	public class Pistol : IAWeaponFirearm
+	public partial class Pistol : IAWeaponFirearm
 	{
 		public override string ViewModelPath => "weapons/rust_pistol/v_rust_pistol.vmdl";
 
@@ -39,8 +39,7 @@ namespace infinitearcade
 				return;
 			}
 
-			if (!Primary.InfiniteClip)
-				Primary.Clip--;
+			Primary.TakeClip();
 
 			TimeSincePrimaryAttack = 0;
 			TimeSinceSecondaryAttack = 0;
