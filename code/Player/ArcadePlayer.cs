@@ -208,6 +208,11 @@ namespace infinitearcade
 
 		public void ChangeCamera()
 		{
+			// block: by default, Z near and far are 0
+			// this is just a lie, their true values are:
+			// ZNear: 7 (3 in HL1/HL:S)
+			//  ZFar: ~28378 (r_mapextents * 1.73205080757f)
+
 			if (Input.VR.IsActive || VR.Enabled)
 			{
 				ResetSeatedPos();
@@ -221,6 +226,7 @@ namespace infinitearcade
 				if (Camera is not FirstPersonCamera)
 				{
 					Camera = new FirstPersonCamera();
+					(Camera as FirstPersonCamera).SetZNear(7);
 				}
 				else
 				{

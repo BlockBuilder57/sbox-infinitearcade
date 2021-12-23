@@ -24,15 +24,22 @@ namespace infinitearcade
 
 		public override void Activated()
 		{
-			base.Activated();
+			if (CurrentView.Viewer?.Camera is Camera currentCam)
+			{
+				TargetPos = currentCam.Position;
+				TargetRot = currentCam.Rotation;
 
-			TargetPos = CurrentView.Position;
-			TargetRot = CurrentView.Rotation;
+				FovOverride = currentCam.FieldOfView;
+				Ortho = currentCam.Ortho;
+				OrthoSize = Math.Min(0.001f, currentCam.OrthoSize);
+
+				ZNear = currentCam.ZNear;
+				ZFar = currentCam.ZFar;
+			}
 
 			Position = TargetPos;
 			Rotation = TargetRot;
 			LookAngles = Rotation.Angles();
-			FovOverride = CurrentView.FieldOfView;
 
 			DoFPoint = 0.0f;
 			DoFBlurSize = 0.0f;
@@ -139,6 +146,9 @@ namespace infinitearcade
 			if (input.Down(InputButton.Menu))
 				DoFBlurSize = Math.Clamp(DoFBlurSize - (Time.Delta * 3.0f), 0.0f, 100.0f);
 
+			if (input.Pressed(InputButton.Drop))
+				Ortho = !Ortho;
+
 			if (input.Pressed(InputButton.Attack1))
 			{
 				var tr = Trace.Ray(Position, Position + Rotation.Forward * 4096).HitLayer(CollisionLayer.All).UseHitboxes().Run();
@@ -147,8 +157,17 @@ namespace infinitearcade
 
 			if (input.Down(InputButton.Attack2))
 			{
-				FovOverride += input.AnalogLook.pitch * (FovOverride / 30.0f);
-				FovOverride = FovOverride.Clamp(5, 150);
+				if (Ortho)
+				{
+					OrthoSize += input.AnalogLook.pitch * (OrthoSize / 30.0f);
+					OrthoSize = OrthoSize.Clamp(0.001f, 5);
+				}
+				else
+				{
+					FovOverride += input.AnalogLook.pitch * (FovOverride / 30.0f);
+					FovOverride = FovOverride.Clamp(5, 150);
+				}
+				
 				input.AnalogLook = default;
 			}
 
