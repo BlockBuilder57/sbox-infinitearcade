@@ -51,6 +51,8 @@ namespace infinitearcade
 				ServerSim++;
 				IADebugging.ResetLineOffset();
 			}
+
+			IADebugging.Simulate();
 		}
 
 		public override void FrameSimulate(Client cl)
