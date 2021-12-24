@@ -179,11 +179,11 @@ namespace infinitearcade
 
 					if (active.IsValid())
 					{
-						active.PhysicsGroup.Velocity = Velocity;
+						active.PhysicsGroup.Velocity = Velocity + BaseVelocity;
 
 						const float throwForce = 500f;
 
-						if (GetActiveController() is WalkController walky && !walky.Duck.IsActive)
+						if (GetActiveController() is QPhysController qPhys && !qPhys.Ducked)
 						{
 							active.PhysicsGroup.AddAngularVelocity(active.Rotation.Left * 20f);
 							Vector3 throwVector = ((EyeRot.Forward * 500) + (Vector3.Up * 200)).Normal;

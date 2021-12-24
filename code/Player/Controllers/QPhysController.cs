@@ -18,6 +18,8 @@ namespace infinitearcade
 		private const float GAMEMOVEMENT_TIME_TO_UNDUCK = (TIME_TO_UNDUCK * 1000.0f); // ms
 		private const float GAMEMOVEMENT_TIME_TO_UNDUCK_INV = (GAMEMOVEMENT_DUCK_TIME - GAMEMOVEMENT_TIME_TO_UNDUCK);
 
+		public Angles BaseAngularVelocity { get; set; }
+
 		[Net] public float DefaultSpeed { get; set; } = 190.0f;
 		[Net] public float WalkSpeed { get; set; } = 150.0f;
 		[Net] public float SprintSpeed { get; set; } = 320.0f;
@@ -50,6 +52,9 @@ namespace infinitearcade
 		private float m_flDucktime = 0.0f;
 		private float m_flJumpTime = 0.0f;
 		private float m_flDuckJumpTime = 0.0f;
+
+		public Angles m_inputRotationLast;
+		public Angles m_inputRotationDelta;
 
 		public Unstuck Unstuck;
 
@@ -110,12 +115,21 @@ namespace infinitearcade
 			Velocity -= new Vector3(0, 0, ent_gravity * Gravity * 0.5f * (float)Math.Sqrt(Pawn.Scale)) * Time.Delta;
 		}
 
-		protected float SurfaceFriction;
-
-
-		public override void FrameSimulate()
+		public void CalculateEyeRot()
 		{
-			base.FrameSimulate();
+			//if (Host.IsClient)
+			//	return;
+			
+			/*m_inputRotationDelta = Input.Rotation.Angles() - m_inputRotationLast;
+			m_inputRotationLast = Input.Rotation.Angles();
+
+			Angles fullCalc = (EyeRot.Angles() + m_inputRotationDelta).WithRoll(0) + (BaseAngularVelocity * Time.Delta);
+
+			IADebugging.ScreenText(Input.Rotation.Angles().ToString());
+			IADebugging.ScreenText(m_inputRotationLast.ToString());
+			IADebugging.ScreenText(m_inputRotationDelta.ToString());
+
+			EyeRot = Rotation.From(fullCalc.WithRoll(0));*/
 
 			EyeRot = Input.Rotation;
 
@@ -123,6 +137,13 @@ namespace infinitearcade
 			{
 				EyeRot = Rotation.From(Input.VR.Head.Rotation.Pitch(), EyeRot.Yaw(), EyeRot.Roll());
 			}
+		}
+
+		public override void FrameSimulate()
+		{
+			Host.AssertClient();
+
+			CalculateEyeRot();
 		}
 
 		public override void Simulate()
@@ -133,17 +154,12 @@ namespace infinitearcade
 
 			Gravity = float.Parse(ConsoleSystem.GetValue("sv_gravity"));
 
-			//EyePosLocal = Vector3.Up * (Ducked ? DuckEyeHeight : EyeHeight);
-
 			EyePosLocal += TraceOffset;
-			EyeRot = Input.Rotation;
+
+			if (Host.IsServer)
+				CalculateEyeRot();
 
 			ReduceTimers();
-
-			//Velocity += BaseVelocity * ( 1 + Time.Delta * 0.5f );
-			//BaseVelocity = Vector3.Zero;
-
-			//Rot = Rotation.LookAt( Input.Rotation.Forward.WithZ( 0 ), Vector3.Up );
 
 			if (Unstuck.TestAndFix())
 				return;
@@ -210,6 +226,9 @@ namespace infinitearcade
 				//player->m_Local.m_flFallVelocity = 0.0f;
 
 				Friction();
+
+				Rotation toRotate = Rotation.From(BaseAngularVelocity) * Time.Delta;
+				Position = Position.RotateAroundPoint(GroundEntity.Position, toRotate);
 			}
 
 			//
@@ -217,7 +236,7 @@ namespace infinitearcade
 			//
 			WishVelocity = new Vector3(Input.Forward, Input.Left, 0);
 			var inSpeed = WishVelocity.Length.Clamp(0, 1);
-			WishVelocity *= Input.Rotation.Angles().WithPitch(0).ToRotation();
+			WishVelocity *= EyeRot.Angles().WithPitch(0).ToRotation();
 
 			if (!Swimming && !m_isTouchingLadder)
 			{
@@ -260,16 +279,11 @@ namespace infinitearcade
 			// Land Sound
 			// Swim Sounds
 
-			if (VR.Enabled)
-			{
-				EyeRot = Rotation.From(Input.VR.Head.Rotation.Pitch(), EyeRot.Yaw(), EyeRot.Roll());
-			}
-
-			const int pad = 20;
+			const int pad = 19;
 			if (Debug && Host.IsServer)
 			{
-				DebugOverlay.Box(Position + TraceOffset, GetHull().Mins, GetHull().Maxs, Color.Red);
-				DebugOverlay.Box(Position, GetHull().Mins, GetHull().Maxs, Color.Blue);
+				//DebugOverlay.Box(Position + TraceOffset, GetHull().Mins, GetHull().Maxs, Color.Red);
+				//DebugOverlay.Box(Position, GetHull().Mins, GetHull().Maxs, Color.Blue);
 
 				if (m_player.Camera is not FirstPersonCamera)
 				{
@@ -282,20 +296,21 @@ namespace infinitearcade
 				IADebugging.ScreenText($"{"Position".PadLeft(pad)}: {Position:F2}");
 				//IADebugging.ScreenText($"{"Velocity".PadLeft(pad)}: {Velocity:F2}");
 				IADebugging.ScreenText($"{"Velocity (hu/s)".PadLeft(pad)}: {Velocity.Length:F2}");
-				//IADebugging.ScreenText($"{"BaseVelocity".PadLeft(pad)}: {BaseVelocity}");
-				//IADebugging.ScreenText($"{"GroundEntity".PadLeft(pad)}: {(GroundEntity != null ? $"{GroundEntity} [vel {GroundEntity?.Velocity}]" : "null")}");
+				IADebugging.ScreenText($"{"BaseVelocity".PadLeft(pad)}: {BaseVelocity}");
+				IADebugging.ScreenText($"{"BaseAngularVelocity".PadLeft(pad)}: {BaseAngularVelocity}");
+				IADebugging.ScreenText($"{"GroundEntity".PadLeft(pad)}: {(GroundEntity != null ? $"{GroundEntity} [vel {GroundEntity?.Velocity}]" : "null")}");
 				//IADebugging.ScreenText($"{"SurfaceFriction".PadLeft(pad)}: {SurfaceFriction}");
 				//IADebugging.ScreenText($"{"WishVelocity".PadLeft(pad)}: {WishVelocity}");
 
-				IADebugging.ScreenText($"{"Ducked (FL_DUCKING)".PadLeft(pad)}: {Ducked}");
-				IADebugging.ScreenText($"{"Ducking".PadLeft(pad)}: {Ducking}");
-				IADebugging.ScreenText($"{"InDuckJump".PadLeft(pad)}: {InDuckJump}");
-				IADebugging.ScreenText($"{"m_flDucktime".PadLeft(pad)}: {m_flDucktime}");
-				IADebugging.ScreenText($"{"m_flJumpTime".PadLeft(pad)}: {m_flJumpTime}");
-				IADebugging.ScreenText($"{"m_flDuckJumpTime".PadLeft(pad)}: {m_flDuckJumpTime}");
+				//IADebugging.ScreenText($"{"Ducked (FL_DUCKING)".PadLeft(pad)}: {Ducked}");
+				//IADebugging.ScreenText($"{"Ducking".PadLeft(pad)}: {Ducking}");
+				//IADebugging.ScreenText($"{"InDuckJump".PadLeft(pad)}: {InDuckJump}");
+				//IADebugging.ScreenText($"{"m_flDucktime".PadLeft(pad)}: {m_flDucktime}");
+				//IADebugging.ScreenText($"{"m_flJumpTime".PadLeft(pad)}: {m_flJumpTime}");
+				//IADebugging.ScreenText($"{"m_flDuckJumpTime".PadLeft(pad)}: {m_flDuckJumpTime}");
 
-				if (GroundEntity == null && m_debugHopType != HopType.None)
-					IADebugging.ScreenText($"{"Hopping Type".PadLeft(pad)}: {m_debugHopName}");
+				//if (GroundEntity == null && m_debugHopType != HopType.None)
+				//	IADebugging.ScreenText($"{"Hopping Type".PadLeft(pad)}: {m_debugHopName}");
 			}
 
 		}
@@ -1102,6 +1117,7 @@ namespace infinitearcade
 			Move();
 		}
 
+		protected float SurfaceFriction;
 
 		public virtual void CategorizePosition()
 		{
@@ -1166,6 +1182,16 @@ namespace infinitearcade
 			if (GroundEntity != null)
 			{
 				BaseVelocity = GroundEntity.Velocity;
+
+				Entity looper = GroundEntity;
+				Rotation totalAngVel = Rotation.From(looper.AngularVelocity);
+				while (looper.Parent != null)
+				{
+					totalAngVel *= Rotation.From(looper.Parent.AngularVelocity);
+					looper = looper.Parent;
+				}
+
+				BaseAngularVelocity = totalAngVel.Angles();
 
 				// VALVE HACKHACK: Scale this to fudge the relationship between vphysics friction values and player friction values.
 				// A value of 0.8f feels pretty normal for vphysics, whereas 1.0f is normal for players.
@@ -1238,8 +1264,9 @@ namespace infinitearcade
 		}
 
 		// misc Valve functions
-		public float SimpleSpline(float value)
+		public float SimpleSpline(float value, float scale = 1)
 		{
+			value = scale * value;
 			float valueSquared = value * value;
 
 			// Nice little ease-in, ease-out spline-like curve
