@@ -49,14 +49,14 @@ namespace infinitearcade
 			else if (IsServer)
 			{
 				ServerSim++;
-				IADebugging.ResetOffset();
+				IADebugging.ResetLineOffset();
 			}
 		}
 
 		public override void FrameSimulate(Client cl)
 		{
 			Host.AssertClient();
-			IADebugging.ResetOffset();
+			IADebugging.ResetLineOffset();
 
 			Entity pawn = cl.Pawn;
 
