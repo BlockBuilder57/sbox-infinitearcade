@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Globalization;
 using Sandbox;
 
 namespace infinitearcade
@@ -24,7 +25,7 @@ namespace infinitearcade
 
 		public override void Activated()
 		{
-			if (CurrentView.Viewer?.Camera is Camera currentCam)
+			if (Local.Pawn?.Camera is Camera currentCam)
 			{
 				TargetPos = currentCam.Position;
 				TargetRot = currentCam.Rotation;
@@ -43,6 +44,9 @@ namespace infinitearcade
 
 			DoFPoint = 0.0f;
 			DoFBlurSize = 0.0f;
+
+			if (FovOverride == 0)
+				FovOverride = float.Parse(ConsoleSystem.GetValue("default_fov", "90"), CultureInfo.InvariantCulture);
 
 			Overlays = Cookie.Get("debugcam.overlays", Overlays);
 
@@ -147,7 +151,16 @@ namespace infinitearcade
 				DoFBlurSize = Math.Clamp(DoFBlurSize - (Time.Delta * 3.0f), 0.0f, 100.0f);
 
 			if (input.Pressed(InputButton.Drop))
+			{
 				Ortho = !Ortho;
+
+				if (Ortho && OrthoSize == 0)
+				{
+					// we (probably) didn't have an ortho size before, so let's make one
+					// it's pretty hacky, but it does approximate the normal perspective cam
+					OrthoSize = (float)(Vector3.DistanceBetween(Position, Local.Pawn.Position) * Math.Tan(FovOverride * 0.5f * (Math.PI/180f))) / 409.6f;
+				}
+			}
 
 			if (input.Pressed(InputButton.Attack1))
 			{

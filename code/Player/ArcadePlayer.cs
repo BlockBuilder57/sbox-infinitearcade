@@ -213,6 +213,8 @@ namespace infinitearcade
 			// ZNear: 7 (3 in HL1/HL:S)
 			//  ZFar: ~28378 (r_mapextents * 1.73205080757f)
 
+			Game.Current.LastCamera = Camera as Camera;
+
 			if (Input.VR.IsActive || VR.Enabled)
 			{
 				ResetSeatedPos();
