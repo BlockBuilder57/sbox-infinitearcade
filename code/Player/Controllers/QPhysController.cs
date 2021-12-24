@@ -18,11 +18,11 @@ namespace infinitearcade
 		private const float GAMEMOVEMENT_TIME_TO_UNDUCK = (TIME_TO_UNDUCK * 1000.0f); // ms
 		private const float GAMEMOVEMENT_TIME_TO_UNDUCK_INV = (GAMEMOVEMENT_DUCK_TIME - GAMEMOVEMENT_TIME_TO_UNDUCK);
 
-		[Net] public float SprintSpeed { get; set; } = 320.0f;
-		[Net] public float WalkSpeed { get; set; } = 150.0f;
 		[Net] public float DefaultSpeed { get; set; } = 190.0f;
+		[Net] public float WalkSpeed { get; set; } = 150.0f;
+		[Net] public float SprintSpeed { get; set; } = 320.0f;
 		[Net] public float Acceleration { get; set; } = 10.0f;
-		[Net] public float AirAcceleration { get; set; } = 50.0f;
+		[Net] public float AirAcceleration { get; set; } = 100.0f;
 		[Net] public float FallSoundZ { get; set; } = -30.0f;
 		[Net] public float GroundFriction { get; set; } = 4.0f;
 		[Net] public float StopSpeed { get; set; } = 100.0f;
@@ -53,8 +53,8 @@ namespace infinitearcade
 
 		public Unstuck Unstuck;
 
-
 		private ArcadePlayer m_player;
+
 		private string m_debugHopName;
 		private HopType m_debugHopType;
 		private enum HopType
@@ -94,7 +94,7 @@ namespace infinitearcade
 			if (m_player.PhysicsBody?.GravityScale != ent_gravity)
 				ent_gravity = (float)m_player.PhysicsBody?.GravityScale;
 
-			Velocity -= new Vector3(0, 0, ent_gravity * Gravity * 0.5f) * Time.Delta;
+			Velocity -= new Vector3(0, 0, ent_gravity * Gravity * 0.5f * (float)Math.Sqrt(Pawn.Scale)) * Time.Delta;
 			Velocity += new Vector3(0, 0, BaseVelocity.z) * Time.Delta;
 
 			BaseVelocity = BaseVelocity.WithZ(0);
@@ -107,7 +107,7 @@ namespace infinitearcade
 			if (m_player.PhysicsBody?.GravityScale != ent_gravity)
 				ent_gravity = (float)m_player.PhysicsBody?.GravityScale;
 
-			Velocity -= new Vector3(0, 0, ent_gravity * Gravity * 0.5f) * Time.Delta;
+			Velocity -= new Vector3(0, 0, ent_gravity * Gravity * 0.5f * (float)Math.Sqrt(Pawn.Scale)) * Time.Delta;
 		}
 
 		protected float SurfaceFriction;
@@ -129,9 +129,7 @@ namespace infinitearcade
 		{
 			// can't do this in the ctor for some reason
 			if (!m_player.IsValid())
-			{
 				m_player = Pawn as ArcadePlayer;
-			}
 
 			Gravity = float.Parse(ConsoleSystem.GetValue("sv_gravity"));
 
@@ -229,8 +227,6 @@ namespace infinitearcade
 			WishVelocity = WishVelocity.Normal * inSpeed;
 			WishVelocity *= GetWishSpeed();
 
-			//Duck.PreTick();
-
 			if (Swimming)
 			{
 				Friction();
@@ -251,12 +247,8 @@ namespace infinitearcade
 
 			CategorizePosition();
 
-			// FinishGravity
 			if (!Swimming && !m_isTouchingLadder)
-			{
 				FinishGravity();
-			}
-
 
 			if (GroundEntity != null)
 			{
@@ -284,7 +276,8 @@ namespace infinitearcade
 					//DebugOverlay.Line(m_player.EyePos, m_player.EyePos + m_player.EyeRot.Forward * 8, Color.White);
 				}
 
-				IADebugging.LineOffset++;
+				if (IADebugging.LineOffset > 0)
+					IADebugging.LineOffset++;
 
 				IADebugging.ScreenText($"{"Position".PadLeft(pad)}: {Position:F2}");
 				//IADebugging.ScreenText($"{"Velocity".PadLeft(pad)}: {Velocity:F2}");
@@ -326,8 +319,9 @@ namespace infinitearcade
 			float ws = -1;
 			if (ws >= 0) return ws;
 
-			if (Input.Down(InputButton.Run)) ws = SprintSpeed;
+			if (Input.Down(InputButton.Duck)) ws = DefaultSpeed;
 			else if (Input.Down(InputButton.Walk)) ws = WalkSpeed;
+			else if (Input.Down(InputButton.Run)) ws = SprintSpeed;
 			else ws = DefaultSpeed;
 
 			return ws * Pawn.Scale;
@@ -398,7 +392,7 @@ namespace infinitearcade
 			// a lot of the functionality is split into other parts of this class (MoveHelper)
 			// it simplifies a lot of it down, but it all does look correct
 			// the only thing that seems to be missing is the ability to slam into a wall at the end
-			mover.TryMoveWithStep(Time.Delta, StepSize + 0.03125f);
+			mover.TryMoveWithStep(Time.Delta, (StepSize * Pawn.Scale) + DistEpsilon);
 
 			Position = mover.Position;
 			Velocity = mover.Velocity;
@@ -853,6 +847,7 @@ namespace infinitearcade
 
 		[ConVar.Replicated] public static bool player_movement_pogo_jumps { get; set; } = true;
 		[ConVar.Replicated] public static bool player_movement_air_jumps { get; set; } = false;
+		[ConVar.Replicated] public static bool player_movement_jump_while_crouched { get; set; } = true;
 		[ConVar.Replicated] public static bool player_movement_ahop { get; set; } = true;
 		[ConVar.Replicated] public static bool player_movement_bhop { get; set; } = true;
 
@@ -899,16 +894,12 @@ namespace infinitearcade
 			if (!player_movement_pogo_jumps && !Input.Pressed(InputButton.Jump))
 				return;
 
-			/*
-			if ( player->m_Local.m_bDucking && (player->GetFlags() & FL_DUCKING) )
-				return false;
-			*/
+			if (!player_movement_jump_while_crouched && Ducking && Ducked)
+				return;
 
-			/*
 			// Still updating the eye position.
-			if ( player->m_Local.m_nDuckJumpTimeMsecs > 0u )
-				return false;
-			*/
+			if (!player_movement_jump_while_crouched && m_flDuckJumpTime > 0)
+				return;
 
 			m_player.OnAnimEventFootstep(Position, 0, 2f, true);
 
@@ -932,12 +923,15 @@ namespace infinitearcade
 					flMul = 160.0f; // approx. 21 units.
 					break;
 				case 800f:
-					flMul = 268.3281572999747f;
+					flMul = 268.3281572999747f; // approx. 45 units.
 					break;
 				default:
 					flMul = (float)Math.Sqrt(2 * Math.Abs(Gravity) * 21.0f) * Math.Sign(Gravity);
 					break;
 			}
+
+			if (Pawn.Scale != 1)
+				flMul *= (float)Math.Sqrt(Pawn.Scale);
 
 			float startz = Velocity.z;
 
@@ -1124,7 +1118,7 @@ namespace infinitearcade
 			var bumpOrigin = Position;
 
 			bool bMovingUp = Velocity.z > 0;
-			bool bMovingUpRapidly = Velocity.z > MaxNonJumpVelocity;
+			bool bMovingUpRapidly = Velocity.z > MaxNonJumpVelocity * Pawn.Scale;
 
 			if (bMovingUpRapidly || Swimming) // or ladder and moving up
 			{
@@ -1225,8 +1219,8 @@ namespace infinitearcade
 		/// </summary>
 		public virtual void StayOnGround()
 		{
-			var start = Position + (Vector3.Up * 2);
-			var end = Position + (Vector3.Down * StepSize);
+			var start = Position + (Vector3.Up * 2 * Pawn.Scale);
+			var end = Position + (Vector3.Down * StepSize * Pawn.Scale);
 
 			// See how far up we can go without getting stuck
 			var trace = TraceBBox(Position, start);
