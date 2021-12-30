@@ -5,7 +5,7 @@ namespace infinitearcade
 	public partial class FirstPersonCamera : Camera
 	{
 		private float m_realZNear = 0;
-		private float m_lastScale = 1;
+		private float m_lastScale = 0;
 
 		/*public FirstPersonCamera(float zNear = 0, float zFar = 0) : base()
 		{
@@ -32,7 +32,7 @@ namespace infinitearcade
 			Position = pawn.EyePos;
 			Rotation = pawn.EyeRot;
 
-			if (m_lastScale != pawn.Scale)
+			if (m_lastScale != pawn.Scale || m_realZNear == 0)
 			{
 				m_lastScale = pawn.Scale;
 				ZNear = m_realZNear * m_lastScale;

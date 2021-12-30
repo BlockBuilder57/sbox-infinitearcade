@@ -87,9 +87,10 @@ namespace infinitearcade
 
 				if (tr.Entity != null && !tr.Entity.IsWorld)
 				{
-					DebugOverlay.Text(tr.EndPos + Vector3.Up * 20, $"Entity: {tr.Entity} ({tr.Entity.EngineEntityName})\n" +
-																	$" Index: {tr.Entity.NetworkIdent}\n" +
-																	$"Health: {tr.Entity.Health}", Color.White);
+					DebugOverlay.Text(tr.EndPos + Vector3.Up * 20, $"    Entity: {tr.Entity} ({tr.Entity.GetType().FullName}, engine name {tr.Entity.EngineEntityName})\n" +
+																	$"     Index: {tr.Entity.NetworkIdent}\n" +
+																	$"    Health: {tr.Entity.Health}\n" +
+																	$"Clientside: {tr.Entity.IsClientOnly}", Color.White);
 
 					if (tr.Entity is ModelEntity modelEnt)
 					{

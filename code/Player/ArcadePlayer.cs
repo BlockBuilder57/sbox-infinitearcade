@@ -9,7 +9,7 @@ namespace infinitearcade
 {
 	public partial class ArcadePlayer : Sandbox.Player
 	{
-		[Net] public new float Health { get; set; }
+		//[Net] public new float Health { get; set; }
 		[Net] public float MaxHealth { get; set; }
 
 		[Net] public float Armor { get; set; }
