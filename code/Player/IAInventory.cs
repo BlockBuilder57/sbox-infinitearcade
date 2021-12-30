@@ -59,5 +59,16 @@ namespace infinitearcade
 
 			return ent.Parent == null;
 		}
+
+		public override bool SetActiveSlot(int i, bool evenIfEmpty = false)
+		{
+			if (Owner.ActiveChild is IAWeaponFirearm firearm && firearm.IsReloading)
+			{
+				firearm.TimeSinceReload = 0;
+				firearm.IsReloading = false;
+			}
+
+			return base.SetActiveSlot(i, evenIfEmpty);
+		}
 	}
 }

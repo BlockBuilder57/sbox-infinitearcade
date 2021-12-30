@@ -16,8 +16,8 @@ namespace infinitearcade
 
 		[Net] public WeaponAmmo Primary { get; set; }
 
-		public virtual float ReloadTime => 1.35f;
-		public virtual float ReloadTimeMult => 1.0f;
+		public virtual float ReloadTime { get; set; } = 1.35f; // default
+		public virtual float ReloadTimeMult { get; set; } = 1.0f;
 
 		[Net] public TimeSince TimeSinceReload { get; set; }
 		[Net] public bool IsReloading { get; set; }

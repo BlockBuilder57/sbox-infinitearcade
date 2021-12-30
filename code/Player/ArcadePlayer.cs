@@ -155,6 +155,14 @@ namespace infinitearcade
 				return Transform.Zero;
 		}
 
+		public override void BuildInput(InputBuilder input)
+		{
+			base.BuildInput(input);
+
+			//if (GetActiveController() is QPhysController qPhys)
+			//	Input.Rotation = Rotation.From(qPhys.BaseAngularVelocity);	
+		}
+
 		public override void Simulate(Client cl)
 		{
 			if (IsServer && LifeState == LifeState.Dead && Input.Released(InputButton.Attack1))
@@ -171,31 +179,41 @@ namespace infinitearcade
 			if (cl.Pawn == this)
 			{
 				TickPlayerUse();
+
 				SimulateActiveChild(cl, ActiveChild);
 
-				if (Input.Down(InputButton.Drop) && ActiveChild.IsValid())
+				if (Inventory is IAInventory inv)
 				{
-					Entity active = Inventory?.DropActive();
+					if (Input.MouseWheel != 0)
+						inv.SwitchActiveSlot(Input.MouseWheel, true);
 
-					if (active.IsValid())
+					if (Input.Pressed(InputButton.Drop) && ActiveChild.IsValid())
 					{
-						active.PhysicsGroup.Velocity = Velocity + BaseVelocity;
+						Entity active = inv.DropActive();
 
-						const float throwForce = 500f;
+						if (active.IsValid())
+						{
+							active.PhysicsGroup.Velocity = Velocity + BaseVelocity;
 
-						if (GetActiveController() is QPhysController qPhys && !qPhys.Ducked)
-						{
-							active.PhysicsGroup.AddAngularVelocity(active.Rotation.Left * 20f);
-							Vector3 throwVector = ((EyeRot.Forward * 500) + (Vector3.Up * 200)).Normal;
-							active.PhysicsGroup.AddVelocity(throwVector * throwForce);
+							const float throwForce = 500f;
+
+							if (GetActiveController() is QPhysController qPhys && !qPhys.Ducked)
+							{
+								active.PhysicsGroup.AddAngularVelocity(active.Rotation.Left * 20f);
+								Vector3 throwVector = ((EyeRot.Forward * 500) + (Vector3.Up * 200)).Normal;
+								active.PhysicsGroup.AddVelocity(throwVector * throwForce);
+							}
+							else
+							{
+								TraceResult tr = Trace.Ray(EyePos, EyePos + EyeRot.Forward * 128 + Vector3.Down * 32).WorldAndEntities().Run();
+								active.Rotation = EyeRot.RotateAroundAxis(tr.Normal + Vector3.Forward, 90);
+								Vector3 throwVector = ((EyeRot.Forward * 600) + (Vector3.Up * 100)).Normal;
+								active.PhysicsGroup.AddVelocity(throwVector * throwForce);
+							}
 						}
-						else
-						{
-							TraceResult tr = Trace.Ray(EyePos, EyePos + EyeRot.Forward * 128 + Vector3.Down * 32).WorldAndEntities().Run();
-							active.Rotation = EyeRot.RotateAroundAxis(tr.Normal + Vector3.Forward, 90);
-							Vector3 throwVector = ((EyeRot.Forward * 600) + (Vector3.Up * 100)).Normal;
-							active.PhysicsGroup.AddVelocity(throwVector * throwForce);
-						}
+
+						// switch to the next active thing (if there is one!)
+						inv.SwitchActiveSlot(0, true);
 					}
 				}
 			}
