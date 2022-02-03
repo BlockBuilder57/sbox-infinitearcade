@@ -282,8 +282,9 @@ namespace infinitearcade
 			const int pad = 19;
 			if (Debug && Host.IsServer)
 			{
-				//DebugOverlay.Box(Position + TraceOffset, GetHull().Mins, GetHull().Maxs, Color.Red);
-				//DebugOverlay.Box(Position, GetHull().Mins, GetHull().Maxs, Color.Blue);
+				DebugOverlay.Box(Position + TraceOffset, GetHull().Mins, GetHull().Maxs, Color.Red);
+				if (Ducking || Ducked)
+					DebugOverlay.Box(Position, m_hullNormal.Mins, m_hullNormal.Maxs, Color.Blue);
 
 				if (m_player.Camera is not FirstPersonCamera)
 				{
@@ -299,6 +300,8 @@ namespace infinitearcade
 				IADebugging.ScreenText($"{"BaseVelocity".PadLeft(pad)}: {BaseVelocity}");
 				IADebugging.ScreenText($"{"BaseAngularVelocity".PadLeft(pad)}: {BaseAngularVelocity}");
 				IADebugging.ScreenText($"{"GroundEntity".PadLeft(pad)}: {(GroundEntity != null ? $"{GroundEntity} [vel {GroundEntity?.Velocity}]" : "null")}");
+				if (GroundEntity != null)
+					IADebugging.ScreenText($"{"GroundNormal".PadLeft(pad)}: {GroundNormal} (angle {GroundNormal.Angle(Vector3.Up)})");
 				//IADebugging.ScreenText($"{"SurfaceFriction".PadLeft(pad)}: {SurfaceFriction}");
 				//IADebugging.ScreenText($"{"WishVelocity".PadLeft(pad)}: {WishVelocity}");
 
@@ -309,8 +312,8 @@ namespace infinitearcade
 				//IADebugging.ScreenText($"{"m_flJumpTime".PadLeft(pad)}: {m_flJumpTime}");
 				//IADebugging.ScreenText($"{"m_flDuckJumpTime".PadLeft(pad)}: {m_flDuckJumpTime}");
 
-				//if (GroundEntity == null && m_debugHopType != HopType.None)
-				//	IADebugging.ScreenText($"{"Hopping Type".PadLeft(pad)}: {m_debugHopName}");
+				if (GroundEntity == null && m_debugHopType != HopType.None)
+					IADebugging.ScreenText($"{"Hopping Type".PadLeft(pad)}: {m_debugHopName}");
 			}
 
 		}
