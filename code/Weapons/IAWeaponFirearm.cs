@@ -9,8 +9,7 @@ namespace infinitearcade
 {
 	public partial class IAWeaponFirearm : IAWeapon
 	{
-		[ConVar.Replicated]
-		public static bool debug_firearm { get; set; } = false;
+		[ConVar.Replicated] public static bool debug_firearm { get; set; } = false;
 
 		public IAWeaponFirearmDefinition Definition { get; set; }
 

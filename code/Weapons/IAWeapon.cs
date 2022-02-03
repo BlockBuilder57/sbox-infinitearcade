@@ -9,12 +9,10 @@ namespace infinitearcade
 {
 	public partial class IAWeapon : BaseWeapon, IUse
 	{
-		[Net, Predicted]
-		public TimeSince TimeSinceDeployed { get; set; }
+		[Net, Predicted] public TimeSince TimeSinceDeployed { get; set; }
+		[Net, Predicted] public TimeSince TimeSinceDropped { get; set; }
 
 		protected PickupTrigger PickupTrigger { get; set; }
-		[Net]
-		public TimeSince TimeSinceDropped { get; set; }
 
 		public override void Spawn()
 		{
