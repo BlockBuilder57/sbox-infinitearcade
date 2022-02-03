@@ -22,6 +22,7 @@ namespace infinitearcade
 		float LerpMode = 0;
 
 		public static bool Overlays = true;
+		public static bool LockInput = false;
 
 		public override void Activated()
 		{
@@ -41,9 +42,6 @@ namespace infinitearcade
 			Position = TargetPos;
 			Rotation = TargetRot;
 			LookAngles = Rotation.Angles();
-
-			DoFPoint = 0.0f;
-			DoFBlurSize = 0.0f;
 
 			if (FovOverride == 0)
 				FovOverride = float.Parse(ConsoleSystem.GetValue("default_fov", "90"), CultureInfo.InvariantCulture);
@@ -69,12 +67,6 @@ namespace infinitearcade
 			var tr = Trace.Ray(Position, Position + Rotation.Forward * 4096).HitLayer(CollisionLayer.All).UseHitboxes().Run();
 			FieldOfView = FovOverride;
 
-			Viewer = null;
-			{
-				var lerpTarget = tr.EndPos.Distance(Position);
-				DoFPoint = lerpTarget;// DoFPoint.LerpTo( lerpTarget, Time.Delta * 10 );
-			}
-
 			if (PivotEnabled)
 				PivotMove();
 			else
@@ -87,10 +79,18 @@ namespace infinitearcade
 
 				if (tr.Entity != null && !tr.Entity.IsWorld)
 				{
-					DebugOverlay.Text(tr.EndPos + Vector3.Up * 20, $"    Entity: {tr.Entity} ({tr.Entity.GetType().FullName}, engine name {tr.Entity.EngineEntityName})\n" +
-																	$"     Index: {tr.Entity.NetworkIdent}\n" +
-																	$"    Health: {tr.Entity.Health}\n" +
-																	$"Clientside: {tr.Entity.IsClientOnly}", Color.White);
+					string debugText = "";
+					const int pad = 6;
+
+					debugText += $"{"Entity".PadLeft(pad)}: {tr.Entity} ({tr.Entity.GetType().FullName}, engine name {tr.Entity.EngineEntityName})";
+					if (tr.Entity is ModelEntity model)
+						debugText += $"\n{"Model".PadLeft(pad)}: {model.GetModelName()}";
+					debugText += $"\n{"Index".PadLeft(pad)}: {tr.Entity.NetworkIdent}";
+					debugText += $"\n{"Health".PadLeft(pad)}: {tr.Entity.Health}";
+					if (tr.Entity.IsClientOnly)
+						debugText += $"\n{"Clientside".PadLeft(pad)}: Clientside only";
+
+					DebugOverlay.Text(tr.EndPos + Vector3.Up * 20, debugText, Color.White);
 
 					if (tr.Entity is ModelEntity modelEnt)
 					{
@@ -117,85 +117,93 @@ namespace infinitearcade
 
 		public override void BuildInput(InputBuilder input)
 		{
-			MoveInput = input.AnalogMove;
-
-			MoveSpeed = 1;
-			if (input.Down(InputButton.Run)) MoveSpeed = 5;
-			if (input.Down(InputButton.Duck)) MoveSpeed = 0.2f;
-
-			PivotEnabled = input.Down(InputButton.Walk);
-
-			if (input.Down(InputButton.Slot1)) LerpSpeed(0.0f);
-			if (input.Down(InputButton.Slot2)) LerpSpeed(0.5f);
-			if (input.Down(InputButton.Slot3)) LerpSpeed(0.9f);
-
-			if (input.Pressed(InputButton.Walk))
+			if (LockInput)
 			{
-				var tr = Trace.Ray(Position, Position + Rotation.Forward * Int32.MaxValue).HitLayer(CollisionLayer.All).UseHitboxes().Run();
-				if (tr.Hit)
+				if (input.Pressed(InputButton.View))
+					LockInput = false;
+
+				input.ClearButton(InputButton.View);
+				base.BuildInput(input);
+			}
+			else
+			{
+				MoveInput = input.AnalogMove;
+
+				MoveSpeed = 1;
+				if (input.Down(InputButton.Run)) MoveSpeed = 5;
+				if (input.Down(InputButton.Duck)) MoveSpeed = 0.2f;
+
+				PivotEnabled = input.Down(InputButton.Walk);
+
+				if (input.Down(InputButton.Slot1)) LerpSpeed(0.0f);
+				if (input.Down(InputButton.Slot2)) LerpSpeed(0.5f);
+				if (input.Down(InputButton.Slot3)) LerpSpeed(0.9f);
+
+				if (input.Pressed(InputButton.Walk))
 				{
-					PivotPos = tr.EndPos;
-					PivotDist = Vector3.DistanceBetween(tr.EndPos, Position);
+					var tr = Trace.Ray(Position, Position + Rotation.Forward * Int32.MaxValue).HitLayer(CollisionLayer.All).UseHitboxes().Run();
+					if (tr.Hit)
+					{
+						PivotPos = tr.EndPos;
+						PivotDist = Vector3.DistanceBetween(tr.EndPos, Position);
+					}
 				}
-			}
 
-			if (input.Down(InputButton.Jump))
-				MoveInput.z = 1;
+				if (input.Down(InputButton.Jump))
+					MoveInput.z = 1;
 
-			if (input.Pressed(InputButton.Flashlight))
-				FovOverride = 90;
+				if (input.Pressed(InputButton.Flashlight))
+					FovOverride = 90;
 
-			if (input.Down(InputButton.Use))
-				DoFBlurSize = Math.Clamp(DoFBlurSize + (Time.Delta * 3.0f), 0.0f, 100.0f);
-
-			if (input.Down(InputButton.Menu))
-				DoFBlurSize = Math.Clamp(DoFBlurSize - (Time.Delta * 3.0f), 0.0f, 100.0f);
-
-			if (input.Pressed(InputButton.Drop))
-			{
-				Ortho = !Ortho;
-
-				if (Ortho && OrthoSize == 0)
+				if (input.Pressed(InputButton.Drop))
 				{
-					// we (probably) didn't have an ortho size before, so let's make one
-					// it's pretty hacky, but it does approximate the normal perspective cam
-					OrthoSize = (float)(Vector3.DistanceBetween(Position, Local.Pawn.Position) * Math.Tan(FovOverride * 0.5f * (Math.PI/180f))) / 409.6f;
+					Ortho = !Ortho;
+
+					if (Ortho && OrthoSize == 0)
+					{
+						// we (probably) didn't have an ortho size before, so let's make one
+						// it's pretty hacky, but it does approximate the normal perspective cam
+						OrthoSize = (float)(Vector3.DistanceBetween(Position, Local.Pawn.Position) * Math.Tan(FovOverride * 0.5f * (Math.PI / 180f))) / 409.6f;
+					}
 				}
-			}
 
-			if (input.Pressed(InputButton.Attack1))
-			{
-				var tr = Trace.Ray(Position, Position + Rotation.Forward * 4096).HitLayer(CollisionLayer.All).UseHitboxes().Run();
-				tr.Entity.ToggleDebugBits(DebugOverlayBits.OVERLAY_TEXT_BIT);
-			}
-
-			if (input.Down(InputButton.Attack2))
-			{
-				if (Ortho)
+				if (input.Pressed(InputButton.Attack1))
 				{
-					OrthoSize += input.AnalogLook.pitch * (OrthoSize / 30.0f);
-					OrthoSize = OrthoSize.Clamp(0.001f, 5);
+					var tr = Trace.Ray(Position, Position + Rotation.Forward * 4096).HitLayer(CollisionLayer.All).UseHitboxes().Run();
+					tr.Entity?.ToggleDebugBits(DebugOverlayBits.OVERLAY_TEXT_BIT);
 				}
-				else
+
+				if (input.Down(InputButton.Attack2))
 				{
-					FovOverride += input.AnalogLook.pitch * (FovOverride / 30.0f);
-					FovOverride = FovOverride.Clamp(5, 150);
+					if (Ortho)
+					{
+						OrthoSize += input.AnalogLook.pitch * (OrthoSize / 30.0f);
+						OrthoSize = OrthoSize.Clamp(0.001f, 5);
+					}
+					else
+					{
+						FovOverride += input.AnalogLook.pitch * (FovOverride / 30.0f);
+						FovOverride = FovOverride.Clamp(5, 150);
+					}
+
+					input.AnalogLook = default;
 				}
-				
-				input.AnalogLook = default;
+
+				if (input.Pressed(InputButton.View))
+					LockInput = true;
+
+				if (input.Pressed(InputButton.Reload))
+				{
+					Overlays = !Overlays;
+					Cookie.Set("debugcam.overlays", Overlays);
+				}
+
+				LookAngles += input.AnalogLook * (FovOverride / 80.0f);
+				LookAngles.roll = 0;
+
+				input.Clear();
+				input.StopProcessing = true;
 			}
-
-			if (input.Pressed(InputButton.Reload))
-			{
-				Overlays = !Overlays;
-				Cookie.Set("debugcam.overlays", Overlays);
-			}
-
-			LookAngles += input.AnalogLook * (FovOverride / 80.0f);
-			LookAngles.roll = 0;
-
-			input.Clear();
-			input.StopProcessing = true;
 		}
 
 		void LerpSpeed(float amount)
