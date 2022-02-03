@@ -6,7 +6,7 @@ code/*.csproj*
 code/obj
 code/Properties/launchSettings.json
 
-config/infinitearcade.fgd
+config/
 
 # considering the vmaps get downloaded, might not be the best idea to push them
 maps/*

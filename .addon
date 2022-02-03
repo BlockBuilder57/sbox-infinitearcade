@@ -1,5 +1,15 @@
 {
-	"sharedassets": "*.*",
-	"type": "game",
-	"ident": "cubickitsune.infinitearcade"
+  "Title": "Infinite Arcade",
+  "Type": "game",
+  "Org": "cubickitsune",
+  "Ident": "infinitearcade",
+  "Schema": 1,
+  "HasAssets": true,
+  "AssetsPath": "",
+  "ResourcePaths": [
+    "/code/UI/*"
+  ],
+  "HasCode": true,
+  "CodePath": "code",
+  "RootNamespace": "infinitearcade"
 }
