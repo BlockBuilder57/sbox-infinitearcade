@@ -7,41 +7,16 @@ using System.Threading.Tasks;
 
 namespace infinitearcade
 {
-	public partial class IAWeapon : BaseCarriable, IUse
+	public partial class IAWeapon : IACarriable, IUse
 	{
 		public virtual float PrimaryRate => 5.0f;
 		public virtual float SecondaryRate => 15.0f;
 		[Net, Predicted] public TimeSince TimeSincePrimaryAttack { get; set; }
 		[Net, Predicted] public TimeSince TimeSinceSecondaryAttack { get; set; }
 
-		[Net, Predicted] public TimeSince TimeSinceDeployed { get; set; }
-		[Net, Predicted] public TimeSince TimeSinceDropped { get; set; }
-
-		protected PickupTrigger PickupTrigger { get; set; }
-
 		public override void Spawn()
 		{
 			base.Spawn();
-
-			CollisionGroup = CollisionGroup.Weapon; // so players touch it as a trigger but not as a solid
-			SetInteractsAs(CollisionLayer.Debris); // so player movement doesn't walk into it
-
-			PickupTrigger = new PickupTrigger
-			{
-				Parent = this,
-				Position = Position,
-				EnableTouch = true,
-				EnableSelfCollisions = false
-			};
-
-			PickupTrigger.PhysicsBody.EnableAutoSleeping = false;
-		}
-
-		public override void ActiveStart(Entity ent)
-		{
-			base.ActiveStart(ent);
-
-			TimeSinceDeployed = 0;
 		}
 
 		public override void Simulate(Client player)
@@ -74,58 +49,6 @@ namespace infinitearcade
 					AttackSecondary();
 				}
 			}
-		}
-
-		public override void OnCarryDrop(Entity dropper)
-		{
-			base.OnCarryDrop(dropper);
-
-			TimeSinceDropped = 0;
-		}
-
-		public bool OnUse(Entity user)
-		{
-			if (!user.IsValid() || Owner != null)
-				return false;
-
-			// pretend we touched it
-			user.StartTouch(this);
-
-			return false;
-		}
-
-		public virtual bool IsUsable(Entity user)
-		{
-			if (Owner != null)
-				return false;
-
-			if (user.Inventory is IAInventory inventory)
-				return inventory.CanAdd(this);
-
-			return true;
-		}
-
-		public void Remove()
-		{
-			PhysicsGroup?.Wake();
-			Delete();
-		}
-
-		public override void CreateViewModel()
-		{
-			Host.AssertClient();
-
-			if (string.IsNullOrEmpty(ViewModelPath))
-				return;
-
-			ViewModelEntity = new IAViewModel
-			{
-				Position = Position,
-				Owner = Owner,
-				EnableViewmodelRendering = true
-			};
-
-			ViewModelEntity.SetModel(ViewModelPath);
 		}
 
 		public virtual bool CanReload()

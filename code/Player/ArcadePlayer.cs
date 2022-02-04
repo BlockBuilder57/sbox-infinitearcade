@@ -187,7 +187,7 @@ namespace infinitearcade
 					if (Input.MouseWheel != 0)
 						inv.SwitchActiveSlot(Input.MouseWheel, true);
 
-					if (Input.Pressed(InputButton.Drop) && ActiveChild.IsValid())
+					if (Host.IsServer && Input.Pressed(InputButton.Drop) && ActiveChild.IsValid())
 					{
 						Entity active = inv.DropActive();
 
@@ -328,6 +328,19 @@ namespace infinitearcade
 		public override void OnAnimEventFootstep(Vector3 pos, int foot, float volume)
 		{
 			OnAnimEventFootstep(pos, foot, volume, false);
+		}
+
+		public override void StartTouch(Entity other)
+		{
+			if (IsClient) return;
+
+			if (other is SleepingPickupTrigger pickup)
+			{
+				StartTouch(other.Parent);
+				return;
+			}
+
+			Inventory?.Add(other, Inventory.Active == null);
 		}
 
 		public override PawnController GetActiveController()

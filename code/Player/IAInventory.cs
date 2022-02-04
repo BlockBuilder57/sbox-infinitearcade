@@ -33,6 +33,9 @@ namespace infinitearcade
 			//if (IsCarryingType(entity.GetType()))
 			//	return false;
 
+			if (ent is IACarriable carriable && carriable.PickupTrigger != null && carriable.PickupTrigger.IsSleeping)
+				return false;
+
 			if (ent is IAWeapon weapon && weapon.TimeSinceDropped < 0.5f)
 				return false;
 
@@ -55,9 +58,26 @@ namespace infinitearcade
 			if (ent is IAWeaponFirearm firearm && firearm.IsReloading)
 				return false;
 
+			ent.SetParent(null);
 			ent.OnCarryDrop(Owner);
 
-			return ent.Parent == null;
+			return true;
+		}
+
+		public override Entity DropActive()
+		{
+			if (!Host.IsServer) return null;
+
+			var ac = Owner.ActiveChild;
+			if (!ac.IsValid()) return null;
+
+			if (Drop(ac))
+			{
+				Owner.ActiveChild = null;
+				return ac;
+			}
+
+			return null;
 		}
 
 		public override bool SetActiveSlot(int i, bool evenIfEmpty = false)
