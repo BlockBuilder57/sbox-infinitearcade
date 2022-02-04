@@ -96,7 +96,7 @@ namespace infinitearcade
 		{
 			float ent_gravity = 1.0f;
 
-			if (m_player.PhysicsBody?.GravityScale != ent_gravity)
+			if (m_player.PhysicsBody != null && m_player.PhysicsBody.GravityScale != ent_gravity)
 				ent_gravity = (float)m_player.PhysicsBody?.GravityScale;
 
 			Velocity -= new Vector3(0, 0, ent_gravity * Gravity * 0.5f * (float)Math.Sqrt(Pawn.Scale)) * Time.Delta;
@@ -109,7 +109,7 @@ namespace infinitearcade
 		{
 			float ent_gravity = 1.0f;
 
-			if (m_player.PhysicsBody?.GravityScale != ent_gravity)
+			if (m_player.PhysicsBody != null && m_player.PhysicsBody.GravityScale != ent_gravity)
 				ent_gravity = (float)m_player.PhysicsBody?.GravityScale;
 
 			Velocity -= new Vector3(0, 0, ent_gravity * Gravity * 0.5f * (float)Math.Sqrt(Pawn.Scale)) * Time.Delta;
