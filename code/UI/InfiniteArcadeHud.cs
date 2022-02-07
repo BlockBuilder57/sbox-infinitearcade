@@ -12,7 +12,9 @@ namespace infinitearcade.UI
 	{
 		public static InfiniteArcadeHud Current { get; set; }
 
+		private ArcadePlayer m_player;
 		private CrosshairCanvas m_crosshairCanvas;
+		private InventoryBuckets m_buckets;
 
 		public InfiniteArcadeHud()
 		{
@@ -34,17 +36,17 @@ namespace infinitearcade.UI
 			// custom stuff
 			AddChild<PlayerStatus>();
 			AddChild<WeaponStatus>();
+			m_buckets = AddChild<InventoryBuckets>();
 		}
 
 		public override void Tick()
 		{
 			base.Tick();
 
-			ArcadePlayer player = Local.Pawn as ArcadePlayer;
-			if (player == null) return;
+			if (m_player == null)
+				m_player = Local.Pawn as ArcadePlayer;
 
-			// I don't need the player right now but I'm keeping it for the future
-			m_crosshairCanvas?.SetClass("hidden", player.Camera is not FirstPersonCamera);
+			m_crosshairCanvas?.SetClass("hidden", m_player.Camera is not FirstPersonCamera);
 		}
 
 		[Event.Hotload]
@@ -55,6 +57,23 @@ namespace infinitearcade.UI
 
 			InfiniteArcadeHud.Current?.Delete();
 			InfiniteArcadeHud hud = new();
+
+			if (Local.Pawn is ArcadePlayer player && player.Inventory is IAInventory inv)
+			{
+				hud.InventoryFullUpdate(inv.BucketList);
+			}
+		}
+
+		public void InventoryFullUpdate(Dictionary<string, List<Entity>> invBuckets)
+		{
+			if (m_buckets != null)
+				m_buckets.FullUpdate(invBuckets);
+		}
+
+		public void InventorySwitchActive(IACarriable prev, IACarriable cur)
+		{
+			if (m_buckets != null)
+				m_buckets.SwitchActive(prev, cur);
 		}
 	}
 }
