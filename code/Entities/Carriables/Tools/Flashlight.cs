@@ -10,6 +10,7 @@ namespace infinitearcade
 	[Library("tool_flashlight", Title = "Flashlight", Spawnable = true)]
 	public partial class Flashlight : IATool
 	{
+		public override string WorldModelPath => "weapons/rust_pistol/rust_pistol.vmdl";
 		public override string ViewModelPath => "weapons/rust_flashlight/v_rust_flashlight.vmdl";
 
 		private bool m_on = true;
@@ -26,8 +27,6 @@ namespace infinitearcade
 		public override void Spawn()
 		{
 			base.Spawn();
-
-			SetModel("weapons/rust_pistol/rust_pistol.vmdl");
 
 			m_spotlightWorld = CreateSpotlight();
 			m_spotlightWorld.SetParent(this, "slide", new Transform(m_spotlightWorldOffset));

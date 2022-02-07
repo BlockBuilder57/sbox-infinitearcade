@@ -9,6 +9,9 @@ namespace infinitearcade
 {
 	public partial class IACarriable : BaseCarriable
 	{
+		public virtual string WorldModelPath { get; set; } = "models/sbox_props/burger_box/burger_box.vmdl";
+		public virtual string BucketIdent { get; set; } = "none";
+
 		[Net, Predicted] public TimeSince TimeSinceDeployed { get; set; }
 		[Net] public TimeSince TimeSinceDropped { get; set; }
 
@@ -17,6 +20,9 @@ namespace infinitearcade
 		public override void Spawn()
 		{
 			base.Spawn();
+
+			if (!string.IsNullOrWhiteSpace(WorldModelPath))
+				SetModel(WorldModelPath);
 
 			CollisionGroup = CollisionGroup.Weapon; // so players touch it as a trigger but not as a solid
 			SetInteractsAs(CollisionLayer.Debris); // so player movement doesn't walk into it

@@ -10,7 +10,9 @@ namespace infinitearcade
 	[Library("weapon_pistol", Title = "Pistol", Spawnable = true)]
 	public partial class Pistol : IAWeaponFirearm
 	{
+		public override string WorldModelPath => "weapons/rust_pistol/rust_pistol.vmdl";
 		public override string ViewModelPath => "weapons/rust_pistol/v_rust_pistol.vmdl";
+		public override string BucketIdent => "secondary";
 
 		public override float PrimaryRate => 5f;
 		public override float SecondaryRate => 8f;
@@ -21,8 +23,6 @@ namespace infinitearcade
 			base.Spawn();
 
 			Primary = new WeaponAmmo(8, 32);
-
-			SetModel("weapons/rust_pistol/rust_pistol.vmdl");
 		}
 
 		public override bool CanPrimaryAttack()

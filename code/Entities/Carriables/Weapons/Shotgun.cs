@@ -7,10 +7,12 @@ using System.Threading.Tasks;
 
 namespace infinitearcade
 {
-	[Library("weapon_shotgun", Title = "Shotgun	", Spawnable = true)]
+	[Library("weapon_shotgun", Title = "Shotgun", Spawnable = true)]
 	public partial class Shotgun : IAWeaponFirearm
 	{
+		public override string WorldModelPath => "weapons/rust_pumpshotgun/rust_pumpshotgun.vmdl";
 		public override string ViewModelPath => "weapons/rust_pumpshotgun/v_rust_pumpshotgun.vmdl";
+		public override string BucketIdent => "primary";
 		public bool ReloadAnimHasInitialShellLoad = true;
 
 		public override float PrimaryRate => 1.5f;
@@ -21,8 +23,6 @@ namespace infinitearcade
 			base.Spawn();
 
 			Primary = new WeaponAmmo(6, 48);
-
-			SetModel("weapons/rust_pumpshotgun/rust_pumpshotgun.vmdl");
 		}
 
 		public override void SimulateAnimator(PawnAnimator anim)
