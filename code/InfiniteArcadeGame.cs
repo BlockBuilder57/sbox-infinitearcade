@@ -91,7 +91,7 @@ namespace infinitearcade
 		{
 			base.ClientJoined(client);
 
-			var player = new ArcadePlayer();
+			var player = new ArcadePlayer(client);
 			client.Pawn = player;
 
 			player.Respawn();

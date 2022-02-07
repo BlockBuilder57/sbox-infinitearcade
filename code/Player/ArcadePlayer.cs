@@ -21,12 +21,19 @@ namespace infinitearcade
 
 		public Transform VRSeatedOffset { private get; set; } = Transform.Zero;
 
+		public Clothing.Container ClothingContainer = new();
+
 		private bool m_clothed = false;
 		private DamageInfo m_lastDamage;
 
 		public ArcadePlayer()
 		{
 			Inventory = new IAInventory(this);
+		}
+
+		public ArcadePlayer(Client cl) : this()
+		{
+			ClothingContainer.LoadFromClient(cl);
 		}
 
 		public override void Respawn()
@@ -60,12 +67,14 @@ namespace infinitearcade
 			if (m_clothed)
 				ClothesSetVisiblity(true);
 			else
-			{
 				Clothe();
-				m_clothed = true;
-			}
 
 			CreateHull();
+
+			Inventory.Add(new Pistol());
+			Inventory.Add(new Shotgun());
+			Inventory.Add(new Flashlight());
+			Inventory.Add(new TestCarriable());
 
 			Game.Current?.MoveToSpawnpoint(this);
 			ResetInterpolation();
@@ -81,27 +90,18 @@ namespace infinitearcade
 			ArmorMultiplier = 1.0f;
 		}
 
-		[ConVar.ClientData("ia_player_clothes_head", Saved = true)]
-		public string ClothesHead { get; set; } = "models/citizen_clothes/hair/hair_femalebun.black.vmdl";
-		[ConVar.ClientData("ia_player_clothes_torso", Saved = true)]
-		public string ClothesTorso { get; set; } = "models/citizen_clothes/jacket/jacket.red.vmdl";
-		[ConVar.ClientData("ia_player_clothes_legs", Saved = true)]
-		public string ClothesLegs { get; set; } = "models/citizen_clothes/trousers/trousers.jeans.vmdl;models/citizen_clothes/shoes/trainers.vmdl";
-
 		public readonly List<ModelEntity> Clothing = new List<ModelEntity>();
 
 		public virtual void Clothe()
 		{
-			List<string> splitClothes = new();
+			ClothingContainer.DressEntity(this);
+			m_clothed = true;
+		}
 
-			splitClothes.AddRange(Client.GetClientData("ia_player_clothes_head", "").Split(';'));
-			splitClothes.AddRange(Client.GetClientData("ia_player_clothes_torso", "").Split(';'));
-			splitClothes.AddRange(Client.GetClientData("ia_player_clothes_legs", "").Split(';'));
-
-			foreach (string modelStr in splitClothes)
-			{
-				AddAsClothes(modelStr);
-			}
+		public virtual void Undress()
+		{
+			ClothingContainer.ClearEntities();
+			m_clothed = false;
 		}
 
 		public void AddAsClothes(string modelStr, string specificBone = null, Transform? offsetTransform = null)
@@ -130,17 +130,12 @@ namespace infinitearcade
 			}
 		}
 
-		public virtual void Undress()
-		{
-			Clothing?.ForEach(entity => entity.Delete());
-			Clothing?.Clear();
-
-			m_clothed = false;
-		}
-
 		public void ClothesSetVisiblity(bool visible)
 		{
-			Clothing?.ForEach(entity => entity.EnableDrawing = visible);
+			// we can't get the entities directly for some reason
+			foreach (AnimEntity model in Children)
+				if (model.Tags.Has("clothes"))
+					model.EnableDrawing = visible;
 		}
 
 		public virtual Transform GetSpawnpoint()
