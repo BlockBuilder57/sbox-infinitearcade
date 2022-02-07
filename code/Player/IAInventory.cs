@@ -9,9 +9,28 @@ namespace infinitearcade
 {
 	public class IAInventory : BaseInventory
 	{
+		public Dictionary<string, List<Entity>> BucketList = new();
+
 		public IAInventory(Entity owner) : base(owner)
 		{
+			BucketList = new() {
+				{ "primary", new() },
+				{ "secondary", new() },
+				{ "tool", new() }
+			};
+		}
 
+		[ServerCmd("inv_clear")]
+		public static void ClearCommand()
+		{
+			Client client = ConsoleSystem.Caller;
+			if (!client.HasPermission("debug"))
+				return;
+
+			if (client?.Pawn is ArcadePlayer player)
+			{
+				player.Inventory.DeleteContents();
+			}
 		}
 
 		public override bool CanAdd(Entity ent)
@@ -42,9 +61,44 @@ namespace infinitearcade
 			return base.Add(ent, makeActive);
 		}
 
+		public override void DeleteContents()
+		{
+			base.DeleteContents();
+
+			BucketList.Clear();
+		}
+
 		public bool IsCarryingType(Type t)
 		{
 			return List.Any(x => x?.GetType() == t);
+		}
+
+		public override void OnChildAdded(Entity child)
+		{
+			if (!CanAdd(child))
+				return;
+
+			if (List.Contains(child))
+				throw new System.Exception("Trying to add to inventory multiple times. This is gated by Entity:OnChildAdded and should never happen!");
+
+			if (child is IACarriable carriable)
+			{
+				BucketList.AddOrCreate(carriable.BucketIdent).Add(child);
+			}
+
+			RecalculateFlatList();
+		}
+
+		public override void OnChildRemoved(Entity child)
+		{
+			if (child is IACarriable carriable)
+			{
+				List<Entity> list = BucketList.GetValueOrDefault(carriable.BucketIdent);
+				if (list != null)
+					list.Remove(child);
+			}
+
+			RecalculateFlatList();
 		}
 
 		public override bool Drop(Entity ent)
@@ -89,6 +143,16 @@ namespace infinitearcade
 			}
 
 			return base.SetActiveSlot(i, evenIfEmpty);
+		}
+
+		public void RecalculateFlatList()
+		{
+			List.Clear();
+			foreach (KeyValuePair<string, List<Entity>> kvp in BucketList)
+			{
+				if (kvp.Value != null)
+					List.AddRange(kvp.Value);
+			}
 		}
 	}
 }

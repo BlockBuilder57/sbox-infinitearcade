@@ -22,6 +22,7 @@ namespace infinitearcade
 		public Transform VRSeatedOffset { private get; set; } = Transform.Zero;
 
 		private bool m_clothed = false;
+		private DamageInfo m_lastDamage;
 
 		public ArcadePlayer()
 		{
@@ -93,9 +94,9 @@ namespace infinitearcade
 		{
 			List<string> splitClothes = new();
 
-			splitClothes.AddRange(Client.GetClientData("ia_player_clothes_head").Split(';'));
-			splitClothes.AddRange(Client.GetClientData("ia_player_clothes_torso").Split(';'));
-			splitClothes.AddRange(Client.GetClientData("ia_player_clothes_legs").Split(';'));
+			splitClothes.AddRange(Client.GetClientData("ia_player_clothes_head", "").Split(';'));
+			splitClothes.AddRange(Client.GetClientData("ia_player_clothes_torso", "").Split(';'));
+			splitClothes.AddRange(Client.GetClientData("ia_player_clothes_legs", "").Split(';'));
 
 			foreach (string modelStr in splitClothes)
 			{
@@ -121,7 +122,7 @@ namespace infinitearcade
 			{
 				Clothing.Add(model);
 
-				ModelPropData propInfo = model.GetModel().GetPropData();
+				ModelPropData propInfo = model.Model.GetPropData();
 				if (propInfo?.ParentBodygroupName != null)
 				{
 					SetBodyGroup(propInfo.ParentBodygroupName, propInfo.ParentBodygroupValue);
@@ -165,7 +166,7 @@ namespace infinitearcade
 
 		public override void Simulate(Client cl)
 		{
-			if (IsServer && LifeState == LifeState.Dead && Input.Released(InputButton.Attack1))
+			if (IsServer && LifeState == LifeState.Dead && Input.Pressed(InputButton.Attack1))
 			{
 				Respawn();
 			}
@@ -185,13 +186,32 @@ namespace infinitearcade
 				if (Inventory is IAInventory inv)
 				{
 					if (Input.MouseWheel != 0)
-						inv.SwitchActiveSlot(Input.MouseWheel, true);
+						inv.SwitchActiveSlot(-Input.MouseWheel, true);
+
+					int offset = (int)Math.Log2((int)InputButton.Slot1);
+
+					void SlotInput(InputButton btn)
+					{
+						if (Input.Pressed(btn))
+							inv.SetActiveSlot((int)Math.Log2((int)btn) - offset, true);
+					}
+
+					SlotInput(InputButton.Slot1);
+					SlotInput(InputButton.Slot2);
+					SlotInput(InputButton.Slot3);
+					SlotInput(InputButton.Slot4);
+					SlotInput(InputButton.Slot5);
+					SlotInput(InputButton.Slot6);
+					SlotInput(InputButton.Slot7);
+					SlotInput(InputButton.Slot8);
+					SlotInput(InputButton.Slot9);
+					SlotInput(InputButton.Slot0);
 
 					if (Host.IsServer && Input.Pressed(InputButton.Drop) && ActiveChild.IsValid())
 					{
 						Entity active = inv.DropActive();
 
-						if (active.IsValid())
+						if (active.IsValid() && active.PhysicsGroup != null)
 						{
 							active.PhysicsGroup.Velocity = Velocity + BaseVelocity;
 
@@ -334,13 +354,16 @@ namespace infinitearcade
 		{
 			if (IsClient) return;
 
-			if (other is SleepingPickupTrigger pickup)
+			if (other is SleepingPickupTrigger)
 			{
 				StartTouch(other.Parent);
 				return;
 			}
 
-			Inventory?.Add(other, Inventory.Active == null);
+			if (other is IACarriable)
+			{
+				Inventory?.Add(other, Inventory.Active == null);
+			}
 		}
 
 		public override PawnController GetActiveController()
@@ -417,18 +440,23 @@ namespace infinitearcade
 				if (Health <= 0)
 				{
 					//Health = 0;
+					// set this early
+					m_lastDamage = info;
 					this.OnKilled();
 				}
 
 				//DebugOverlay.ScreenText(debugPos, debugLine += 1, Color.Yellow, $"Final: {Health} {Armor} (x{ArmorMultiplier}:F1)", debugTime);
 			}
+
+			base.TakeDamage(info);
+			m_lastDamage = info;
 		}
 
 		public override void OnKilled()
 		{
 			base.OnKilled();
 
-			BecomeRagdollOnClient(Velocity, DamageFlags.Generic, Vector3.Zero, Vector3.Zero, GetHitboxBone(0));
+			BecomeRagdollOnClient(Velocity, m_lastDamage.Flags, m_lastDamage.Position, m_lastDamage.Force, GetHitboxBone(m_lastDamage.HitboxIndex));
 			Camera = new SpectateRagdollCamera();
 			Controller = null;
 
@@ -445,15 +473,47 @@ namespace infinitearcade
 			bubbleUp.Reverse();
 			bubbleUp.ForEach(x => x.ExitMachine());
 
-			if (this is not ArcadeMachinePlayer)
-				Inventory?.DropActive();
+			//if (this is not ArcadeMachinePlayer)
+			//	Inventory?.DropActive();
 			Inventory?.DeleteContents();
 		}
 
 		private void BecomeRagdollOnClient(Vector3 velocity, DamageFlags damageFlags, Vector3 forcePos, Vector3 force, int bone)
 		{
+			ModelEntity ent = CreateDeathRagdoll();
+
+			ClothesSetVisiblity(false);
+			RemoveAllDecals();
+
+			ent.PhysicsGroup.Velocity = velocity;
+
+			if (damageFlags.HasFlag(DamageFlags.Bullet) || damageFlags.HasFlag(DamageFlags.PhysicsImpact))
+			{
+				PhysicsBody body = bone > 0 ? ent.GetBonePhysicsBody(bone) : null;
+
+				if (body != null)
+					body.ApplyImpulseAt(forcePos, force * body.Mass);
+				else
+					ent.PhysicsGroup.ApplyImpulse(force);
+			}
+
+			if (damageFlags.HasFlag(DamageFlags.Blast))
+			{
+				if (ent.PhysicsGroup != null)
+				{
+					ent.PhysicsGroup.AddVelocity((Position - (forcePos + Vector3.Down * 100.0f)).Normal * (force.Length * 0.2f));
+					var angularDir = (Rotation.FromYaw(90) * force.WithZ(0).Normal).Normal;
+					ent.PhysicsGroup.AddAngularVelocity(angularDir * (force.Length * 0.02f));
+				}
+			}
+
+			Corpse = ent;
+		}
+
+		public ModelEntity CreateDeathRagdoll()
+		{
 			if (string.IsNullOrEmpty(GetModelName()))
-				return;
+				return null;
 
 			var ent = new ModelEntity();
 			ent.Position = Position;
@@ -495,33 +555,9 @@ namespace infinitearcade
 				}
 			}
 
-			ClothesSetVisiblity(false);
-
-			ent.PhysicsGroup.Velocity = velocity;
-
-			if (damageFlags.HasFlag(DamageFlags.Bullet) || damageFlags.HasFlag(DamageFlags.PhysicsImpact))
-			{
-				PhysicsBody body = bone > 0 ? ent.GetBonePhysicsBody(bone) : null;
-
-				if (body != null)
-					body.ApplyImpulseAt(forcePos, force * body.Mass);
-				else
-					ent.PhysicsGroup.ApplyImpulse(force);
-			}
-
-			if (damageFlags.HasFlag(DamageFlags.Blast))
-			{
-				if (ent.PhysicsGroup != null)
-				{
-					ent.PhysicsGroup.AddVelocity((Position - (forcePos + Vector3.Down * 100.0f)).Normal * (force.Length * 0.2f));
-					var angularDir = (Rotation.FromYaw(90) * force.WithZ(0).Normal).Normal;
-					ent.PhysicsGroup.AddAngularVelocity(angularDir * (force.Length * 0.02f));
-				}
-			}
-
-			Corpse = ent;
-
 			ent.DeleteAsync(10.0f);
+
+			return ent;
 		}
 
 		protected bool IsUseDisabled()

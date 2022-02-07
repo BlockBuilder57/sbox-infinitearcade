@@ -100,5 +100,27 @@ namespace infinitearcade
 				player.ResetSeatedPos();
 			}
 		}
+
+		[ServerCmd("create_ragdoll")]
+		public static void CreateRagdollCommand()
+		{
+			Client client = ConsoleSystem.Caller;
+
+			if (client?.Pawn is ArcadePlayer player)
+			{
+				ModelEntity ent = player.CreateDeathRagdoll();
+
+				foreach (PhysicsJoint joint in ent.PhysicsGroup.Joints)
+				{
+					//Log.Info($"{joint.Body1} -> {joint.Body2} | {joint.JointFrame1.Angles()} -> {joint.JointFrame2.Angles()}");
+					// I don't think we can access specific joint properties yet so this vaguely works for now
+					joint.LocalJointFrame1 = Rotation.Identity;
+					joint.LocalJointFrame2 = Rotation.Identity;
+				}
+
+				ent.SetRagdollVelocityFrom(player);
+				ent.PhysicsGroup.Velocity = player.Velocity;
+			}
+		}
 	}
 }
