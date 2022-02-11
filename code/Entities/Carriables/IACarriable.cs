@@ -9,13 +9,18 @@ namespace infinitearcade
 {
 	public partial class IACarriable : BaseCarriable
 	{
-		public virtual string WorldModelPath { get; set; } = "models/sbox_props/burger_box/burger_box.vmdl";
-		public virtual string BucketIdent { get; set; } = "none";
+		public virtual string WorldModelPath { get; set; } = "models/error.vmdl";
+		[Net] public string BucketIdent { get; set; } = "none";
 
 		[Net, Predicted] public TimeSince TimeSinceDeployed { get; set; }
 		[Net] public TimeSince TimeSinceDropped { get; set; }
 
 		public SleepingPickupTrigger PickupTrigger { get; set; }
+
+		public IACarriable()
+		{
+			BucketIdent = "none";
+		}
 
 		public override void Spawn()
 		{

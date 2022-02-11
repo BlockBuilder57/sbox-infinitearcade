@@ -122,5 +122,23 @@ namespace infinitearcade
 				ent.PhysicsGroup.Velocity = player.Velocity;
 			}
 		}
+
+		[ServerCmd("test_bucket")]
+		public static void TestBucketCommand()
+		{
+			Client client = ConsoleSystem.Caller;
+
+			TestCarriable test1 = new TestCarriable();
+			TestCarriable test2 = new TestCarriable();
+			TestCarriable test3 = new TestCarriable();
+
+			test1.Position = new Vector3(0, 0, 128);
+			test2.Position = new Vector3(128, 0, 128);
+			test3.Position = new Vector3(-128, 0, 128);
+
+			test1.Scale = 0.5f;
+			test2.Scale = 2;
+			test3.Scale = 1;
+		}
 	}
 }

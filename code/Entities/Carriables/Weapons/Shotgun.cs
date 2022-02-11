@@ -12,16 +12,14 @@ namespace infinitearcade
 	{
 		public override string WorldModelPath => "weapons/rust_pumpshotgun/rust_pumpshotgun.vmdl";
 		public override string ViewModelPath => "weapons/rust_pumpshotgun/v_rust_pumpshotgun.vmdl";
-		public override string BucketIdent => "primary";
 		public bool ReloadAnimHasInitialShellLoad = true;
 
 		public override float PrimaryRate => 1.5f;
 		public override float ReloadTime => .5f; // time per shell
 
-		public override void Spawn()
+		public Shotgun()
 		{
-			base.Spawn();
-
+			BucketIdent = "primary";
 			Primary = new WeaponAmmo(6, 48);
 		}
 

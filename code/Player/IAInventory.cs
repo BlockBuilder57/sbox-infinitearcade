@@ -11,9 +11,21 @@ namespace infinitearcade
 	public partial class IAInventory : BaseNetworkable, IBaseInventory
 	{
 		public Entity Owner { get; init; }
-		[Net] public List<Entity> List { get; set; } = new List<Entity>();
-		[Net] public Dictionary<string, List<Entity>> BucketList { get; set; } = new();
+		[Net] public IList<IACarriable> List { get; set; } = new List<IACarriable>();
 
+		// because this type cannot be networked for some reason,
+		// this needs to be a mirror to the flat List
+		public Dictionary<string, List<IACarriable>> BucketList { get; set; } = new();
+
+		private static Dictionary<string, List<IACarriable>> m_bucketTemplate = new()
+		{
+			{ "primary", new() },
+			{ "secondary", new() },
+			{ "tool", new() },
+			{ "none", new() }
+		};
+
+		public virtual Entity Active => Owner.ActiveChild;
 		public virtual int Count() => List.Count;
 		public virtual bool Contains(Entity ent) => List.Contains(ent);
 		public bool IsCarryingType(Type t) => List.Any(x => x?.GetType() == t);
@@ -22,11 +34,7 @@ namespace infinitearcade
 		{
 			Owner = owner;
 
-			BucketList = new() {
-				{ "primary", new() },
-				{ "secondary", new() },
-				{ "tool", new() }
-			};
+			BucketList = m_bucketTemplate;
 		}
 
 		[ServerCmd("inv_clear")]
@@ -128,8 +136,6 @@ namespace infinitearcade
 			return true;
 		}
 
-		
-
 		public virtual void OnChildAdded(Entity child)
 		{
 			if (!CanAdd(child))
@@ -139,23 +145,20 @@ namespace infinitearcade
 				throw new System.Exception("Trying to add to inventory multiple times. This is gated by Entity:OnChildAdded and should never happen!");
 
 			if (child is IACarriable carriable)
-			{
-				BucketList.AddOrCreate(carriable.BucketIdent).Add(child);
-			}
+				List?.Add(carriable);
 
-			RecalculateFlatList();
+			if (child is IACarriable carriable2)
+				Log.Info($"{(Host.IsClient ? "CLIENT" : "SERVER")} says we're adding {carriable2.BucketIdent}");
+
+			BucketListFullUpdate();
 		}
 
 		public virtual void OnChildRemoved(Entity child)
 		{
 			if (child is IACarriable carriable)
-			{
-				List<Entity> list = BucketList.GetValueOrDefault(carriable.BucketIdent);
-				if (list != null)
-					list.Remove(child);
-			}
+				List?.Remove(carriable);
 
-			RecalculateFlatList();
+			BucketListFullUpdate();
 		}
 
 		public virtual bool Drop(Entity ent)
@@ -191,26 +194,17 @@ namespace infinitearcade
 			return null;
 		}
 
-		/// <summary>
-		/// Returns true if this inventory contains this entity
-		/// </summary>
-		
-
-
-		/// <summary>
-		/// Returns the active entity
-		/// </summary>
-		public virtual Entity Active => Owner.ActiveChild;
-
-		/// <summary>
-		/// Make this entity the active one
-		/// </summary>
 		public virtual bool SetActive(Entity ent)
 		{
 			if (Active == ent) return false;
 			if (!Contains(ent)) return false;
 
+			Entity prev = Owner.ActiveChild;
 			Owner.ActiveChild = ent;
+
+			if (Host.IsClient)
+				InfiniteArcadeHud.Current.InventorySwitchActive(prev as IACarriable, Owner.ActiveChild as IACarriable);
+
 			return true;
 		}
 
@@ -260,20 +254,25 @@ namespace infinitearcade
 			return SetActiveSlot(nextSlot, false);
 		}
 
-		public void RecalculateFlatList()
+		public void BucketListFullUpdate()
 		{
+			// dirty function, please replace me
+
+			//BucketList.Clear();
+			foreach (var list in BucketList.Values)
+				list.Clear();
+
+			foreach (IACarriable carriable in List)
+				BucketList.AddOrCreate(carriable.BucketIdent).Add(carriable);
+
 			List.Clear();
-			foreach (KeyValuePair<string, List<Entity>> kvp in BucketList)
-			{
-				if (kvp.Value != null)
-				{
-					foreach (Entity ent in kvp.Value)
-						List.Add(ent);
-				}
-			}
+
+			foreach (var list in BucketList.Values)
+				foreach (var carriable in list)
+					List.Add(carriable);
 
 			if (Host.IsClient)
-				InfiniteArcadeHud.Current.InventoryFullUpdate(BucketList);
+				InfiniteArcadeHud.Current.InventoryFullUpdate(this);
 		}
 	}
 }

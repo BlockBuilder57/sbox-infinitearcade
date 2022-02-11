@@ -24,6 +24,11 @@ namespace infinitearcade
 
 		private Vector3 m_spotlightWorldOffset = (Vector3.Forward * 10) + (Vector3.Up * 5);
 
+		public Flashlight()
+		{
+			BucketIdent = "tool";
+		}
+
 		public override void Spawn()
 		{
 			base.Spawn();

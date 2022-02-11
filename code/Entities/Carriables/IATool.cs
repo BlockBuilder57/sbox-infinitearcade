@@ -9,6 +9,9 @@ namespace infinitearcade
 {
 	public partial class IATool : IACarriable, IUse
 	{
-		public override string BucketIdent => "tool";
+		public IATool()
+		{
+			BucketIdent = "tool";
+		}
 	}
 }

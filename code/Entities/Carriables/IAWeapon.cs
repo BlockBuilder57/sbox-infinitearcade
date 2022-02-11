@@ -14,11 +14,6 @@ namespace infinitearcade
 		[Net, Predicted] public TimeSince TimeSincePrimaryAttack { get; set; }
 		[Net, Predicted] public TimeSince TimeSinceSecondaryAttack { get; set; }
 
-		public override void Spawn()
-		{
-			base.Spawn();
-		}
-
 		public override void Simulate(Client player)
 		{
 			if (CanReload())

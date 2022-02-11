@@ -60,14 +60,14 @@ namespace infinitearcade.UI
 
 			if (Local.Pawn is ArcadePlayer player && player.Inventory is IAInventory inv)
 			{
-				hud.InventoryFullUpdate(inv.BucketList);
+				hud.InventoryFullUpdate(inv);
 			}
 		}
 
-		public void InventoryFullUpdate(Dictionary<string, List<Entity>> invBuckets)
+		public void InventoryFullUpdate(IAInventory inv)
 		{
 			if (m_buckets != null)
-				m_buckets.FullUpdate(invBuckets);
+				m_buckets.FullUpdate(inv);
 		}
 
 		public void InventorySwitchActive(IACarriable prev, IACarriable cur)
