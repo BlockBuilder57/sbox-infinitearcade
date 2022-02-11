@@ -26,9 +26,12 @@ namespace infinitearcade
 		private bool m_clothed = false;
 		private DamageInfo m_lastDamage;
 
+		private int m_slotOffset = (int)Math.Log2((int)InputButton.Slot1);
+
 		public ArcadePlayer()
 		{
-			Inventory = new IAInventory(this);
+			if (Host.IsServer)
+				Inventory = new IAInventory(this);
 		}
 
 		public ArcadePlayer(Client cl) : this()
@@ -38,6 +41,8 @@ namespace infinitearcade
 
 		public override void Respawn()
 		{
+			Host.AssertServer();
+
 			SetModel("models/citizen/citizen.vmdl");
 
 			Controller = new QPhysController();
@@ -55,8 +60,6 @@ namespace infinitearcade
 			EnableHideInFirstPerson = true;
 			EnableShadowInFirstPerson = true;
 
-			Host.AssertServer();
-
 			LifeState = LifeState.Alive;
 			Velocity = Vector3.Zero;
 			WaterLevel.Clear();
@@ -71,10 +74,9 @@ namespace infinitearcade
 
 			CreateHull();
 
-			Inventory.Add(new Pistol());
-			Inventory.Add(new Shotgun());
-			Inventory.Add(new Flashlight());
-			Inventory.Add(new TestCarriable());
+			Inventory?.Add(new Shotgun());
+			Inventory?.Add(new Pistol());
+			Inventory?.Add(new Flashlight());
 
 			Game.Current?.MoveToSpawnpoint(this);
 			ResetInterpolation();
@@ -133,7 +135,7 @@ namespace infinitearcade
 		public void ClothesSetVisiblity(bool visible)
 		{
 			// we can't get the entities directly for some reason
-			foreach (AnimEntity model in Children)
+			foreach (ModelEntity model in Children)
 				if (model.Tags.Has("clothes"))
 					model.EnableDrawing = visible;
 		}
@@ -178,17 +180,15 @@ namespace infinitearcade
 
 				SimulateActiveChild(cl, ActiveChild);
 
-				if (Inventory is IAInventory inv)
+				if (Host.IsServer && Inventory is IAInventory inv)
 				{
 					if (Input.MouseWheel != 0)
 						inv.SwitchActiveSlot(-Input.MouseWheel, true);
 
-					int offset = (int)Math.Log2((int)InputButton.Slot1);
-
 					void SlotInput(InputButton btn)
 					{
 						if (Input.Pressed(btn))
-							inv.SetActiveSlot((int)Math.Log2((int)btn) - offset, true);
+							inv.SetActiveSlot((int)Math.Log2((int)btn) - m_slotOffset, true);
 					}
 
 					SlotInput(InputButton.Slot1);
@@ -202,7 +202,7 @@ namespace infinitearcade
 					SlotInput(InputButton.Slot9);
 					SlotInput(InputButton.Slot0);
 
-					if (Host.IsServer && Input.Pressed(InputButton.Drop) && ActiveChild.IsValid())
+					if (Input.Pressed(InputButton.Drop) && ActiveChild.IsValid())
 					{
 						Entity active = inv.DropActive();
 
@@ -358,6 +358,12 @@ namespace infinitearcade
 			if (other is IACarriable)
 			{
 				Inventory?.Add(other, Inventory.Active == null);
+			}
+
+			if (other is GlassShard glassShard)
+			{
+				glassShard.PhysicsGroup?.Wake();
+				glassShard.Velocity = Velocity * 1.2f;
 			}
 		}
 

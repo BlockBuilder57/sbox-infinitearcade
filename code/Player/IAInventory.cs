@@ -11,19 +11,11 @@ namespace infinitearcade
 	public partial class IAInventory : BaseNetworkable, IBaseInventory
 	{
 		public Entity Owner { get; init; }
-		[Net] public IList<IACarriable> List { get; set; } = new List<IACarriable>();
+		[Net] public List<IACarriable> List { get; set; } = new List<IACarriable>();
 
 		// because this type cannot be networked for some reason,
 		// this needs to be a mirror to the flat List
 		public Dictionary<string, List<IACarriable>> BucketList { get; set; } = new();
-
-		private static Dictionary<string, List<IACarriable>> m_bucketTemplate = new()
-		{
-			{ "primary", new() },
-			{ "secondary", new() },
-			{ "tool", new() },
-			{ "none", new() }
-		};
 
 		public virtual Entity Active => Owner.ActiveChild;
 		public virtual int Count() => List.Count;
@@ -32,9 +24,11 @@ namespace infinitearcade
 
 		public IAInventory(Entity owner)
 		{
+			Host.AssertServer();
+
 			Owner = owner;
 
-			BucketList = m_bucketTemplate;
+			DeleteContents();
 		}
 
 		[ServerCmd("inv_clear")]
@@ -52,13 +46,18 @@ namespace infinitearcade
 
 		public virtual void DeleteContents()
 		{
-			Host.AssertServer();
-
 			foreach (var item in List.ToArray())
 				item.Delete();
 
 			List.Clear();
 			BucketList.Clear();
+			BucketList = new()
+			{
+				{ "primary", new() },
+				{ "secondary", new() },
+				{ "tool", new() },
+				{ "none", new() }
+			};
 		}
 
 		public virtual Entity GetSlot(int i)
@@ -146,9 +145,6 @@ namespace infinitearcade
 
 			if (child is IACarriable carriable)
 				List?.Add(carriable);
-
-			if (child is IACarriable carriable2)
-				Log.Info($"{(Host.IsClient ? "CLIENT" : "SERVER")} says we're adding {carriable2.BucketIdent}");
 
 			BucketListFullUpdate();
 		}
@@ -256,6 +252,7 @@ namespace infinitearcade
 
 		public void BucketListFullUpdate()
 		{
+			//Log.Info($"BucketListFullUpdate called from {(Host.IsClient ? "CLIENT" : "SERVER")}");
 			// dirty function, please replace me
 
 			//BucketList.Clear();
