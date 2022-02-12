@@ -10,8 +10,11 @@ namespace infinitearcade
 {
 	public static partial class IADebugging
 	{
-		[ConVar.Replicated] public static bool debug_camera { get; set; } = false;
-		[ConVar.Replicated] public static bool cl_showmap { get; set; } = false;
+		[ClientVar] public static bool debug_camera { get; set; } = false;
+		[ClientVar] public static bool cl_showmap { get; set; } = false;
+
+		[ConVar.ClientData(Help = "Debugs a client by network identity (entity number).")]
+		public static int debug_client { get; set; } = 0;
 
 		public static Vector2 Offset = new Vector2(20, 20) + (Host.IsClient ? Vector2.Left * Screen.Width / 2 : 0);
 		public static int LineOffset = 0;
@@ -27,22 +30,56 @@ namespace infinitearcade
 
 		public static void ScreenText(string text, float duration = 0f)
 		{
-			DebugOverlay.ScreenText(Offset, LineOffset++, GetSideColor(), text, duration);
+			DebugOverlay.ScreenText(Offset, LineOffset++, GetSideColor(), text, duration == 0f && Host.IsClient ? Global.TickInterval : duration);
 		}
 
 		public static void ScreenText(string text, Color color, float duration = 0f)
 		{
-			DebugOverlay.ScreenText(Offset, LineOffset++, color, text, duration);
+			DebugOverlay.ScreenText(Offset, LineOffset++, color, text, duration == 0f && Host.IsClient ? Global.TickInterval : duration);
 		}
 
 		public static void ScreenText(Vector2 position, string text, int line = 0, float duration = 0f)
 		{
-			DebugOverlay.ScreenText(position, 0, GetSideColor(), text, duration);
+			DebugOverlay.ScreenText(position, 0, GetSideColor(), text, duration == 0f && Host.IsClient ? Global.TickInterval : duration);
 		}
 
-		public static void Simulate()
+		public static void Simulate(Client cl)
 		{
+			// server or clientside stuff
+			int cl_debug_client = cl.GetClientData<int>("debug_client", 0);
 
+			if (Host.IsServer && cl.HasPermission("debug") && cl_debug_client > 0 && Client.All.FirstOrDefault(x => x.NetworkIdent == cl_debug_client)?.Pawn is ArcadePlayer player)
+			{
+				if (player.Inventory is IAInventory inv)
+				{
+					Entity ent;
+					for (int i = 0; i < inv.List?.Count; i++)
+					{
+						ent = inv.List[i];
+
+						if (ent.IsValid())
+							ScreenText($"[{i}] {ent.Name}");
+						else
+							ScreenText($"[{i}] (null)");
+					}
+
+					foreach (var kvp in inv.BucketList)
+					{
+						ScreenText(kvp.Key);
+
+						for (int i = 0; i < inv.BucketList[kvp.Key].Count; i++)
+						{
+							ent = inv.BucketList[kvp.Key][i];
+
+							if (ent.IsValid())
+								ScreenText($"    [{i}] {ent.Name}");
+							else
+								ScreenText($"    [{i}] (null)");
+						}
+					}
+				}
+				
+			}
 		}
 
 		public static void FrameSimulate(Client cl)
@@ -74,7 +111,7 @@ namespace infinitearcade
 
 			if (cl_showmap)
 			{
-				ScreenText(m_gamemodeOffset, $"{Global.GameName} in {(m_mapLocal ? @"maps\" + Global.MapName + ".vpk" : Global.MapName)}");
+				ScreenText(m_gamemodeOffset, $"{Global.GameName} on {(m_mapLocal ? @"maps\" + Global.MapName + ".vpk" : Global.MapName)}");
 			}
 		}
 	}

@@ -4,6 +4,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Sandbox;
+using Sandbox.Joints;
+using Sandbox.UI;
 
 namespace infinitearcade
 {
@@ -39,7 +41,7 @@ namespace infinitearcade
 			}
 		}
 
-		[ServerCmd("hurtme2")]
+		[ServerCmd("hurtme")]
 		public static void HurtMeCommand(float amount)
 		{
 			Client client = ConsoleSystem.Caller;
@@ -101,6 +103,17 @@ namespace infinitearcade
 			}
 		}
 
+		[ServerCmd("respawnpawn")]
+		public static void RespawnPawnCommand()
+		{
+			Client client = ConsoleSystem.Caller;
+			if (!client.HasPermission("debug"))
+				return;
+
+			Game.Current.ClientDisconnect(client, NetworkDisconnectionReason.UNUSUAL);
+			Game.Current.ClientJoined(client);
+		}
+
 		[ServerCmd("create_ragdoll")]
 		public static void CreateRagdollCommand()
 		{
@@ -121,24 +134,6 @@ namespace infinitearcade
 				ent.SetRagdollVelocityFrom(player);
 				ent.PhysicsGroup.Velocity = player.Velocity;
 			}
-		}
-
-		[ServerCmd("test_bucket")]
-		public static void TestBucketCommand()
-		{
-			Client client = ConsoleSystem.Caller;
-
-			TestCarriable test1 = new TestCarriable();
-			TestCarriable test2 = new TestCarriable();
-			TestCarriable test3 = new TestCarriable();
-
-			test1.Position = new Vector3(0, 0, 128);
-			test2.Position = new Vector3(128, 0, 128);
-			test3.Position = new Vector3(-128, 0, 128);
-
-			test1.Scale = 0.5f;
-			test2.Scale = 2;
-			test3.Scale = 1;
 		}
 	}
 }
