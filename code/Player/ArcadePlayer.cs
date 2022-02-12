@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using infinitearcade.UI;
 
 namespace infinitearcade
 {
@@ -74,9 +75,13 @@ namespace infinitearcade
 
 			CreateHull();
 
-			Inventory?.Add(new Shotgun());
-			Inventory?.Add(new Pistol());
-			Inventory?.Add(new Flashlight());
+			if (Inventory is IAInventory inv)
+			{
+				inv.Add(new Shotgun());
+				inv.Add(new Pistol());
+				inv.Add(new Flashlight());
+				HudFullUpdate(To.Single(this), inv.List.ToArray());
+			}
 
 			Game.Current?.MoveToSpawnpoint(this);
 			ResetInterpolation();
@@ -559,6 +564,25 @@ namespace infinitearcade
 			ent.DeleteAsync(10.0f);
 
 			return ent;
+		}
+
+		// This is kinda weird, but with a serverside inventory I think it's the best I can do
+		[ClientRpc]
+		public void HudFullUpdate(IACarriable[] inv)
+		{
+			InfiniteArcadeHud hud = Local.Hud as InfiniteArcadeHud;
+
+			if (hud != null)
+				hud.InventoryFullUpdate(inv);
+		}
+
+		[ClientRpc]
+		public void HudSwitchActive(IACarriable prev, IACarriable next)
+		{
+			InfiniteArcadeHud hud = Local.Hud as InfiniteArcadeHud;
+
+			if (hud != null)
+				hud.InventorySwitchActive(prev, next);
 		}
 
 		protected bool IsUseDisabled()

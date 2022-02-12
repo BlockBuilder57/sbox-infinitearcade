@@ -57,14 +57,9 @@ namespace infinitearcade.UI
 
 			InfiniteArcadeHud.Current?.Delete();
 			InfiniteArcadeHud hud = new();
-
-			if (Local.Pawn is ArcadePlayer player && player.Inventory is IAInventory inv)
-			{
-				hud.InventoryFullUpdate(inv);
-			}
 		}
 
-		public void InventoryFullUpdate(IAInventory inv)
+		public void InventoryFullUpdate(IACarriable[] inv)
 		{
 			if (m_buckets != null)
 				m_buckets.FullUpdate(inv);

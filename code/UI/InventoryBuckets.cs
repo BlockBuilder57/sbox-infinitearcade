@@ -18,14 +18,20 @@ namespace infinitearcade.UI
 			StyleSheet.Load("/UI/InventoryBuckets.scss");
 		}
 
-		public void FullUpdate(IAInventory inv)
+		public void FullUpdate(IACarriable[] inv)
 		{
 			foreach (var item in icons.Values)
 				item.ForEach(x => x.Delete());
 			icons.Clear();
 
-			foreach (IACarriable carriable in inv.List)
-				icons.AddOrCreate(carriable.BucketIdent).Add(new InventoryIcon(this, carriable));
+			foreach (IACarriable carriable in inv)
+			{
+				InventoryIcon icon = new InventoryIcon(this, carriable);
+				if (carriable.IsActiveChild())
+					icon.AddClass("active");
+
+				icons.AddOrCreate(carriable.BucketIdent).Add(icon);
+			}
 		}
 
 		public void SwitchActive(IACarriable prev, IACarriable cur)

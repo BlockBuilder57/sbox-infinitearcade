@@ -10,19 +10,27 @@ namespace infinitearcade
 {
 	public partial class IAInventory : BaseNetworkable, IBaseInventory
 	{
-		public Entity Owner { get; init; }
-		[Net] public List<IACarriable> List { get; set; } = new List<IACarriable>();
+		[ConVar.ClientData] public static bool ia_inventory_flat_deploy_toggle { get; set; } = true;
 
-		// because this type cannot be networked for some reason,
-		// this needs to be a mirror to the flat List
+		public ArcadePlayer Owner { get; init; }
+		public List<IACarriable> List { get; set; } = new List<IACarriable>();
 		public Dictionary<string, List<IACarriable>> BucketList { get; set; } = new();
+
+		public enum Bucket
+		{
+			Flat, // eg fp's sandbox
+			Bucketed // eg Source games, ULTRAKILL
+		}
+		public Bucket BucketType = Bucket.Flat;
+
+		private int m_cachedSlot = -1;
 
 		public virtual Entity Active => Owner.ActiveChild;
 		public virtual int Count() => List.Count;
 		public virtual bool Contains(Entity ent) => List.Contains(ent);
 		public bool IsCarryingType(Type t) => List.Any(x => x?.GetType() == t);
 
-		public IAInventory(Entity owner)
+		public IAInventory(ArcadePlayer owner)
 		{
 			Host.AssertServer();
 
@@ -70,15 +78,22 @@ namespace infinitearcade
 
 		public virtual int GetActiveSlot()
 		{
-			var ae = Owner.ActiveChild;
-			var count = Count();
+			if (m_cachedSlot >= 0)
+				return m_cachedSlot;
 
-			for (int i = 0; i < count; i++)
+			var ae = Owner.ActiveChild;
+			var index = Count();
+
+			for (int i = 0; i < Count(); i++)
 			{
 				if (List[i] == ae)
-					return i;
+				{
+					index = i;
+					m_cachedSlot = index;
+					return index;
+				}
 			}
-
+			
 			return -1;
 		}
 
@@ -198,8 +213,9 @@ namespace infinitearcade
 			Entity prev = Owner.ActiveChild;
 			Owner.ActiveChild = ent;
 
-			if (Host.IsClient)
-				InfiniteArcadeHud.Current.InventorySwitchActive(prev as IACarriable, Owner.ActiveChild as IACarriable);
+			Owner.HudSwitchActive(To.Single(Owner), prev as IACarriable, Owner.ActiveChild as IACarriable);
+
+			m_cachedSlot = -1;
 
 			return true;
 		}
@@ -214,16 +230,24 @@ namespace infinitearcade
 			}
 
 			var ent = GetSlot(i);
+
 			if (Owner.ActiveChild == ent)
-				return false;
+			{
+				// press the slot number again to remove as active
+				if (evenIfEmpty && BucketType == Bucket.Flat && Owner.Client.GetClientData<bool>(nameof(ia_inventory_flat_deploy_toggle)))
+					ent = null;
+				else
+					return false;
+			}
 
 			if (!evenIfEmpty && ent == null)
 				return false;
 
 			Owner.ActiveChild = ent;
 
-			if (Host.IsClient)
-				InfiniteArcadeHud.Current.InventorySwitchActive(prev as IACarriable, Owner.ActiveChild as IACarriable);
+			Owner.HudSwitchActive(To.Single(Owner), prev as IACarriable, Owner.ActiveChild as IACarriable);
+
+			m_cachedSlot = -1;
 
 			return ent.IsValid();
 		}
@@ -268,8 +292,7 @@ namespace infinitearcade
 				foreach (var carriable in list)
 					List.Add(carriable);
 
-			if (Host.IsClient)
-				InfiniteArcadeHud.Current.InventoryFullUpdate(this);
+			Owner.HudFullUpdate(To.Single(Owner), List.ToArray());
 		}
 	}
 }
