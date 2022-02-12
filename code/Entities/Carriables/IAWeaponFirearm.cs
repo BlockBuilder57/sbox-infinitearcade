@@ -21,13 +21,13 @@ namespace infinitearcade
 		[Net] public TimeSince TimeSinceReload { get; set; }
 		[Net] public bool IsReloading { get; set; }
 
-		public override void Simulate(Client owner)
+		public override void Simulate(Client cl)
 		{
 			if (TimeSinceDeployed < 0.6f)
 				return;
 
 			if (!IsReloading)
-				base.Simulate(owner);
+				base.Simulate(cl);
 			else if (TimeSinceReload > ReloadTime * 1 / ReloadTimeMult)
 				OnReloadFinish();
 

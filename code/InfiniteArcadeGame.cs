@@ -13,8 +13,8 @@ namespace infinitearcade
 	{
 		public InfiniteArcadeGame()
 		{
-			// nice
-			Global.TickRate = 69;
+			// dunno why this isn't default, but
+			Global.TickRate = 66;
 
 			if (IsServer)
 			{
@@ -56,9 +56,8 @@ namespace infinitearcade
 
 		public override void MoveToSpawnpoint(Entity pawn)
 		{
-			if (pawn is ArcadePlayer)
+			if (pawn is ArcadePlayer player)
 			{
-				ArcadePlayer player = pawn as ArcadePlayer;
 				Transform spawnpoint = player.GetSpawnpoint();
 
 				if (spawnpoint == Transform.Zero)
@@ -73,12 +72,12 @@ namespace infinitearcade
 			}
 		}
 
-		public override void ClientJoined(Client client)
+		public override void ClientJoined(Client cl)
 		{
-			base.ClientJoined(client);
+			base.ClientJoined(cl);
 
-			var player = new ArcadePlayer(client);
-			client.Pawn = player;
+			var player = new ArcadePlayer(cl);
+			cl.Pawn = player;
 
 			player.Respawn();
 		}
@@ -98,23 +97,21 @@ namespace infinitearcade
 
 		public override void DoPlayerSuicide(Client cl)
 		{
-			ArcadePlayer player = cl.Pawn as ArcadePlayer;
-
-			if (player != null && player.LifeState == LifeState.Alive)
+			if (cl.Pawn is ArcadePlayer player && player.LifeState == LifeState.Alive)
 			{
 				float damage = player.Health + (player.Armor * player.ArmorMultiplier);
 				player.TakeDamage(DamageInfo.Generic(damage * 100f));
 			}
 		}
 
-		public override void DoPlayerDevCam(Client player)
+		public override void DoPlayerDevCam(Client cl)
 		{
 			Host.AssertServer();
 
-			if (!player.HasPermission("devcam"))
+			if (!cl.HasPermission("devcam"))
 				return;
 
-			player.DevCamera = player.DevCamera == null ? new DevCamera() : null;
+			cl.DevCamera = cl.DevCamera == null ? new DevCamera() : null;
 		}
 	}
 }

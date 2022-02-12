@@ -21,9 +21,7 @@ namespace infinitearcade
 
 		private static readonly Color m_colClient = new Color(0.41f, 0.49f, 0.61f) * 1.5f; // tf2 blue * 1.5
 		private static readonly Color m_colServer = new Color(0.71f, 0.36f, 0.30f) * 1.5f; // tf2 red * 1.5
-		private static readonly Vector2 m_gamemodeOffset = new Vector2(2, -8 + Screen.Height);
-
-		private static bool m_mapLocal = !Global.MapName.Contains('.');
+		private static readonly Vector2 m_gamemodeOffset = new(2, -8 + Screen.Height);
 
 		public static void ResetLineOffset() => LineOffset = 0;
 		public static Color GetSideColor() => Host.IsMenuOrClient ? m_colClient : m_colServer;
@@ -40,7 +38,7 @@ namespace infinitearcade
 
 		public static void ScreenText(Vector2 position, string text, int line = 0, float duration = 0f)
 		{
-			DebugOverlay.ScreenText(position, 0, GetSideColor(), text, duration == 0f && Host.IsClient ? Global.TickInterval : duration);
+			DebugOverlay.ScreenText(position, line, GetSideColor(), text, duration == 0f && Host.IsClient ? Global.TickInterval : duration);
 		}
 
 		public static void Simulate(Client cl)
@@ -78,7 +76,6 @@ namespace infinitearcade
 						}
 					}
 				}
-				
 			}
 		}
 
@@ -98,20 +95,20 @@ namespace infinitearcade
 				if (LineOffset > 0)
 					LineOffset++;
 
-				ScreenText($"{"Cam Type".PadLeft(pad)}: {cam.GetType()}");
-				ScreenText($"{"Cam Position".PadLeft(pad)}: {cam.Position:F2}");
-				ScreenText($"{"Cam Rotation".PadLeft(pad)}: {cam.Rotation.Angles():F2}");
-				ScreenText($"{"Cam Viewer".PadLeft(pad)}: {cam.Viewer}");
-				ScreenText($"{"Cam Projection".PadLeft(pad)}: {(cam.Ortho ? "Orthographic" : "Perspective")}");
+				ScreenText($"{"Cam Type",pad}: {cam.GetType()}");
+				ScreenText($"{"Cam Position",pad}: {cam.Position:F2}");
+				ScreenText($"{"Cam Rotation",pad}: {cam.Rotation.Angles():F2}");
+				ScreenText($"{"Cam Viewer",pad}: {cam.Viewer}");
+				ScreenText($"{"Cam Projection",pad}: {(cam.Ortho ? "Orthographic" : "Perspective")}");
 				if (!cam.Ortho)
-					ScreenText($"{"Cam FOV".PadLeft(pad)}: {fov} {(cam.FieldOfView == 0 ? "(from default_fov)" : "")}");
+					ScreenText($"{"Cam FOV",pad}: {fov} {(cam.FieldOfView == 0 ? "(from default_fov)" : "")}");
 				else
-					ScreenText($"{"Cam Ortho Size".PadLeft(pad)}: {cam.OrthoSize}");
+					ScreenText($"{"Cam Ortho Size",pad}: {cam.OrthoSize}");
 			}
 
 			if (cl_showmap)
 			{
-				ScreenText(m_gamemodeOffset, $"{Global.GameName} on {(m_mapLocal ? @"maps\" + Global.MapName + ".vpk" : Global.MapName)}");
+				ScreenText(m_gamemodeOffset, $"{Global.GameName} on {(!Global.MapName.Contains('.') ? @"maps\" + Global.MapName + ".vpk" : Global.MapName)}");
 			}
 		}
 	}

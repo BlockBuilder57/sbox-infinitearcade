@@ -8,7 +8,7 @@ using infinitearcade.UI;
 
 namespace infinitearcade
 {
-	public partial class ArcadePlayer : Sandbox.Player
+	public partial class ArcadePlayer : Player
 	{
 		//[Net] public new float Health { get; set; }
 		[Net] public float MaxHealth { get; set; }
@@ -27,7 +27,7 @@ namespace infinitearcade
 		private bool m_clothed = false;
 		private DamageInfo m_lastDamage;
 
-		private int m_slotOffset = (int)Math.Log2((int)InputButton.Slot1);
+		private readonly int m_slotOffset = (int)Math.Log2((int)InputButton.Slot1);
 
 		public ArcadePlayer()
 		{
@@ -97,7 +97,7 @@ namespace infinitearcade
 			ArmorMultiplier = 1.0f;
 		}
 
-		public readonly List<ModelEntity> Clothing = new List<ModelEntity>();
+		public readonly List<ModelEntity> Clothing = new();
 
 		public virtual void Clothe()
 		{
@@ -113,7 +113,7 @@ namespace infinitearcade
 
 		public void AddAsClothes(string modelStr, string specificBone = null, Transform? offsetTransform = null)
 		{
-			ModelEntity model = new ModelEntity();
+			ModelEntity model = new();
 			model.SetModel(modelStr);
 
 			if (string.IsNullOrEmpty(specificBone))
@@ -220,14 +220,14 @@ namespace infinitearcade
 							if (GetActiveController() is QPhysController qPhys && !qPhys.Ducked)
 							{
 								active.PhysicsGroup.AddAngularVelocity(active.Rotation.Left * 20f);
-								Vector3 throwVector = ((EyeRot.Forward * 500) + (Vector3.Up * 200)).Normal;
+								Vector3 throwVector = ((EyeRotation.Forward * 500) + (Vector3.Up * 200)).Normal;
 								active.PhysicsGroup.AddVelocity(throwVector * throwForce);
 							}
 							else
 							{
-								TraceResult tr = Trace.Ray(EyePos, EyePos + EyeRot.Forward * 128 + Vector3.Down * 32).WorldAndEntities().Run();
-								active.Rotation = EyeRot.RotateAroundAxis(tr.Normal + Vector3.Forward, 90);
-								Vector3 throwVector = ((EyeRot.Forward * 600) + (Vector3.Up * 100)).Normal;
+								TraceResult tr = Trace.Ray(EyePosition, EyePosition + EyeRotation.Forward * 128 + Vector3.Down * 32).WorldAndEntities().Run();
+								active.Rotation = EyeRotation.RotateAroundAxis(tr.Normal + Vector3.Forward, 90);
+								Vector3 throwVector = ((EyeRotation.Forward * 600) + (Vector3.Up * 100)).Normal;
 								active.PhysicsGroup.AddVelocity(throwVector * throwForce);
 							}
 						}
@@ -282,7 +282,7 @@ namespace infinitearcade
 
 			Vector3 relativeHeadPos = VR.Anchor.PointToLocal(Input.VR.Head.Position);
 			Rotation relativeHeadRot = VR.Anchor.RotationToLocal(Input.VR.Head.Rotation);
-			Transform offset = new Transform(relativeHeadPos, relativeHeadRot);
+			Transform offset = new(relativeHeadPos, relativeHeadRot);
 			VRSeatedOffset = offset;
 			//yLog.Info($"VRSeatedOffset: {offset.Position}, {offset.Rotation.Angles()}");
 			return offset;
@@ -292,7 +292,7 @@ namespace infinitearcade
 		{
 			base.PostCameraSetup(ref setup);
 
-			Rotation rot = Rotation.FromYaw(EyeRot.Yaw() - VRSeatedOffset.Rotation.Yaw());
+			Rotation rot = Rotation.FromYaw(EyeRotation.Yaw() - VRSeatedOffset.Rotation.Yaw());
 			//RotatePointAroundPivotWithEuler(Vector3 point, Vector3 pivot, Vector3 angles)
 			Vector3 point = Position;
 			Vector3 pivot = Position + VRSeatedOffset.Position;
@@ -304,7 +304,7 @@ namespace infinitearcade
 			Vector3 result = Rotation.From(angles) * (point - pivot) + pivot;
 			result -= VRSeatedOffset.Position;
 
-			Transform anchor = new Transform(result + EyePosLocal, Rotation.LookAt(rot.Forward, rot.Up));
+			Transform anchor = new(result + EyeLocalPosition, Rotation.LookAt(rot.Forward, rot.Up));
 			//Transform head = anchor.ToWorld(VRSeatedOffset);
 
 			//DebugOverlay.Axis(anchor.Position, anchor.Rotation);
@@ -470,7 +470,7 @@ namespace infinitearcade
 			EnableDrawing = false;
 
 			ArcadeMachine machine = UsingMachine;
-			List<ArcadeMachine> bubbleUp = new List<ArcadeMachine>();
+			List<ArcadeMachine> bubbleUp = new();
 			while (machine != null && machine.BeingPlayed)
 			{
 				bubbleUp.Add(machine);
@@ -595,7 +595,7 @@ namespace infinitearcade
 			if (IsUseDisabled())
 				return null;
 
-			var tr = Trace.Ray(EyePos, EyePos + EyeRot.Forward * 64).Ignore(this).Run();
+			var tr = Trace.Ray(EyePosition, EyePosition + EyeRotation.Forward * 64).Ignore(this).Run();
 
 			if (tr.Entity == null) return null;
 			if (tr.Entity is not IUse use) return null;

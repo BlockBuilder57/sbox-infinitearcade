@@ -15,7 +15,7 @@ namespace infinitearcade
 		public int PawnDepth { get { return PlayerChain.Count; } }
 
 		public List<ArcadePlayer> PlayerChain
-		{ 
+		{
 			get
 			{
 				List<ArcadePlayer> players = new List<ArcadePlayer>();
@@ -29,7 +29,7 @@ namespace infinitearcade
 						machine = machinePlayer.ParentMachine;
 					else
 						machine = machinePlayer.UsingMachine;
-					
+
 					players.Add(creatorPlayer);
 				}
 

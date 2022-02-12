@@ -14,7 +14,7 @@ namespace infinitearcade
 		[Net, Predicted] public TimeSince TimeSincePrimaryAttack { get; set; }
 		[Net, Predicted] public TimeSince TimeSinceSecondaryAttack { get; set; }
 
-		public override void Simulate(Client player)
+		public override void Simulate(Client cl)
 		{
 			if (CanReload())
 				Reload();

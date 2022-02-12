@@ -19,15 +19,17 @@ namespace infinitearcade
 			if (ConsoleSystem.Caller == null)
 				return;
 
-			var tr = Trace.Ray(owner.EyePos, owner.EyePos + owner.EyeRot.Forward * 500)
+			var tr = Trace.Ray(owner.EyePosition, owner.EyePosition + owner.EyeRotation.Forward * 500)
 				.UseHitboxes()
 				.Ignore(owner)
 				.Size(2)
 				.Run();
 
-			var ent = new Prop();
-			ent.Position = tr.EndPos;
-			ent.Rotation = Rotation.From(new Angles(0, owner.EyeRot.Angles().yaw, 0)) * Rotation.FromAxis(Vector3.Up, 180);
+			var ent = new Prop
+			{
+				Position = tr.EndPos,
+				Rotation = Rotation.From(new Angles(0, owner.EyeRotation.Angles().yaw, 0)) * Rotation.FromAxis(Vector3.Up, 180)
+			};
 			ent.SetModel(modelname);
 
 			// Drop to floor
@@ -44,60 +46,64 @@ namespace infinitearcade
 		[ServerCmd("hurtme")]
 		public static void HurtMeCommand(float amount)
 		{
-			Client client = ConsoleSystem.Caller;
-			if (!client.HasPermission("debug"))
+			Client cl = ConsoleSystem.Caller;
+			if (!cl.HasPermission("debug"))
 				return;
 
-			client?.Pawn?.TakeDamage(DamageInfo.Generic(amount));
+			cl?.Pawn?.TakeDamage(DamageInfo.Generic(amount));
 		}
 
 		[ServerCmd("sethealth")]
 		public static void SetHealthCommand(float amount)
 		{
-			Client client = ConsoleSystem.Caller;
-			if (!client.HasPermission("debug"))
+			Client cl = ConsoleSystem.Caller;
+			if (!cl.HasPermission("debug"))
 				return;
 
-			(client?.Pawn as ArcadePlayer).Health = amount;
+			if (cl.Pawn is ArcadePlayer player)
+				player.Health = amount;
 		}
 
 		[ServerCmd("setarmor")]
 		public static void SetArmorCommand(float amount, float multiplier = 1.0f)
 		{
-			Client client = ConsoleSystem.Caller;
-			if (!client.HasPermission("debug"))
+			Client cl = ConsoleSystem.Caller;
+			if (!cl.HasPermission("debug"))
 				return;
 
-			(client?.Pawn as ArcadePlayer).Armor = amount;
-			(client?.Pawn as ArcadePlayer).ArmorMultiplier = multiplier;
+			if (cl.Pawn is ArcadePlayer player)
+			{
+				player.Armor = amount;
+				player.ArmorMultiplier = multiplier;
+			}
 		}
 
 		[ServerCmd("setscale")]
 		public static void SetScaleCommand(float amount)
 		{
-			Client client = ConsoleSystem.Caller;
-			if (!client.HasPermission("debug"))
+			Client cl = ConsoleSystem.Caller;
+			if (!cl.HasPermission("debug"))
 				return;
 
-			Player player = (client?.Pawn) as Player;
+			Player player = (cl?.Pawn) as Player;
 			if (!player.IsValid())
 				return;
 
-			if (amount <= 0)
+			if (amount <= float.Epsilon)
 				return;
 
 			player.LocalScale = amount;
 
 			if (player.Controller is QPhysController qPhys)
-				player.EyePosLocal = Vector3.Up * qPhys.EyeHeight * amount;
+				player.EyeLocalPosition = Vector3.Up * qPhys.EyeHeight * amount;
 		}
 
 		[ServerCmd("vr_reset_seated_pos")]
 		public static void VRResetSeatedCommand()
 		{
-			Client client = ConsoleSystem.Caller;
+			Client cl = ConsoleSystem.Caller;
 
-			if (client?.Pawn is ArcadePlayer player)
+			if (cl?.Pawn is ArcadePlayer player)
 			{
 				player.ResetSeatedPos();
 			}
@@ -106,20 +112,20 @@ namespace infinitearcade
 		[ServerCmd("respawnpawn")]
 		public static void RespawnPawnCommand()
 		{
-			Client client = ConsoleSystem.Caller;
-			if (!client.HasPermission("debug"))
+			Client cl = ConsoleSystem.Caller;
+			if (!cl.HasPermission("debug"))
 				return;
 
-			Game.Current.ClientDisconnect(client, NetworkDisconnectionReason.UNUSUAL);
-			Game.Current.ClientJoined(client);
+			Game.Current.ClientDisconnect(cl, NetworkDisconnectionReason.UNUSUAL);
+			Game.Current.ClientJoined(cl);
 		}
 
 		[ServerCmd("create_ragdoll")]
 		public static void CreateRagdollCommand()
 		{
-			Client client = ConsoleSystem.Caller;
+			Client cl = ConsoleSystem.Caller;
 
-			if (client?.Pawn is ArcadePlayer player)
+			if (cl?.Pawn is ArcadePlayer player)
 			{
 				ModelEntity ent = player.CreateDeathRagdoll();
 

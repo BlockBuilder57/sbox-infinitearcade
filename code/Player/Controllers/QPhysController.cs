@@ -119,7 +119,7 @@ namespace infinitearcade
 		{
 			//if (Host.IsClient)
 			//	return;
-			
+
 			/*m_inputRotationDelta = Input.Rotation.Angles() - m_inputRotationLast;
 			m_inputRotationLast = Input.Rotation.Angles();
 
@@ -294,26 +294,26 @@ namespace infinitearcade
 				if (IADebugging.LineOffset > 0)
 					IADebugging.LineOffset++;
 
-				IADebugging.ScreenText($"{"Position".PadLeft(pad)}: {Position:F2}");
-				//IADebugging.ScreenText($"{"Velocity".PadLeft(pad)}: {Velocity:F2}");
-				IADebugging.ScreenText($"{"Velocity (hu/s)".PadLeft(pad)}: {Velocity.Length:F2}");
-				IADebugging.ScreenText($"{"BaseVelocity".PadLeft(pad)}: {BaseVelocity}");
-				IADebugging.ScreenText($"{"BaseAngularVelocity".PadLeft(pad)}: {BaseAngularVelocity}");
-				IADebugging.ScreenText($"{"GroundEntity".PadLeft(pad)}: {(GroundEntity != null ? $"{GroundEntity} [vel {GroundEntity?.Velocity}]" : "null")}");
+				IADebugging.ScreenText($"{"Position",pad}: {Position:F2}");
+				//IADebugging.ScreenText($"{"Velocity",pad}: {Velocity:F2}");
+				IADebugging.ScreenText($"{"Velocity (hu/s)",pad}: {Velocity.Length:F2}");
+				IADebugging.ScreenText($"{"BaseVelocity",pad}: {BaseVelocity}");
+				IADebugging.ScreenText($"{"BaseAngularVelocity",pad}: {BaseAngularVelocity}");
+				IADebugging.ScreenText($"{"GroundEntity",pad}: {(GroundEntity != null ? $"{GroundEntity} [vel {GroundEntity?.Velocity}]" : "null")}");
 				if (GroundEntity != null)
-					IADebugging.ScreenText($"{"GroundNormal".PadLeft(pad)}: {GroundNormal} (angle {GroundNormal.Angle(Vector3.Up)})");
-				//IADebugging.ScreenText($"{"SurfaceFriction".PadLeft(pad)}: {SurfaceFriction}");
-				//IADebugging.ScreenText($"{"WishVelocity".PadLeft(pad)}: {WishVelocity}");
+					IADebugging.ScreenText($"{"GroundNormal",pad}: {GroundNormal} (angle {GroundNormal.Angle(Vector3.Up)})");
+				//IADebugging.ScreenText($"{"SurfaceFriction",pad}: {SurfaceFriction}");
+				//IADebugging.ScreenText($"{"WishVelocity",pad}: {WishVelocity}");
 
-				//IADebugging.ScreenText($"{"Ducked (FL_DUCKING)".PadLeft(pad)}: {Ducked}");
-				//IADebugging.ScreenText($"{"Ducking".PadLeft(pad)}: {Ducking}");
-				//IADebugging.ScreenText($"{"InDuckJump".PadLeft(pad)}: {InDuckJump}");
-				//IADebugging.ScreenText($"{"m_flDucktime".PadLeft(pad)}: {m_flDucktime}");
-				//IADebugging.ScreenText($"{"m_flJumpTime".PadLeft(pad)}: {m_flJumpTime}");
-				//IADebugging.ScreenText($"{"m_flDuckJumpTime".PadLeft(pad)}: {m_flDuckJumpTime}");
+				//IADebugging.ScreenText($"{"Ducked (FL_DUCKING)",pad}: {Ducked}");
+				//IADebugging.ScreenText($"{"Ducking",pad}: {Ducking}");
+				//IADebugging.ScreenText($"{"InDuckJump",pad}: {InDuckJump}");
+				//IADebugging.ScreenText($"{"m_flDucktime",pad}: {m_flDucktime}");
+				//IADebugging.ScreenText($"{"m_flJumpTime",pad}: {m_flJumpTime}");
+				//IADebugging.ScreenText($"{"m_flDuckJumpTime",pad}: {m_flDuckJumpTime}");
 
 				if (GroundEntity == null && m_debugHopType != HopType.None)
-					IADebugging.ScreenText($"{"Hopping Type".PadLeft(pad)}: {m_debugHopName}");
+					IADebugging.ScreenText($"{"Hopping Type",pad}: {m_debugHopName}");
 			}
 
 		}
@@ -402,7 +402,7 @@ namespace infinitearcade
 
 		public virtual void StepMove()
 		{
-			MoveHelper mover = new MoveHelper(Position, Velocity);
+			MoveHelper mover = new(Position, Velocity);
 			mover.Trace = mover.Trace.Size(GetHull().Mins, GetHull().Maxs).Ignore(Pawn);
 			mover.MaxStandableAngle = GroundAngle;
 
@@ -418,7 +418,7 @@ namespace infinitearcade
 
 		public virtual void Move()
 		{
-			MoveHelper mover = new MoveHelper(Position, Velocity);
+			MoveHelper mover = new(Position, Velocity);
 			mover.Trace = mover.Trace.Size(GetHull().Mins, GetHull().Maxs).Ignore(Pawn);
 			mover.MaxStandableAngle = GroundAngle;
 
@@ -491,7 +491,7 @@ namespace infinitearcade
 							// Check for a crouch override.
 							if (!bBindDown)
 							{
-								TraceResult trace = default(TraceResult);
+								TraceResult trace = default;
 								if (CanUnDuckJump(ref trace))
 								{
 									FinishUnDuckJump(ref trace);
@@ -508,7 +508,7 @@ namespace infinitearcade
 					{
 						if (!bBindDown)
 						{
-							TraceResult trace = default(TraceResult);
+							TraceResult trace = default;
 							if (CanUnDuckJump(ref trace))
 							{
 								FinishUnDuckJump(ref trace);
@@ -933,7 +933,7 @@ namespace infinitearcade
 				//   flGroundFactor = g_pPhysicsQuery->GetGameSurfaceproperties( player->m_pSurfaceData )->m_flJumpFactor;
 			}
 
-			float flMul = 268.3281572999747f;
+			float flMul;
 
 			switch (Gravity)
 			{
@@ -1185,8 +1185,9 @@ namespace infinitearcade
 			if (GroundEntity != null)
 			{
 				BaseVelocity = GroundEntity.Velocity;
+				BaseAngularVelocity = GroundEntity.AngularVelocity;
 
-				Entity looper = GroundEntity;
+				/*Entity looper = GroundEntity;
 				Rotation totalAngVel = Rotation.From(looper.AngularVelocity);
 				while (looper.Parent != null)
 				{
@@ -1194,7 +1195,7 @@ namespace infinitearcade
 					looper = looper.Parent;
 				}
 
-				BaseAngularVelocity = totalAngVel.Angles();
+				BaseAngularVelocity = totalAngVel.Angles();*/
 
 				// VALVE HACKHACK: Scale this to fudge the relationship between vphysics friction values and player friction values.
 				// A value of 0.8f feels pretty normal for vphysics, whereas 1.0f is normal for players.

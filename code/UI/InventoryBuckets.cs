@@ -26,7 +26,7 @@ namespace infinitearcade.UI
 
 			foreach (IACarriable carriable in inv)
 			{
-				InventoryIcon icon = new InventoryIcon(this, carriable);
+				InventoryIcon icon = new(this, carriable);
 				if (carriable.IsActiveChild())
 					icon.AddClass("active");
 

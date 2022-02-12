@@ -42,11 +42,11 @@ namespace infinitearcade
 		[ServerCmd("inv_clear")]
 		public static void ClearCommand()
 		{
-			Client client = ConsoleSystem.Caller;
-			if (!client.HasPermission("debug"))
+			Client cl = ConsoleSystem.Caller;
+			if (!cl.HasPermission("debug"))
 				return;
 
-			if (client?.Pawn is ArcadePlayer player)
+			if (cl?.Pawn is ArcadePlayer player)
 			{
 				player.Inventory.DeleteContents();
 			}
@@ -82,18 +82,16 @@ namespace infinitearcade
 				return m_cachedSlot;
 
 			var ae = Owner.ActiveChild;
-			var index = Count();
 
 			for (int i = 0; i < Count(); i++)
 			{
 				if (List[i] == ae)
 				{
-					index = i;
-					m_cachedSlot = index;
-					return index;
+					m_cachedSlot = i;
+					return i;
 				}
 			}
-			
+
 			return -1;
 		}
 
