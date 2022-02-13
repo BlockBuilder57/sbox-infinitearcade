@@ -32,7 +32,7 @@ namespace infinitearcade
 		{
 			if (Primary.Clip <= 0)
 			{
-				PlaySound("ui.button.deny");
+				PlaySound("weapon_empty_click");
 				Reload();
 				return;
 			}
@@ -48,7 +48,7 @@ namespace infinitearcade
 			ViewModelEntity?.SetAnimBool("fire", true);
 
 			PlaySound("rust_pistol.shoot");
-			ShootBullet(Owner.EyePos, Owner.EyeRot.Forward, 0.025f, .6f, 5f, 2f);
+			ShootBullet(Owner.EyePosition, Owner.EyeRotation.Forward, 0.025f, .6f, 5f, 2f);
 		}
 
 		public override bool CanSecondaryAttack()

@@ -20,8 +20,8 @@ namespace infinitearcade
 			var pawn = Local.Pawn;
 			if (pawn == null) return;
 
-			Position = pawn.EyePos;
-			Rotation = pawn.EyeRot;
+			Position = pawn.EyePosition;
+			Rotation = pawn.EyeRotation;
 		}
 
 		public override void Update()
@@ -29,8 +29,8 @@ namespace infinitearcade
 			var pawn = Local.Pawn;
 			if (pawn == null) return;
 
-			Position = pawn.EyePos;
-			Rotation = pawn.EyeRot;
+			Position = pawn.EyePosition;
+			Rotation = pawn.EyeRotation;
 
 			if (m_lastScale != pawn.Scale || m_realZNear == 0)
 			{
