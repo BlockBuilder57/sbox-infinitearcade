@@ -1,19 +1,22 @@
-# remove sbox generated stuff
-.intermediate
-.codegen
+# remove generated stuff:
+# sbox
+.intermediate/
+.codegen/
+*_c
+# visual studio
+.vs/
+obj/
+bin/
+*.dll
+*.pdb
+*.csproj*
+launchSettings.json
 
-code/*.csproj*
-code/obj
-code/Properties/launchSettings.json
-
-config/
+# config fgd's
+config/*.fgd
 
 # considering the vmaps get downloaded, might not be the best idea to push them
 maps/*
-# map generation
-_bakeresourcecache
-maps/*.vpk
-maps/*.los
 
 # asset browser info
 tools_asset_info.bin
