@@ -129,10 +129,8 @@ namespace infinitearcade
 			//if (IsCarryingType(entity.GetType()))
 			//	return false;
 
-			if (ent is IACarriable carriable && carriable.PickupTrigger != null && carriable.PickupTrigger.IsSleeping)
-				return false;
-
-			if (ent is IAWeapon weapon && weapon.TimeSinceDropped < 0.5f)
+			if (ent is IACarriable carriable && carriable.PickupTrigger != null && carriable.PickupTrigger.IsSleeping
+				&& carriable.TimeSinceDropped < 0.5f)
 				return false;
 
 			// we're good :)
@@ -282,7 +280,7 @@ namespace infinitearcade
 				list.Clear();
 
 			foreach (IACarriable carriable in List)
-				BucketList.AddOrCreate(carriable.BucketIdent).Add(carriable);
+				BucketList.AddOrCreate(carriable.Definition.BucketIdentifier).Add(carriable);
 
 			List.Clear();
 

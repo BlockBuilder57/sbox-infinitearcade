@@ -10,19 +10,6 @@ namespace infinitearcade
 	[Library("weapon_pistol", Title = "Pistol", Spawnable = true)]
 	public partial class Pistol : IAWeaponFirearm
 	{
-		public override string WorldModelPath => "weapons/rust_pistol/rust_pistol.vmdl";
-		public override string ViewModelPath => "weapons/rust_pistol/v_rust_pistol.vmdl";
-
-		public override float PrimaryRate => 5f;
-		public override float SecondaryRate => 8f;
-		public override float ReloadTimeMult => 1f;
-
-		public Pistol()
-		{
-			BucketIdent = "secondary";
-			Primary = new WeaponAmmo(8, 32);
-		}
-
 		public override bool CanPrimaryAttack()
 		{
 			return base.CanPrimaryAttack() && Input.Pressed(InputButton.Attack1);
@@ -30,6 +17,9 @@ namespace infinitearcade
 
 		public override void AttackPrimary()
 		{
+			if (Primary == null)
+				return;
+
 			if (Primary.Clip <= 0)
 			{
 				PlaySound("weapon_empty_click");

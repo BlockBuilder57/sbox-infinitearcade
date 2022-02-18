@@ -12,8 +12,9 @@ bin/
 *.csproj*
 launchSettings.json
 
-# config fgd's
+# config folder
 config/*.fgd
+config/*.asset
 
 # considering the vmaps get downloaded, might not be the best idea to push them
 maps/*

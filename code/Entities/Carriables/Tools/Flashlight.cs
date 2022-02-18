@@ -10,9 +10,6 @@ namespace infinitearcade
 	[Library("tool_flashlight", Title = "Flashlight", Spawnable = true)]
 	public partial class Flashlight : IATool
 	{
-		public override string WorldModelPath => "weapons/rust_pistol/rust_pistol.vmdl";
-		public override string ViewModelPath => "weapons/rust_flashlight/v_rust_flashlight.vmdl";
-
 		private bool m_on = true;
 
 		// these are separate for a few reasons:
@@ -23,11 +20,6 @@ namespace infinitearcade
 		private SpotLightEntity m_spotlightLocal;
 
 		private Vector3 m_spotlightWorldOffset = (Vector3.Forward * 10) + (Vector3.Up * 5);
-
-		public Flashlight()
-		{
-			BucketIdent = "tool";
-		}
 
 		public override void Spawn()
 		{

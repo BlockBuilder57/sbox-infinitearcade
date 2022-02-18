@@ -1,0 +1,21 @@
+<!-- kv3 encoding:text:version{e21c7f3c-8a33-41c5-9977-a76d3a32aa0d} format:generic:version{7412167c-06e9-4698-aff2-e63eb59037e7} -->
+{
+	data = 
+	{
+		reloadtime = 0.5
+		hasprimary = true
+		clipprimary = 6
+		ammoprimary = 24
+		hassecondary = false
+		secondary = 0
+		clipsecondary = 0
+		ammosecondary = 0
+		primaryrate = 1.5
+		secondaryrate = 1.0
+		identifier = "ia_carriable_shotgun"
+		bucketidentifier = "primary"
+		worldmodelpath = resource:"weapons/rust_pumpshotgun/rust_pumpshotgun.vmdl"
+		viewmodelpath = resource:"weapons/rust_pumpshotgun/v_rust_pumpshotgun.vmdl"
+		basetype = "2"
+	}
+}

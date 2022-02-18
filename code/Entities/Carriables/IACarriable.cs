@@ -9,25 +9,41 @@ namespace infinitearcade
 {
 	public partial class IACarriable : BaseCarriable
 	{
-		public virtual string WorldModelPath { get; set; } = "models/error.vmdl";
-		[Net] public string BucketIdent { get; set; } = "none";
+		[Net] public IACarriableDefinition Definition { get; set; }
 
 		[Net, Predicted] public TimeSince TimeSinceDeployed { get; set; }
 		[Net] public TimeSince TimeSinceDropped { get; set; }
 
 		public SleepingPickupTrigger PickupTrigger { get; set; }
 
-		public IACarriable()
+		private bool m_definitionLoaded;
+
+		public virtual IACarriable SetupFromDefinition(IACarriableDefinition def)
 		{
-			BucketIdent = "none";
+			if (def == null)
+			{
+				Log.Error($"{this} trying to set up with a null definition!");
+				Delete();
+				return null;
+			}
+
+			Definition = def;
+			m_definitionLoaded = true;
+
+			Model = def.WorldModel;
+
+			return this;
 		}
 
 		public override void Spawn()
 		{
 			base.Spawn();
 
-			if (!string.IsNullOrWhiteSpace(WorldModelPath))
-				SetModel(WorldModelPath);
+			if (!m_definitionLoaded)
+				SetupFromDefinition(Asset.FromPath<IACarriableDefinition>("carriables/default.carry"));
+
+			if (!m_definitionLoaded)
+				Delete();
 
 			CollisionGroup = CollisionGroup.Weapon; // so players touch it as a trigger but not as a solid
 			SetInteractsAs(CollisionLayer.Debris); // so player movement doesn't walk into it
@@ -95,17 +111,16 @@ namespace infinitearcade
 		{
 			Host.AssertClient();
 
-			if (string.IsNullOrEmpty(ViewModelPath))
+			if (Definition == null)
 				return;
 
 			ViewModelEntity = new IAViewModel
 			{
 				Position = Position,
 				Owner = Owner,
+				Model = Definition.ViewModel,
 				EnableViewmodelRendering = true
 			};
-
-			ViewModelEntity.SetModel(ViewModelPath);
 		}
 	}
 }

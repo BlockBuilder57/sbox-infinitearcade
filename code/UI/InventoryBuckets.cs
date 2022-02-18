@@ -30,7 +30,7 @@ namespace infinitearcade.UI
 				if (carriable.IsActiveChild())
 					icon.AddClass("active");
 
-				icons.AddOrCreate(carriable.BucketIdent).Add(icon);
+				icons.AddOrCreate(carriable.Definition.BucketIdentifier).Add(icon);
 			}
 		}
 
@@ -40,7 +40,7 @@ namespace infinitearcade.UI
 
 			if (prev != null)
 			{
-				var list = icons.GetValueOrDefault(prev.BucketIdent);
+				var list = icons.GetValueOrDefault(prev.Definition.BucketIdentifier);
 				if (list != null)
 					list.Find(x => x.Carriable == prev)?.RemoveClass("active");
 				//else
@@ -48,7 +48,7 @@ namespace infinitearcade.UI
 			}
 			if (cur != null)
 			{
-				var list = icons.GetValueOrDefault(cur.BucketIdent);
+				var list = icons.GetValueOrDefault(cur.Definition.BucketIdentifier);
 				if (list != null)
 					list.Find(x => x.Carriable == cur)?.AddClass("active");
 				//else

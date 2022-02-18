@@ -28,14 +28,13 @@ namespace infinitearcade.UI
 
 			ArcadePlayer player = Local.Pawn as ArcadePlayer;
 			if (player == null) return;
-			IAWeapon weapon = player.ActiveChild as IAWeapon;
-			if (weapon == null) return;
 
-			SetClass("hidden", false);
-
-			if (weapon is IAWeaponFirearm firearm)
+			if (player.ActiveChild is IAWeaponFirearm firearm)
 			{
-				m_primaryDisplay.Update(firearm.Primary.Clip, firearm.Primary.Ammo);
+				SetClass("hidden", false);
+
+				if (firearm.Primary != null)
+					m_primaryDisplay.Update(firearm.Primary.Clip, firearm.Primary.Ammo);
 			}
 
 		}

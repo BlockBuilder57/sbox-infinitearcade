@@ -77,10 +77,10 @@ namespace infinitearcade
 
 			if (Inventory is IAInventory inv)
 			{
-				inv.Add(new Shotgun());
-				inv.Add(new Pistol());
-				inv.Add(new Flashlight());
-				HudFullUpdate(To.Single(this), inv.List.ToArray());
+				inv.Add(IACarriableDefinition.GetEntity("carriables/shotgun.firearm"));
+				inv.Add(IACarriableDefinition.GetEntity("carriables/pistol.firearm"));
+				inv.Add(IACarriableDefinition.GetEntity("carriables/flashlight.tool"));
+				//HudFullUpdate(To.Single(this), inv.List.ToArray());
 			}
 
 			Game.Current?.MoveToSpawnpoint(this);

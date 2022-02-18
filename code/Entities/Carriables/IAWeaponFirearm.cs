@@ -7,19 +7,35 @@ using Sandbox;
 
 namespace infinitearcade
 {
-	public partial class IAWeaponFirearm : IAWeapon
+	public partial class IAWeaponFirearm : IATool
 	{
 		[ConVar.Replicated] public static bool debug_firearm { get; set; } = false;
 
-		public IAWeaponFirearmDefinition Definition { get; set; }
-
 		[Net] public WeaponAmmo Primary { get; set; }
+		[Net] public WeaponAmmo Secondary { get; set; }
 
-		public virtual float ReloadTime { get; set; } = 1.35f; // default
-		public virtual float ReloadTimeMult { get; set; } = 1.0f;
+		[Net] public float ReloadTime { get; set; } = 1.35f; // default
 
 		[Net] public TimeSince TimeSinceReload { get; set; }
 		[Net] public bool IsReloading { get; set; }
+
+		public override IACarriable SetupFromDefinition(IACarriableDefinition def)
+		{
+			base.SetupFromDefinition(def);
+
+			if (def is IAWeaponFirearmDefinition firearmDef)
+			{
+				if (firearmDef.HasPrimary)
+					Primary = new WeaponAmmo(firearmDef.ClipPrimary, firearmDef.AmmoPrimary);
+
+				if (firearmDef.HasSecondary)
+					Secondary = new WeaponAmmo(firearmDef.ClipSecondary, firearmDef.AmmoSecondary);
+
+				ReloadTime = firearmDef.ReloadTime;
+			}
+
+			return this;
+		}
 
 		public override void Simulate(Client cl)
 		{
@@ -28,7 +44,7 @@ namespace infinitearcade
 
 			if (!IsReloading)
 				base.Simulate(cl);
-			else if (TimeSinceReload > ReloadTime * 1 / ReloadTimeMult)
+			else if (TimeSinceReload > ReloadTime * 1)
 				OnReloadFinish();
 
 			if (debug_firearm && IsActiveChild())
@@ -55,7 +71,7 @@ namespace infinitearcade
 			if (!Owner.IsValid() || !Input.Down(InputButton.Reload))
 				return false;
 
-			if (Primary.Clip == Primary.MaxClip || (Primary.Ammo <= 0 && Primary.Clip <= Primary.MaxClip))
+			if (Primary == null || Primary.Clip == Primary.MaxClip || (Primary.Ammo <= 0 && Primary.Clip <= Primary.MaxClip))
 				return false;
 
 			return true;

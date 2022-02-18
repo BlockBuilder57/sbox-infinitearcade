@@ -42,8 +42,7 @@ namespace infinitearcade
 		{
 			base.Respawn();
 
-			if (!(bool)(Inventory as IAInventory)?.IsCarryingType(typeof(Pistol)))
-				Inventory?.Add(new Pistol(), true);
+			Inventory?.Add(IACarriableDefinition.GetEntity("carriables/pistol.firearm"), true);
 		}
 
 		public override void InitStats()

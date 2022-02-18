@@ -43,6 +43,31 @@ namespace infinitearcade
 			}
 		}
 
+		[ServerCmd("spawncarriable")]
+		public static void SpawnWeaponCommand(string path)
+		{
+			if (ConsoleSystem.Caller == null)
+				return;
+
+			var owner = ConsoleSystem.Caller.Pawn;
+
+			if (!path.StartsWith("carriables/"))
+				path = "carriables/" + path;
+
+			IACarriable carriable = IACarriableDefinition.GetEntity(path);
+			if (carriable == null)
+				return;
+
+			var tr = Trace.Ray(owner.EyePosition, owner.EyePosition + owner.EyeRotation.Forward * 200)
+				.UseHitboxes()
+				.Ignore(owner)
+				.Size(2)
+				.Run();
+
+			carriable.Position = tr.EndPos + Vector3.Up * 8;
+			carriable.Rotation = Rotation.From(new Angles(0, owner.EyeRotation.Angles().yaw, 0));
+		}
+
 		[ServerCmd("hurtme")]
 		public static void HurtMeCommand(float amount)
 		{

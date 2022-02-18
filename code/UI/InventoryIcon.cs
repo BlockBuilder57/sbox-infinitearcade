@@ -20,7 +20,7 @@ namespace infinitearcade.UI
 		{
 			Parent = parent;
 			Carriable = carriable;
-			Name = Add.Label(carriable.Name);
+			Name = Add.Label(carriable.Definition.Identifier);
 			//Icon = Add.Image("https://thiscatdoesnotexist.com/");
 
 			StyleSheet.Load("UI/InventoryIcon.scss");
@@ -28,7 +28,7 @@ namespace infinitearcade.UI
 			using (SceneWorld.SetCurrent(new SceneWorld()))
 			{
 				Vector3 center = carriable.Model.Bounds.Center + Vector3.Left * 64;
-				SceneObject.CreateModel(carriable.WorldModelPath, Transform.Zero);
+				SceneObject.CreateModel(carriable.Model, Transform.Zero);
 				Light.Point(center, 512, Color.White);
 
 				Scene = Add.ScenePanel(SceneWorld.Current, center, Rotation.From(0, -90, 0), 45);

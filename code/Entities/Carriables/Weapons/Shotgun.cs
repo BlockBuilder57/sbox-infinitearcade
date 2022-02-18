@@ -10,18 +10,7 @@ namespace infinitearcade
 	[Library("weapon_shotgun", Title = "Shotgun", Spawnable = true)]
 	public partial class Shotgun : IAWeaponFirearm
 	{
-		public override string WorldModelPath => "weapons/rust_pumpshotgun/rust_pumpshotgun.vmdl";
-		public override string ViewModelPath => "weapons/rust_pumpshotgun/v_rust_pumpshotgun.vmdl";
 		public bool ReloadAnimHasInitialShellLoad = true;
-
-		public override float PrimaryRate => 1.5f;
-		public override float ReloadTime => .5f; // time per shell
-
-		public Shotgun()
-		{
-			BucketIdent = "primary";
-			Primary = new WeaponAmmo(6, 48);
-		}
 
 		public override void SimulateAnimator(PawnAnimator anim)
 		{
