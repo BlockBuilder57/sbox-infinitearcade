@@ -11,13 +11,19 @@ namespace infinitearcade
 {
 	public partial class InfiniteArcadeGame : Sandbox.Game
 	{
+		[AdminCmd("respawn_entities")]
+		public static void RespawnEntities()
+		{
+			EntityManager.CleanUpMap(EntityManager.DefaultCleanupFilter);
+		}
+
 		[ServerCmd("spawn")]
 		public static void SpawnCommand(string modelname)
 		{
-			var owner = ConsoleSystem.Caller?.Pawn;
-
 			if (ConsoleSystem.Caller == null)
 				return;
+
+			var owner = ConsoleSystem.Caller.Pawn;
 
 			var tr = Trace.Ray(owner.EyePosition, owner.EyePosition + owner.EyeRotation.Forward * 500)
 				.UseHitboxes()
@@ -134,12 +140,10 @@ namespace infinitearcade
 			}
 		}
 
-		[ServerCmd("respawnpawn")]
+		[AdminCmd("respawn_pawn")]
 		public static void RespawnPawnCommand()
 		{
 			Client cl = ConsoleSystem.Caller;
-			if (!cl.HasPermission("debug"))
-				return;
 
 			Game.Current.ClientDisconnect(cl, NetworkDisconnectionReason.UNUSUAL);
 			Game.Current.ClientJoined(cl);
