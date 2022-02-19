@@ -352,6 +352,8 @@ namespace infinitearcade
 
 		public override void StartTouch(Entity other)
 		{
+			base.StartTouch(other);
+
 			if (IsClient) return;
 
 			if (other is SleepingPickupTrigger)
@@ -365,10 +367,15 @@ namespace infinitearcade
 				Inventory?.Add(other, Inventory.Active == null);
 			}
 
-			if (other is GlassShard glassShard)
+			if (other is GlassShard glassShard && DevController == null)
 			{
-				glassShard.PhysicsGroup?.Wake();
-				glassShard.Velocity = Velocity * 1.2f;
+				if (!glassShard.ParentPanel.IsBroken && Velocity.Length > 350f)
+					glassShard.ShatterWorldSpace((EyePosition + Position)/2f);
+				else if (glassShard.ParentPanel.IsBroken)
+				{
+					glassShard.PhysicsGroup?.Wake();
+					glassShard.Velocity += Velocity * 0.2f;
+				}
 			}
 		}
 
