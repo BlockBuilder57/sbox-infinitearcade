@@ -14,7 +14,7 @@ namespace infinitearcade
 		[AdminCmd("respawn_entities")]
 		public static void RespawnEntities()
 		{
-			EntityManager.CleanUpMap(EntityManager.DefaultCleanupFilter);
+			EntityManager.CleanUpMap(Game.DefaultCleanupFilter);
 		}
 
 		[ServerCmd("spawn")]

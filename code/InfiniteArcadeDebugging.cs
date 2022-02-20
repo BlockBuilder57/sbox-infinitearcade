@@ -108,7 +108,7 @@ namespace infinitearcade
 
 			if (cl_showmap)
 			{
-				ScreenText(m_gamemodeOffset, $"{Global.GameName} on {(!Global.MapName.Contains('.') ? @"maps\" + Global.MapName + ".vpk" : Global.MapName)}");
+				ScreenText(m_gamemodeOffset, $"{Global.GameIdent} on {(!Global.MapName.Contains('.') ? @"maps\" + Global.MapName + ".vpk" : Global.MapName)}");
 			}
 		}
 	}
