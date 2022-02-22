@@ -12,10 +12,11 @@ namespace infinitearcade
 		[ConVar.Replicated] public static bool debug_firearm { get; set; } = false;
 
 		[Net] public WeaponAmmo Primary { get; set; }
-		[Net] public WeaponAmmo Secondary { get; set; }
+		[Net] public WeaponAmmo[] Secondaries { get; set; }
+
+		[Net] protected IAWeaponFirearmDefinition m_firearmDef { get; set; }
 
 		[Net] public float ReloadTime { get; set; } = 1.35f; // default
-
 		[Net] public TimeSince TimeSinceReload { get; set; }
 		[Net] public bool IsReloading { get; set; }
 
@@ -25,13 +26,18 @@ namespace infinitearcade
 
 			if (def is IAWeaponFirearmDefinition firearmDef)
 			{
-				if (firearmDef.HasPrimary)
-					Primary = new WeaponAmmo(firearmDef.ClipPrimary, firearmDef.AmmoPrimary);
+				Primary = new WeaponAmmo(firearmDef.Primary.MaxClip, firearmDef.Primary.MaxAmmo);
 
-				if (firearmDef.HasSecondary)
-					Secondary = new WeaponAmmo(firearmDef.ClipSecondary, firearmDef.AmmoSecondary);
+				Secondaries = new WeaponAmmo[firearmDef.Secondaries.Length];
+				for (int i = 0; i < firearmDef.Secondaries.Length; i++)
+				{
+					IAWeaponFirearmDefinition.AmmoSetting setting = firearmDef.Secondaries[i];
+					Secondaries[i] = new WeaponAmmo(setting.MaxClip, setting.MaxAmmo);
+				}
 
 				ReloadTime = firearmDef.ReloadTime;
+
+				m_firearmDef = firearmDef;
 			}
 
 			return this;
@@ -126,15 +132,26 @@ namespace infinitearcade
 			}
 		}
 
-		public virtual void ShootBullet(int numBullets, Vector3 pos, Vector3 dir, float spread, float force, float damage, float bulletSize)
+		public virtual void ShootBullet(int numBullets, Vector3 pos, Vector3 dir, float spread, float force, float damage, float bulletSize, bool perBullet = false)
 		{
 			for (int i = 0; i < numBullets; i++)
 			{
-				ShootBullet(pos, dir, spread, force / numBullets, damage / numBullets, bulletSize);
+				if (perBullet)
+					ShootBullet(pos, dir, spread, force, damage, bulletSize);
+				else
+					ShootBullet(pos, dir, spread, force / numBullets, damage / numBullets, bulletSize);
 			}
 		}
 
-		[ServerCmd("setclip")]
+		public virtual void ShootBullet(Vector3 pos, Vector3 dir)
+		{
+			ShootBullet(m_firearmDef.BulletSettings.Pellets, pos, dir,
+				m_firearmDef.BulletSettings.Spread, m_firearmDef.BulletSettings.Force,
+				m_firearmDef.BulletSettings.Damage, m_firearmDef.BulletSettings.BulletSize,
+				m_firearmDef.BulletSettings.CalculatedPerPellet);
+		}
+
+		[AdminCmd("setclip")]
 		public static void SetClipCommand(int clip)
 		{
 			IAWeaponFirearm firearm = ConsoleSystem.Caller?.Pawn?.ActiveChild as IAWeaponFirearm;
@@ -143,7 +160,7 @@ namespace infinitearcade
 				firearm.Primary.SetClip(clip);
 		}
 
-		[ServerCmd("setammo")]
+		[AdminCmd("setammo")]
 		public static void SetAmmoCommand(int ammo)
 		{
 			IAWeaponFirearm firearm = ConsoleSystem.Caller?.Pawn?.ActiveChild as IAWeaponFirearm;

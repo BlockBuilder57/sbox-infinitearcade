@@ -77,13 +77,5 @@ namespace infinitearcade
 				LightCookie = Texture.Load("materials/effects/lightcookie.vtex")
 			};
 		}
-
-		public override void SimulateAnimator(PawnAnimator anim)
-		{
-			anim.SetParam("holdtype", 4);
-			anim.SetParam("holdtype_handedness", 1);
-			anim.SetParam("holdtype_pose_hand", 0.14f);
-			anim.SetParam("aimat_weight", 1.0f);
-		}
 	}
 }

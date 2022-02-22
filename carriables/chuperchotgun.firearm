@@ -2,30 +2,30 @@
 {
 	data = 
 	{
-		reloadtime = 0.5
-		primaryrate = 0.7
+		reloadtime = 0.0
+		primaryrate = 0.01
 		secondaryrate = 1.0
-		identifier = "ia_firearm_shotgun"
+		identifier = "ia_firearm_chuperchotgun"
 		bucketidentifier = "primary"
 		worldmodelpath = resource:"weapons/rust_pumpshotgun/rust_pumpshotgun.vmdl"
 		viewmodelpath = resource:"weapons/rust_pumpshotgun/v_rust_pumpshotgun.vmdl"
 		basetype = "2"
 		primary = 
 		{
-			maxclip = 6
-			maxammo = 24
+			maxclip = 64
+			maxammo = 1024
 		}
 		secondaries = [  ]
 		bulletsettings = 
 		{
+			pellets = 24
+			calculatedperpellet = true
 			spread = 0.2
-			force = 2.4
-			damage = 24.0
-			bulletsize = 0.8
-			calculatedperpellet = false
-			pellets = 8
+			force = 3.0
+			damage = 8.0
+			bulletsize = 0.0
 		}
-		firesound = "rust_pumpshotgun.shoot"
+		firesound = "Example.src1_3d"
 		animgraphsettings = 
 		[
 			{

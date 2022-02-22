@@ -2,20 +2,32 @@
 {
 	data = 
 	{
-		primaryrate = 5.0
-		secondaryrate = 8.0
+		primaryrate = 0.2
+		secondaryrate = 0.125
 		identifier = "ia_firearm_pistol"
 		bucketidentifier = "secondary"
 		basetype = "3"
 		worldmodelpath = resource:"weapons/rust_pistol/rust_pistol.vmdl"
 		viewmodelpath = resource:"weapons/rust_pistol/v_rust_pistol.vmdl"
 		reloadtime = 1.35
-		hasprimary = true
-		clipprimary = 8
-		ammoprimary = 32
-		hassecondary = false
-		secondary = 0
-		clipsecondary = 0
-		ammosecondary = 0
+		primary = 
+		{
+			maxclip = 8
+			maxammo = 32
+		}
+		secondaries = [  ]
+		bulletsettings = 
+		{
+			spread = 0.025
+		}
+		firesound = "rust_pistol.shoot"
+		animgraphsettings = 
+		[
+			{
+				key = "holdtype"
+				value = "1"
+				type = "1"
+			},
+		]
 	}
 }

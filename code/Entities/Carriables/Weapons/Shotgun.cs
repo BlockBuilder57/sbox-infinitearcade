@@ -12,12 +12,6 @@ namespace infinitearcade
 	{
 		public bool ReloadAnimHasInitialShellLoad = true;
 
-		public override void SimulateAnimator(PawnAnimator anim)
-		{
-			anim.SetParam("holdtype", 3);
-			anim.SetParam("aimat_weight", 1.0f);
-		}
-
 		public override bool CanPrimaryAttack()
 		{
 			return base.CanPrimaryAttack() && Input.Down(InputButton.Attack1);
@@ -27,6 +21,7 @@ namespace infinitearcade
 		{
 			if (Primary.Clip <= 0)
 			{
+				PlaySound("weapon_empty_click");
 				Reload();
 				return;
 			}
@@ -41,8 +36,8 @@ namespace infinitearcade
 
 			ViewModelEntity?.SetAnimBool("fire", true);
 
-			PlaySound("rust_pumpshotgun.shoot");
-			ShootBullet(8, Owner.EyePosition, Owner.EyeRotation.Forward, 0.2f, 2.4f, 24f, .8f);
+			PlaySound(m_firearmDef.FireSound);
+			ShootBullet(Owner.EyePosition, Owner.EyeRotation.Forward);
 		}
 
 		public override bool CanSecondaryAttack()

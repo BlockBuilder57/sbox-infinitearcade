@@ -37,8 +37,8 @@ namespace infinitearcade
 
 			ViewModelEntity?.SetAnimBool("fire", true);
 
-			PlaySound("rust_pistol.shoot");
-			ShootBullet(Owner.EyePosition, Owner.EyeRotation.Forward, 0.025f, .6f, 5f, 2f);
+			PlaySound(m_firearmDef.FireSound);
+			ShootBullet(Owner.EyePosition, Owner.EyeRotation.Forward);
 		}
 
 		public override bool CanSecondaryAttack()

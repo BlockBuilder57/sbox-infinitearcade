@@ -13,7 +13,7 @@ namespace infinitearcade
 		[Hammer.Skip] public static IReadOnlyList<IACarriableDefinition> AllCarriables => _allCarriables;
 		[Hammer.Skip] internal static List<IACarriableDefinition> _allCarriables = new();
 
-		public enum BaseTypes
+		public enum BaseTypes : byte
 		{
 			// bases
 			Carriable,
@@ -25,11 +25,27 @@ namespace infinitearcade
 			Flashlight
 		}
 
+		public enum AnimGraphTypes : byte
+		{
+			Bool,
+			Int,
+			Float,
+			Vector3
+		}
+
+		public class AnimGraphSetting
+		{
+			public string Key { get; set; }
+			public string Value { get; set; }
+			public AnimGraphTypes Type { get; set; }
+		}
+
 		public string Identifier { get; set; } = "ia_carriable_new";
 		public string BucketIdentifier { get; set; } = "none";
 		public BaseTypes BaseType { get; set; } = BaseTypes.Carriable;
 
 		[ResourceType("vmdl")] public string WorldModelPath { get; set; }
+		public AnimGraphSetting[] AnimGraphSettings { get; set; } = new AnimGraphSetting[] { new() { Key = "holdtype", Value = "0", Type = AnimGraphTypes.Int } };
 		[ResourceType("vmdl")] public string ViewModelPath { get; set; }
 
 		[Hammer.Skip] public Model WorldModel { get; private set; }
@@ -43,7 +59,7 @@ namespace infinitearcade
 
 			if (def == null)
 			{
-				Log.Error("Couldn't get definition from path!");
+				Log.Error($"Couldn't get definition from path {path}!");
 				return null;
 			}
 
@@ -71,6 +87,15 @@ namespace infinitearcade
 
 			//Log.Info($"returning {entity}");
 			return entity;
+		}
+
+		protected override void PostReload()
+		{
+			base.PostReload();
+
+			foreach (IACarriable carry in Entity.All.OfType<IACarriable>())
+				if (carry.Definition == this)
+					carry.SetupFromDefinition(this);
 		}
 
 		protected override void PostLoad()

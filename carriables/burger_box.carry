@@ -7,5 +7,13 @@
 		basetype = "0"
 		worldmodelpath = resource:"models/sbox_props/burger_box/burger_box.vmdl"
 		viewmodelpath = resource:""
+		animgraphsettings = 
+		[
+			{
+				key = "holdtype"
+				value = "1"
+				type = "1"
+			},
+		]
 	}
 }

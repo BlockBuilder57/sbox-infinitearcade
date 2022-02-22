@@ -9,8 +9,8 @@ namespace infinitearcade
 {
 	public partial class IATool : IACarriable, IUse
 	{
-		[Net] public float PrimaryRate { get; set; } = 5.0f;
-		[Net] public float SecondaryRate { get; set; } = 15.0f;
+		[Net] public float PrimaryRate { get; set; } = 1.0f;
+		[Net] public float SecondaryRate { get; set; } = 1.0f;
 		[Net] public TimeSince TimeSincePrimaryAttack { get; set; }
 		[Net] public TimeSince TimeSinceSecondaryAttack { get; set; }
 
@@ -82,7 +82,7 @@ namespace infinitearcade
 			var rate = PrimaryRate;
 			if (rate <= 0) return true;
 
-			return TimeSincePrimaryAttack > (1 / rate);
+			return TimeSincePrimaryAttack > rate;
 		}
 
 		public virtual void AttackPrimary()
@@ -97,7 +97,7 @@ namespace infinitearcade
 			var rate = SecondaryRate;
 			if (rate <= 0) return true;
 
-			return TimeSinceSecondaryAttack > (1 / rate);
+			return TimeSinceSecondaryAttack > rate;
 		}
 
 		public virtual void AttackSecondary()

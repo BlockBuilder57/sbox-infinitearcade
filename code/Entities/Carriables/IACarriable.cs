@@ -107,6 +107,36 @@ namespace infinitearcade
 			Delete();
 		}
 
+		public override void SimulateAnimator(PawnAnimator anim)
+		{
+			if (Definition != null && Definition.AnimGraphSettings != null && Definition.AnimGraphSettings.Length > 0)
+			{
+				foreach (IACarriableDefinition.AnimGraphSetting setting in Definition.AnimGraphSettings)
+				{
+					//IADebugging.ScreenText($"processing {setting.Key}: {setting.Value}");
+					switch (setting.Type)
+					{
+						case IACarriableDefinition.AnimGraphTypes.Bool:
+							anim.SetParam(setting.Key, bool.Parse(setting.Value));
+							break;
+						case IACarriableDefinition.AnimGraphTypes.Int:
+							anim.SetParam(setting.Key, int.Parse(setting.Value));
+							break;
+						case IACarriableDefinition.AnimGraphTypes.Float:
+							anim.SetParam(setting.Key, float.Parse(setting.Value));
+							break;
+						case IACarriableDefinition.AnimGraphTypes.Vector3:
+							anim.SetParam(setting.Key, Vector3.Parse(setting.Value));
+							break;
+					}
+				}
+			}
+			else
+			{
+				base.SimulateAnimator(anim);
+			}
+		}
+
 		public override void CreateViewModel()
 		{
 			Host.AssertClient();

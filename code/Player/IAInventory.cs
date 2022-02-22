@@ -135,7 +135,7 @@ namespace infinitearcade
 
 			// we're good :)
 
-			ent.Parent = Owner;
+			ent.SetParent(Owner);
 
 			// Let the item know
 			ent.OnCarryStart(Owner);
