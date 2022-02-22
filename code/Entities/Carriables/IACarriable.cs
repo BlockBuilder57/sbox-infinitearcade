@@ -56,7 +56,7 @@ namespace infinitearcade
 				EnableSelfCollisions = false
 			};
 
-			PickupTrigger.PhysicsBody.EnableAutoSleeping = false;
+			PickupTrigger.PhysicsBody.AutoSleep = false;
 		}
 
 		public override void ActiveStart(Entity ent)
@@ -95,7 +95,7 @@ namespace infinitearcade
 			if (Owner != null)
 				return false;
 
-			if (user.Inventory is IAInventory inventory)
+			if (user is Player player && player.Inventory is IAInventory inventory)
 				return inventory.CanAdd(this);
 
 			return true;
@@ -103,7 +103,8 @@ namespace infinitearcade
 
 		public void Remove()
 		{
-			PhysicsGroup?.Wake();
+			if (PhysicsGroup != null)
+				PhysicsGroup.Sleeping = false;
 			Delete();
 		}
 
@@ -117,16 +118,16 @@ namespace infinitearcade
 					switch (setting.Type)
 					{
 						case IACarriableDefinition.AnimGraphTypes.Bool:
-							anim.SetParam(setting.Key, bool.Parse(setting.Value));
+							anim.SetAnimParameter(setting.Key, bool.Parse(setting.Value));
 							break;
 						case IACarriableDefinition.AnimGraphTypes.Int:
-							anim.SetParam(setting.Key, int.Parse(setting.Value));
+							anim.SetAnimParameter(setting.Key, int.Parse(setting.Value));
 							break;
 						case IACarriableDefinition.AnimGraphTypes.Float:
-							anim.SetParam(setting.Key, float.Parse(setting.Value));
+							anim.SetAnimParameter(setting.Key, float.Parse(setting.Value));
 							break;
 						case IACarriableDefinition.AnimGraphTypes.Vector3:
-							anim.SetParam(setting.Key, Vector3.Parse(setting.Value));
+							anim.SetAnimParameter(setting.Key, Vector3.Parse(setting.Value));
 							break;
 					}
 				}

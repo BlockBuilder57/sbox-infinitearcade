@@ -27,7 +27,7 @@ namespace infinitearcade.UI
 			foreach (IACarriable carriable in inv)
 			{
 				InventoryIcon icon = new(this, carriable);
-				if (carriable.IsActiveChild())
+				if (carriable.Owner is Player player && player.ActiveChild == carriable)
 					icon.AddClass("active");
 
 				icons.AddOrCreate(carriable.Definition.BucketIdentifier).Add(icon);

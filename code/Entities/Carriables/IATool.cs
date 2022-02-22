@@ -111,7 +111,7 @@ namespace infinitearcade
 		/// </summary>
 		public virtual IEnumerable<TraceResult> TraceBullet(Vector3 start, Vector3 end, float radius = 2.0f)
 		{
-			bool InWater = Physics.TestPointContents(start, CollisionLayer.Water);
+			bool InWater = Map.Physics.IsPointWater(start);
 
 			var tr = Trace.Ray(start, end)
 					.UseHitboxes()

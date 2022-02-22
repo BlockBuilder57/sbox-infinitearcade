@@ -63,9 +63,10 @@ namespace infinitearcade
 
 			LifeState = LifeState.Alive;
 			Velocity = Vector3.Zero;
-			WaterLevel.Clear();
+			WaterLevel = 0;
 
 			InitStats();
+			GiveWeapons();
 
 			//Undress();
 			if (m_clothed)
@@ -75,13 +76,7 @@ namespace infinitearcade
 
 			CreateHull();
 
-			if (Inventory is IAInventory inv)
-			{
-				inv.Add(IACarriableDefinition.GetEntity("carriables/shotgun.firearm"));
-				inv.Add(IACarriableDefinition.GetEntity("carriables/pistol.firearm"));
-				inv.Add(IACarriableDefinition.GetEntity("carriables/flashlight.tool"));
-				//HudFullUpdate(To.Single(this), inv.List.ToArray());
-			}
+			
 
 			Game.Current?.MoveToSpawnpoint(this);
 			ResetInterpolation();
@@ -95,6 +90,13 @@ namespace infinitearcade
 			Armor = 0f;
 			MaxArmor = 50f;
 			ArmorMultiplier = 1.0f;
+		}
+
+		public virtual void GiveWeapons()
+		{
+			Inventory?.Add(IACarriableDefinition.GetEntity("carriables/shotgun.firearm"));
+			Inventory?.Add(IACarriableDefinition.GetEntity("carriables/pistol.firearm"));
+			Inventory?.Add(IACarriableDefinition.GetEntity("carriables/flashlight.tool"));
 		}
 
 		public readonly List<ModelEntity> Clothing = new();
@@ -251,26 +253,26 @@ namespace infinitearcade
 			// ZNear: 7 (3 in HL1/HL:S)
 			//  ZFar: ~28378 (r_mapextents * 1.73205080757f)
 
-			Game.Current.LastCamera = Camera as Camera;
+			//Game.Current.LastCamera = CameraMode as Camera;
 
 			if (Input.VR.IsActive || VR.Enabled)
 			{
 				ResetSeatedPos();
-				if (Camera is not VRCamera)
+				if (CameraMode is not VRCamera)
 				{
-					Camera = new VRCamera();
+					CameraMode = new VRCamera();
 				}
 			}
 			else
 			{
-				if (Camera is not FirstPersonCamera)
+				if (CameraMode is not FirstPersonCamera)
 				{
-					Camera = new FirstPersonCamera();
-					(Camera as FirstPersonCamera).SetZNear(7);
+					CameraMode = new FirstPersonCamera();
+					(CameraMode as FirstPersonCamera).SetZNear(7);
 				}
 				else
 				{
-					Camera = new ThirdPersonCamera();
+					CameraMode = new ThirdPersonCamera();
 				}
 			}
 		}
@@ -371,9 +373,9 @@ namespace infinitearcade
 			{
 				if (!glassShard.ParentPanel.IsBroken && Velocity.Length > 350f)
 					glassShard.ShatterWorldSpace((EyePosition + Position)/2f);
-				else if (glassShard.ParentPanel.IsBroken)
+				else if (glassShard.ParentPanel.IsBroken && glassShard.PhysicsGroup.IsValid())
 				{
-					glassShard.PhysicsGroup?.Wake();
+					glassShard.PhysicsGroup.Sleeping = false;
 					glassShard.Velocity += Velocity * 0.2f;
 				}
 			}
@@ -470,7 +472,7 @@ namespace infinitearcade
 			base.OnKilled();
 
 			BecomeRagdollOnClient(Velocity, m_lastDamage.Flags, m_lastDamage.Position, m_lastDamage.Force, GetHitboxBone(m_lastDamage.HitboxIndex));
-			Camera = new SpectateRagdollCamera();
+			CameraMode = new SpectateRagdollCamera();
 			Controller = null;
 
 			EnableAllCollisions = false;

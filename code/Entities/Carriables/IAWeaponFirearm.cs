@@ -54,7 +54,7 @@ namespace infinitearcade
 			else if (TimeSinceReload > ReloadTime * 1)
 				OnReloadFinish();
 
-			if (debug_firearm && IsActiveChild())
+			if (debug_firearm && (Owner as Player).ActiveChild == this)
 			{
 				if (IsServer)
 					DebugOverlay.Text(Position, "srv: " + Primary.ToString());
@@ -105,8 +105,8 @@ namespace infinitearcade
 		[ClientRpc]
 		public virtual void StartReloadEffects()
 		{
-			ViewModelEntity?.SetAnimBool("reload", true);
-			(Owner as AnimEntity)?.SetAnimBool("b_reload", true);
+			ViewModelEntity?.SetAnimParameter("reload", true);
+			(Owner as AnimEntity)?.SetAnimParameter("b_reload", true);
 		}
 
 		public virtual void ShootBullet(Vector3 pos, Vector3 dir, float spread, float force, float damage, float bulletSize)
@@ -125,7 +125,7 @@ namespace infinitearcade
 				{
 					tr.Surface.DoBulletImpact(tr);
 
-					var damageInfo = DamageInfo.FromBullet(tr.EndPos, forward * 100 * force * Scale, damage * Scale)
+					var damageInfo = DamageInfo.FromBullet(tr.EndPosition, forward * 100 * force * Scale, damage * Scale)
 						.UsingTraceResult(tr).WithAttacker(Owner).WithWeapon(this);
 
 					tr.Entity.TakeDamage(damageInfo);
@@ -155,7 +155,12 @@ namespace infinitearcade
 		[AdminCmd("setclip")]
 		public static void SetClipCommand(int clip)
 		{
-			IAWeaponFirearm firearm = ConsoleSystem.Caller?.Pawn?.ActiveChild as IAWeaponFirearm;
+			Entity pawn = ConsoleSystem.Caller?.Pawn;
+			Player player = pawn as Player;
+			if (!player.IsValid())
+				return;
+
+			IAWeaponFirearm firearm = player.ActiveChild as IAWeaponFirearm;
 
 			if (firearm.IsValid())
 				firearm.Primary.SetClip(clip);
@@ -164,7 +169,12 @@ namespace infinitearcade
 		[AdminCmd("setammo")]
 		public static void SetAmmoCommand(int ammo)
 		{
-			IAWeaponFirearm firearm = ConsoleSystem.Caller?.Pawn?.ActiveChild as IAWeaponFirearm;
+			Entity pawn = ConsoleSystem.Caller?.Pawn;
+			Player player = pawn as Player;
+			if (!player.IsValid())
+				return;
+
+			IAWeaponFirearm firearm = player.ActiveChild as IAWeaponFirearm;
 
 			if (firearm.IsValid())
 				firearm.Primary.SetAmmo(ammo);

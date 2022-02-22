@@ -4,7 +4,7 @@ using Sandbox;
 
 namespace infinitearcade
 {
-	public class DevCamera : Camera
+	public class DevCamera : CameraMode
 	{
 		Angles LookAngles;
 		Vector3 MoveInput;
@@ -26,17 +26,17 @@ namespace infinitearcade
 
 		public override void Activated()
 		{
-			if (Local.Pawn?.Camera is Camera currentCam)
+			if (Local.Pawn is Player player && player.CameraMode != null)
 			{
-				TargetPos = currentCam.Position;
-				TargetRot = currentCam.Rotation;
+				TargetPos = player.CameraMode.Position;
+				TargetRot = player.CameraMode.Rotation;
 
-				FovOverride = currentCam.FieldOfView;
-				Ortho = currentCam.Ortho;
-				OrthoSize = Math.Min(0.001f, currentCam.OrthoSize);
+				FovOverride = player.CameraMode.FieldOfView;
+				Ortho = player.CameraMode.Ortho;
+				OrthoSize = Math.Min(0.001f, player.CameraMode.OrthoSize);
 
-				ZNear = currentCam.ZNear;
-				ZFar = currentCam.ZFar;
+				ZNear = player.CameraMode.ZNear;
+				ZFar = player.CameraMode.ZFar;
 			}
 
 			Position = TargetPos;
@@ -61,9 +61,6 @@ namespace infinitearcade
 
 		public override void Update()
 		{
-			var player = Local.Client;
-			if (player == null) return;
-
 			var tr = Trace.Ray(Position, Position + Rotation.Forward * 4096).HitLayer(CollisionLayer.All).UseHitboxes().Run();
 			FieldOfView = FovOverride;
 
@@ -75,7 +72,7 @@ namespace infinitearcade
 			if (Overlays)
 			{
 				var normalRot = Rotation.LookAt(tr.Normal);
-				DebugOverlay.Axis(tr.EndPos, normalRot, 3.0f);
+				DebugOverlay.Axis(tr.EndPosition, normalRot, 3.0f);
 
 				if (tr.Entity != null && !tr.Entity.IsWorld)
 				{
@@ -90,7 +87,7 @@ namespace infinitearcade
 					if (tr.Entity.IsClientOnly)
 						debugText += $"\n{"Clientside",pad}: Clientside only";
 
-					DebugOverlay.Text(tr.EndPos + Vector3.Up * 20, debugText, Color.White);
+					DebugOverlay.Text(tr.EndPosition + Vector3.Up * 20, debugText, Color.White);
 
 					var bbox_world = tr.Entity.WorldSpaceBounds;
 					DebugOverlay.Box(0, Vector3.Zero, Rotation.Identity, bbox_world.Mins, bbox_world.Maxs, Color.Red.WithAlpha(0.4f));
@@ -147,8 +144,8 @@ namespace infinitearcade
 					var tr = Trace.Ray(Position, Position + Rotation.Forward * Int32.MaxValue).HitLayer(CollisionLayer.All).UseHitboxes().Run();
 					if (tr.Hit)
 					{
-						PivotPos = tr.EndPos;
-						PivotDist = Vector3.DistanceBetween(tr.EndPos, Position);
+						PivotPos = tr.EndPosition;
+						PivotDist = Vector3.DistanceBetween(tr.EndPosition, Position);
 					}
 				}
 
@@ -173,7 +170,8 @@ namespace infinitearcade
 				if (input.Pressed(InputButton.Attack1))
 				{
 					var tr = Trace.Ray(Position, Position + Rotation.Forward * 4096).HitLayer(CollisionLayer.All).UseHitboxes().Run();
-					tr.Entity?.ToggleDebugBits(DebugOverlayBits.OVERLAY_TEXT_BIT);
+					if (tr.Entity.IsValid())
+						tr.Entity.DebugFlags ^= EntityDebugFlags.Text;
 				}
 
 				if (input.Down(InputButton.Attack2))

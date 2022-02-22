@@ -7,7 +7,7 @@ using Sandbox;
 
 namespace infinitearcade
 {
-	public class VRCamera : Camera
+	public class VRCamera : CameraMode
 	{
 
 		public override void Update()

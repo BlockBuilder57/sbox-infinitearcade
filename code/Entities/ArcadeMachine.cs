@@ -52,7 +52,7 @@ namespace infinitearcade
 		[Event.Frame]
 		public void OnFrame()
 		{
-			if (HasDebugBitsSet(DebugOverlayBits.OVERLAY_TEXT_BIT))
+			if (DebugFlags.HasFlag(EntityDebugFlags.Text))
 			{
 				Vector3 machineBottom = new Vector3(this.WorldSpaceBounds.Center.x, this.WorldSpaceBounds.Center.y, this.WorldSpaceBounds.Mins.z);
 				Vector3 machineTop = new Vector3(this.WorldSpaceBounds.Center.x, this.WorldSpaceBounds.Center.y, this.WorldSpaceBounds.Maxs.z);

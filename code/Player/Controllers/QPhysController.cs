@@ -123,19 +123,19 @@ namespace infinitearcade
 			/*m_inputRotationDelta = Input.Rotation.Angles() - m_inputRotationLast;
 			m_inputRotationLast = Input.Rotation.Angles();
 
-			Angles fullCalc = (EyeRot.Angles() + m_inputRotationDelta).WithRoll(0) + (BaseAngularVelocity * Time.Delta);
+			Angles fullCalc = (EyeRotation.Angles() + m_inputRotationDelta).WithRoll(0) + (BaseAngularVelocity * Time.Delta);
 
 			IADebugging.ScreenText(Input.Rotation.Angles().ToString());
 			IADebugging.ScreenText(m_inputRotationLast.ToString());
 			IADebugging.ScreenText(m_inputRotationDelta.ToString());
 
-			EyeRot = Rotation.From(fullCalc.WithRoll(0));*/
+			EyeRotation = Rotation.From(fullCalc.WithRoll(0));*/
 
-			EyeRot = Input.Rotation;
+			EyeRotation = Input.Rotation;
 
 			if (VR.Enabled)
 			{
-				EyeRot = Rotation.From(Input.VR.Head.Rotation.Pitch(), EyeRot.Yaw(), EyeRot.Roll());
+				EyeRotation = Rotation.From(Input.VR.Head.Rotation.Pitch(), EyeRotation.Yaw(), EyeRotation.Roll());
 			}
 		}
 
@@ -154,7 +154,7 @@ namespace infinitearcade
 
 			Gravity = float.Parse(ConsoleSystem.GetValue("sv_gravity"));
 
-			EyePosLocal += TraceOffset;
+			EyeLocalPosition += TraceOffset;
 
 			if (Host.IsServer)
 				CalculateEyeRot();
@@ -186,7 +186,7 @@ namespace infinitearcade
 			// RunLadderMode
 
 			CheckLadder();
-			Swimming = Pawn.WaterLevel.Fraction > 0.6f;
+			Swimming = Pawn.WaterLevel > 0.6f;
 
 			//
 			// Start Gravity
@@ -236,7 +236,7 @@ namespace infinitearcade
 			//
 			WishVelocity = new Vector3(Input.Forward, Input.Left, 0);
 			var inSpeed = WishVelocity.Length.Clamp(0, 1);
-			WishVelocity *= EyeRot.Angles().WithPitch(0).ToRotation();
+			WishVelocity *= EyeRotation.Angles().WithPitch(0).ToRotation();
 
 			if (!Swimming && !m_isTouchingLadder)
 			{
@@ -286,9 +286,9 @@ namespace infinitearcade
 				if (Ducking || Ducked)
 					DebugOverlay.Box(Position, m_hullNormal.Mins, m_hullNormal.Maxs, Color.Blue);
 
-				if (m_player.Camera is not FirstPersonCamera)
+				if (m_player.CameraMode is not FirstPersonCamera)
 				{
-					//DebugOverlay.Line(m_player.EyePos, m_player.EyePos + m_player.EyeRot.Forward * 8, Color.White);
+					//DebugOverlay.Line(m_player.EyePos, m_player.EyePos + m_player.EyeRotation.Forward * 8, Color.White);
 				}
 
 				if (IADebugging.LineOffset > 0)
@@ -384,7 +384,7 @@ namespace infinitearcade
 
 				if (pm.Fraction == 1)
 				{
-					Position = pm.EndPos;
+					Position = pm.EndPosition;
 					StayOnGround();
 					return;
 				}
@@ -594,7 +594,7 @@ namespace infinitearcade
 			Ducked = true;
 			Ducking = false;
 
-			EyePosLocal = GetPlayerViewOffset(true) * Pawn.Scale;
+			EyeLocalPosition = GetPlayerViewOffset(true) * Pawn.Scale;
 
 			// HACKHACK - Fudge for collision bug - no time to fix this properly
 			if (GroundEntity != null)
@@ -664,7 +664,7 @@ namespace infinitearcade
 			Ducked = false;
 			Ducking = false;
 			InDuckJump = false;
-			EyePosLocal = GetPlayerViewOffset(false) * Pawn.Scale;
+			EyeLocalPosition = GetPlayerViewOffset(false) * Pawn.Scale;
 			m_flDucktime = 0;
 
 			Position = newOrigin;
@@ -678,7 +678,7 @@ namespace infinitearcade
 			Ducked = true;
 			Ducking = false;
 
-			EyePosLocal = GetPlayerViewOffset(true) * Pawn.Scale;
+			EyeLocalPosition = GetPlayerViewOffset(true) * Pawn.Scale;
 
 			Vector3 hullSizeNormal = (m_hullNormal.Maxs - m_hullNormal.Mins) * Pawn.Scale;
 			Vector3 hullSizeCrouch = (m_hullDucked.Maxs - m_hullDucked.Mins) * Pawn.Scale;
@@ -733,7 +733,7 @@ namespace infinitearcade
 			m_flDuckJumpTime = 0;
 			m_flJumpTime = 0;
 
-			EyePosLocal = EyePosLocal.WithZ(EyePosLocal.z - flDeltaZ) * Pawn.Scale;
+			EyeLocalPosition = EyeLocalPosition.WithZ(EyeLocalPosition.z - flDeltaZ) * Pawn.Scale;
 			Position -= viewDelta;
 
 			// block: this is where that snapping to a surface after jumping thing comes from
@@ -765,8 +765,8 @@ namespace infinitearcade
 				return;
 			}
 
-			if (EyePosLocal == Vector3.Zero)
-				EyePosLocal = Vector3.Up * EyeHeight * Pawn.Scale;
+			if (EyeLocalPosition == Vector3.Zero)
+				EyeLocalPosition = Vector3.Up * EyeHeight * Pawn.Scale;
 		}
 
 		public void SetDuckedEyeOffset(float duckFraction)
@@ -778,10 +778,10 @@ namespace infinitearcade
 
 			Vector3 vecDuckViewOffset = GetPlayerViewOffset(true);
 			Vector3 vecStandViewOffset = GetPlayerViewOffset(false);
-			Vector3 temp = EyePosLocal;
+			Vector3 temp = EyeLocalPosition;
 			temp.z = ((vecDuckViewOffset.z - fMore) * duckFraction) +
 				(vecStandViewOffset.z * (1 - duckFraction));
-			EyePosLocal = temp * Pawn.Scale;
+			EyeLocalPosition = temp * Pawn.Scale;
 		}
 
 		/// <summary>
@@ -960,7 +960,7 @@ namespace infinitearcade
 
 			// ahopping and bhopping
 			{
-				Vector3 vecForward = EyeRot.Forward.WithZ(0).Normal;
+				Vector3 vecForward = EyeRotation.Forward.WithZ(0).Normal;
 
 				float flSpeedBoostPerc = (!Input.Down(InputButton.Run) /*&& !Duck.IsActive*/) ? 0.5f : 0.1f;
 				float flSpeedAddition = Math.Abs(Input.Forward * flSpeedBoostPerc);
@@ -1161,7 +1161,7 @@ namespace infinitearcade
 
 			if (!pm.StartedSolid && pm.Fraction > 0.0f && pm.Fraction < 1.0f)
 			{
-				Position = pm.EndPos;
+				Position = pm.EndPosition;
 			}
 
 		}
@@ -1254,7 +1254,7 @@ namespace infinitearcade
 
 			// See how far up we can go without getting stuck
 			var trace = TraceBBox(Position, start);
-			start = trace.EndPos;
+			start = trace.EndPosition;
 
 			// Now trace down from a known safe position
 			trace = TraceBBox(start, end);
@@ -1264,7 +1264,7 @@ namespace infinitearcade
 			if (trace.StartedSolid) return; // can't be embedded in a solid
 			if (Vector3.GetAngle(Vector3.Up, trace.Normal) > GroundAngle) return; // can't hit a steep slope that we can't stand on anyway
 
-			Position = trace.EndPos;
+			Position = trace.EndPosition;
 		}
 
 		// misc Valve functions

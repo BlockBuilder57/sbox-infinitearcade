@@ -33,9 +33,9 @@ namespace infinitearcade
 			TimeSinceSecondaryAttack = 0;
 
 			if (Owner is AnimEntity anim)
-				anim.SetAnimBool("b_attack", true);
+				anim.SetAnimParameter("b_attack", true);
 
-			ViewModelEntity?.SetAnimBool("fire", true);
+			ViewModelEntity?.SetAnimParameter("fire", true);
 
 			PlaySound(m_firearmDef.FireSound);
 			ShootBullet(Owner.EyePosition, Owner.EyeRotation.Forward);

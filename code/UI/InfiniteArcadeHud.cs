@@ -46,7 +46,7 @@ namespace infinitearcade.UI
 			if (m_player == null)
 				m_player = Local.Pawn as ArcadePlayer;
 
-			m_crosshairCanvas?.SetClass("hidden", m_player.Camera is not FirstPersonCamera);
+			m_crosshairCanvas?.SetClass("hidden", m_player.CameraMode is not FirstPersonCamera);
 		}
 
 		[Event.Hotload]

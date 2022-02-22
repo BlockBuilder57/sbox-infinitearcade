@@ -100,7 +100,9 @@ namespace infinitearcade
 			if (!ent.IsValid())
 				return false;
 
-			if (!ent.CanCarry(Owner))
+			// if we do not have this A LOT of things break
+			// mostly because OnTouch would add literally everything
+			if (ent is not BaseCarriable)
 				return false;
 
 			return true;
@@ -121,10 +123,6 @@ namespace infinitearcade
 			if (!CanAdd(ent))
 				return false;
 
-			// Let the entity reject the inventory
-			if (!ent.CanCarry(Owner))
-				return false;
-
 			// 
 			//if (IsCarryingType(entity.GetType()))
 			//	return false;
@@ -138,7 +136,8 @@ namespace infinitearcade
 			ent.SetParent(Owner);
 
 			// Let the item know
-			ent.OnCarryStart(Owner);
+			if (ent is BaseCarriable carry)
+				carry.OnCarryStart(Owner);
 
 			if (makeActive)
 				SetActive(ent);
@@ -180,7 +179,8 @@ namespace infinitearcade
 				return false;
 
 			ent.SetParent(null);
-			ent.OnCarryDrop(Owner);
+			if (ent is BaseCarriable carry)
+				carry.OnCarryDrop(Owner);
 
 			return true;
 		}
@@ -194,7 +194,8 @@ namespace infinitearcade
 
 			if (Drop(ac))
 			{
-				Owner.ActiveChild = null;
+				using (Prediction.Off())
+					Owner.ActiveChild = null;
 				return ac;
 			}
 
@@ -207,7 +208,8 @@ namespace infinitearcade
 			if (!Contains(ent)) return false;
 
 			Entity prev = Owner.ActiveChild;
-			Owner.ActiveChild = ent;
+			using (Prediction.Off())
+				Owner.ActiveChild = ent;
 
 			Owner.HudSwitchActive(To.Single(Owner), prev as IACarriable, Owner.ActiveChild as IACarriable);
 
@@ -239,7 +241,8 @@ namespace infinitearcade
 			if (!evenIfEmpty && ent == null)
 				return false;
 
-			Owner.ActiveChild = ent;
+			using (Prediction.Off())
+				Owner.ActiveChild = ent;
 
 			Owner.HudSwitchActive(To.Single(Owner), prev as IACarriable, Owner.ActiveChild as IACarriable);
 

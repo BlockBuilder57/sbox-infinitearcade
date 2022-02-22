@@ -86,7 +86,7 @@ namespace infinitearcade
 			if (debug_camera)
 			{
 				const int pad = 14;
-				Camera cam = Game.Current.FindActiveCamera() as Camera;
+				CameraMode cam = Game.Current.FindActiveCamera();
 				float fov = cam.FieldOfView;
 
 				if (cam.FieldOfView == 0)

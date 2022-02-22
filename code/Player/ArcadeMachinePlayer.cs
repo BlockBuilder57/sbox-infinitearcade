@@ -42,7 +42,7 @@ namespace infinitearcade
 		{
 			base.Respawn();
 
-			Inventory?.Add(IACarriableDefinition.GetEntity("carriables/pistol.firearm"), true);
+			
 		}
 
 		public override void InitStats()
@@ -53,6 +53,11 @@ namespace infinitearcade
 			Armor = 25f;
 			MaxArmor = 100f;
 			ArmorMultiplier = 1f;
+		}
+
+		public override void GiveWeapons()
+		{
+			Inventory?.Add(IACarriableDefinition.GetEntity("carriables/pistol.firearm"), true);
 		}
 
 		public override void Clothe()

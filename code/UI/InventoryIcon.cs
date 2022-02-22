@@ -25,15 +25,16 @@ namespace infinitearcade.UI
 
 			StyleSheet.Load("UI/InventoryIcon.scss");
 
-			using (SceneWorld.SetCurrent(new SceneWorld()))
-			{
-				Vector3 center = carriable.Model.Bounds.Center + Vector3.Left * 64;
-				SceneObject.CreateModel(carriable.Model, Transform.Zero);
-				Light.Point(center, 512, Color.White);
+			SceneWorld world = new();
 
-				Scene = Add.ScenePanel(SceneWorld.Current, center, Rotation.From(0, -90, 0), 45);
-				Scene.RenderOnce = true;
-			}
+			new SceneModel(world, carriable.Model, Transform.Zero);
+
+			Vector3 center = carriable.Model.Bounds.Center + Vector3.Left * 64;
+			new SceneLight(world, center, 512, Color.White);
+			Scene = Add.ScenePanel(world, center, Rotation.From(0, -90, 0), 45);
+			Scene.RenderOnce = true;
+			Scene.Style.Width = Length.Percent(100);
+			Scene.Style.Height = Length.Percent(100);
 		}
 	}
 }

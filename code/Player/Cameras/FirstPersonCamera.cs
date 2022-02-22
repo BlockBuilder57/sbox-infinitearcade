@@ -2,7 +2,7 @@
 
 namespace infinitearcade
 {
-	public partial class FirstPersonCamera : Camera
+	public partial class FirstPersonCamera : CameraMode
 	{
 		private float m_realZNear = 0;
 		private float m_lastScale = 0;

@@ -107,11 +107,19 @@ namespace infinitearcade
 		public override void DoPlayerDevCam(Client cl)
 		{
 			Host.AssertServer();
-
 			if (!cl.HasPermission("devcam"))
 				return;
 
-			cl.DevCamera = cl.DevCamera == null ? new DevCamera() : null;
+			var camera = cl.Components.Get<DevCamera>(true);
+
+			if (camera == null)
+			{
+				camera = new DevCamera();
+				cl.Components.Add(camera);
+				return;
+			}
+
+			camera.Enabled = !camera.Enabled;
 		}
 	}
 }

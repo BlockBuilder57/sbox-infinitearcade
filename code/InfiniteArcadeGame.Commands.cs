@@ -4,7 +4,6 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Sandbox;
-using Sandbox.Joints;
 using Sandbox.UI;
 
 namespace infinitearcade
@@ -14,7 +13,7 @@ namespace infinitearcade
 		[AdminCmd("respawn_entities")]
 		public static void RespawnEntities()
 		{
-			EntityManager.CleanUpMap(Game.DefaultCleanupFilter);
+			Map.Reset(DefaultCleanupFilter);
 		}
 
 		[ServerCmd("spawn")]
@@ -33,7 +32,7 @@ namespace infinitearcade
 
 			var ent = new Prop
 			{
-				Position = tr.EndPos,
+				Position = tr.EndPosition,
 				Rotation = Rotation.From(new Angles(0, owner.EyeRotation.Angles().yaw, 0)) * Rotation.FromAxis(Vector3.Up, 180)
 			};
 			ent.SetModel(modelname);
@@ -41,9 +40,9 @@ namespace infinitearcade
 			// Drop to floor
 			if (ent.PhysicsBody != null && ent.PhysicsGroup.BodyCount == 1)
 			{
-				var p = ent.PhysicsBody.FindClosestPoint(tr.EndPos);
+				var p = ent.PhysicsBody.FindClosestPoint(tr.EndPosition);
 
-				var delta = p - tr.EndPos;
+				var delta = p - tr.EndPosition;
 				ent.PhysicsBody.Position -= delta;
 				//DebugOverlay.Line( p, tr.EndPos, 10, false );
 			}
@@ -70,7 +69,7 @@ namespace infinitearcade
 				.Size(2)
 				.Run();
 
-			carriable.Position = tr.EndPos + Vector3.Up * 8;
+			carriable.Position = tr.EndPosition + Vector3.Up * 8;
 			carriable.Rotation = Rotation.From(new Angles(0, owner.EyeRotation.Angles().yaw, 0));
 		}
 
@@ -159,14 +158,6 @@ namespace infinitearcade
 				ModelEntity ent = player.CreateDeathRagdoll();
 				if (ent == null)
 					return;
-
-				foreach (PhysicsJoint joint in ent.PhysicsGroup.Joints)
-				{
-					//Log.Info($"{joint.Body1} -> {joint.Body2} | {joint.JointFrame1.Angles()} -> {joint.JointFrame2.Angles()}");
-					// I don't think we can access specific joint properties yet so this vaguely works for now
-					joint.LocalJointFrame1 = Rotation.Identity;
-					joint.LocalJointFrame2 = Rotation.Identity;
-				}
 
 				ent.SetRagdollVelocityFrom(player);
 				ent.PhysicsGroup.Velocity = player.Velocity + (player.EyeRotation.Forward * force);

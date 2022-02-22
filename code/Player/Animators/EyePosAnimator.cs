@@ -26,47 +26,38 @@ namespace infinitearcade
 			bool sitting = HasTag("sitting");
 			bool noclip = HasTag("noclip") && !sitting;
 
-			SetParam("b_grounded", GroundEntity != null || noclip || sitting);
-			SetParam("b_noclip", noclip);
-			SetParam("b_sit", sitting);
-			SetParam("b_swim", Pawn.WaterLevel.Fraction > 0.5f && !sitting);
+			SetAnimParameter("b_grounded", GroundEntity != null || noclip || sitting);
+			SetAnimParameter("b_noclip", noclip);
+			SetAnimParameter("b_sit", sitting);
+			SetAnimParameter("b_swim", Pawn.WaterLevel > 0.5f && !sitting);
 
 			if (Host.IsClient && Client.IsValid())
 			{
-				SetParam("voice", Client.TimeSinceLastVoice < 0.5f ? Client.VoiceLevel : 0.0f);
+				SetAnimParameter("voice", Client.TimeSinceLastVoice < 0.5f ? Client.VoiceLevel : 0.0f);
 			}
 
 			Vector3 aimPos = Pawn.EyePosition + Pawn.EyeRotation.Forward * 200;
 			Vector3 lookPos = aimPos;
 
-			//
-			// Look in the direction what the player's input is facing
-			//
-			SetLookAt("lookat_pos", lookPos); // old
-			SetLookAt("aimat_pos", aimPos); // old
-
 			SetLookAt("aim_eyes", lookPos);
 			SetLookAt("aim_head", lookPos);
 			SetLookAt("aim_body", aimPos);
-
-			SetParam("b_ducked", HasTag("ducked")); // old
 
 			if (HasTag("ducked"))
 				duck = duck.LerpTo(1.0f, Time.Delta * 10.0f);
 			else
 				duck = duck.LerpTo(0.0f, Time.Delta * 5.0f);
 
-			SetParam("duck", duck);
+			SetAnimParameter("duck", duck);
 
-			if (Pawn.ActiveChild is BaseCarriable carry)
+			if (Pawn is Player player && player.ActiveChild is BaseCarriable carry)
 			{
 				carry.SimulateAnimator(this);
 			}
 			else
 			{
-				SetParam("holdtype", 0);
-				SetParam("aimat_weight", 0.5f); // old
-				SetParam("aim_body_weight", 0.5f);
+				SetAnimParameter("holdtype", 0);
+				SetAnimParameter("aim_body_weight", 0.5f);
 			}
 
 		}
@@ -76,7 +67,7 @@ namespace infinitearcade
 			//
 			// Our ideal player model rotation is the way we're facing
 			//
-			var allowYawDiff = Pawn.ActiveChild == null ? 90 : 50;
+			var allowYawDiff = Pawn is Player player && player.ActiveChild == null ? 90 : 50;
 
 			float turnSpeed = 0.01f;
 			if (HasTag("ducked"))
@@ -97,7 +88,7 @@ namespace infinitearcade
 			//
 			if (change > 1 && WishVelocity.Length <= 1) TimeSinceFootShuffle = 0;
 
-			SetParam("b_shuffle", TimeSinceFootShuffle < 0.1);
+			SetAnimParameter("b_shuffle", TimeSinceFootShuffle < 0.1);
 		}
 
 		void DoWalk()
@@ -110,11 +101,11 @@ namespace infinitearcade
 
 				var angle = MathF.Atan2(sideward, forward).RadianToDegree().NormalizeDegrees();
 
-				SetParam("move_direction", angle);
-				SetParam("move_speed", dir.Length);
-				SetParam("move_groundspeed", dir.WithZ(0).Length);
-				SetParam("move_y", sideward);
-				SetParam("move_x", forward);
+				SetAnimParameter("move_direction", angle);
+				SetAnimParameter("move_speed", dir.Length);
+				SetAnimParameter("move_groundspeed", dir.WithZ(0).Length);
+				SetAnimParameter("move_y", sideward);
+				SetAnimParameter("move_x", forward);
 			}
 
 			// Wish Speed
@@ -125,11 +116,11 @@ namespace infinitearcade
 
 				var angle = MathF.Atan2(sideward, forward).RadianToDegree().NormalizeDegrees();
 
-				SetParam("wish_direction", angle);
-				SetParam("wish_speed", dir.Length);
-				SetParam("wish_groundspeed", dir.WithZ(0).Length);
-				SetParam("wish_y", sideward);
-				SetParam("wish_x", forward);
+				SetAnimParameter("wish_direction", angle);
+				SetAnimParameter("wish_speed", dir.Length);
+				SetAnimParameter("wish_groundspeed", dir.WithZ(0).Length);
+				SetAnimParameter("wish_y", sideward);
+				SetAnimParameter("wish_x", forward);
 			}
 		}
 
