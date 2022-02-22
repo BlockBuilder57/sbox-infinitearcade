@@ -13,10 +13,21 @@ namespace infinitearcade
 		[Hammer.Skip] public static IReadOnlyList<IAToolDefinition> AllFirearms => _allFirearms;
 		[Hammer.Skip] internal static List<IAToolDefinition> _allFirearms = new();
 
+		[Flags]
+		public enum FireMode : byte
+		{
+			None     = 0,
+			Single   = 1 << 0,
+			FullAuto = 1 << 1,
+			Burst    = 1 << 2
+		}
+
 		public class AmmoSetting
 		{
 			public int MaxClip { get; set; }
 			public int MaxAmmo { get; set; }
+			public FireMode FireModes { get; set; } = FireMode.Single;
+			public int BurstAmount { get; set; } = 3;
 		}
 
 		public class BulletSetting
@@ -47,5 +58,5 @@ namespace infinitearcade
 		}
 	}
 
-	
+
 }

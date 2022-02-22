@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -26,13 +27,13 @@ namespace infinitearcade
 
 			if (def is IAWeaponFirearmDefinition firearmDef)
 			{
-				Primary = new WeaponAmmo(firearmDef.Primary.MaxClip, firearmDef.Primary.MaxAmmo);
+				Primary = new WeaponAmmo(firearmDef.Primary.MaxClip, firearmDef.Primary.MaxAmmo, firearmDef.Primary.FireModes);
 
 				Secondaries = new WeaponAmmo[firearmDef.Secondaries.Length];
 				for (int i = 0; i < firearmDef.Secondaries.Length; i++)
 				{
 					IAWeaponFirearmDefinition.AmmoSetting setting = firearmDef.Secondaries[i];
-					Secondaries[i] = new WeaponAmmo(setting.MaxClip, setting.MaxAmmo);
+					Secondaries[i] = new WeaponAmmo(setting.MaxClip, setting.MaxAmmo, setting.FireModes);
 				}
 
 				ReloadTime = firearmDef.ReloadTime;
@@ -180,16 +181,21 @@ namespace infinitearcade
 		[Net] public bool InfiniteClip { get; set; } = false;
 		[Net] public bool InfiniteAmmo { get; set; } = false;
 
+		[Net] public IAWeaponFirearmDefinition.FireMode AllowedFireModes { get; private set; }
+		[Net] public IAWeaponFirearmDefinition.FireMode CurrentFireMode { get; private set; }
+
 		public WeaponAmmo()
 		{
 			Clip = MaxClip = 8;
 			Ammo = MaxAmmo = 32;
+			AllowedFireModes = IAWeaponFirearmDefinition.FireMode.Single;
 		}
 
-		public WeaponAmmo(int clip, int ammo)
+		public WeaponAmmo(int clip, int ammo, IAWeaponFirearmDefinition.FireMode firemodes)
 		{
 			Clip = MaxClip = clip;
 			Ammo = MaxAmmo = ammo;
+			AllowedFireModes = firemodes;
 		}
 
 		public void SetClip(int amount) => Clip = amount;
@@ -244,6 +250,23 @@ namespace infinitearcade
 				// done reloading
 				return false;
 			}
+		}
+
+		public void NextFireMode()
+		{
+			List<IAWeaponFirearmDefinition.FireMode> modes = new();
+
+			// modified https://stackoverflow.com/a/42557518
+			bool[] bits = new BitArray(new[] { (int)AllowedFireModes }).OfType<bool>().ToArray();
+			for (int i = 0; i < bits.Length; i++)
+			{
+				modes.Add((IAWeaponFirearmDefinition.FireMode)(i+1 << 1));
+			}
+
+			if (modes.Count <= 1)
+				return; // we've only got one value, don't even bother
+
+			// iterate throught the list
 		}
 
 		public override string ToString()

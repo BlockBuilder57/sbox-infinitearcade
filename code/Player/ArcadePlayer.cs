@@ -528,17 +528,19 @@ namespace infinitearcade
 			if (string.IsNullOrEmpty(GetModelName()))
 				return null;
 
-			var ent = new ModelEntity();
-			ent.Position = Position;
-			ent.Rotation = Rotation;
-			ent.Scale = Scale;
+			var ent = new ModelEntity
+			{
+				Position = Position,
+				Rotation = Rotation,
+				Scale = Scale,
 
-			ent.MoveType = MoveType.Physics;
-			ent.UsePhysicsCollision = true;
-			ent.EnableAllCollisions = true;
-			ent.CollisionGroup = CollisionGroup.Debris;
-			ent.EnableHitboxes = true;
-			ent.SurroundingBoundsMode = SurroundingBoundsType.Physics;
+				MoveType = MoveType.Physics,
+				UsePhysicsCollision = true,
+				EnableAllCollisions = true,
+				EnableHitboxes = true,
+				CollisionGroup = CollisionGroup.Debris,
+				SurroundingBoundsMode = SurroundingBoundsType.Physics
+			};
 
 			ent.SetInteractsAs(CollisionLayer.Debris);
 			ent.SetInteractsWith(CollisionLayer.WORLD_GEOMETRY);
@@ -563,6 +565,8 @@ namespace infinitearcade
 					var clothing = new ModelEntity();
 					clothing.SetModel(model);
 					clothing.SetParent(ent, true);
+					clothing.CopyBodyGroups(e);
+					clothing.CopyMaterialGroup(e);
 					clothing.TakeDecalsFrom(e);
 					clothing.RenderColor = e.RenderColor;
 				}

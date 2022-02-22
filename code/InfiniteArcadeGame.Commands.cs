@@ -150,13 +150,15 @@ namespace infinitearcade
 		}
 
 		[ServerCmd("create_ragdoll")]
-		public static void CreateRagdollCommand()
+		public static void CreateRagdollCommand(float force = 0)
 		{
 			Client cl = ConsoleSystem.Caller;
 
 			if (cl?.Pawn is ArcadePlayer player)
 			{
 				ModelEntity ent = player.CreateDeathRagdoll();
+				if (ent == null)
+					return;
 
 				foreach (PhysicsJoint joint in ent.PhysicsGroup.Joints)
 				{
@@ -167,7 +169,7 @@ namespace infinitearcade
 				}
 
 				ent.SetRagdollVelocityFrom(player);
-				ent.PhysicsGroup.Velocity = player.Velocity;
+				ent.PhysicsGroup.Velocity = player.Velocity + (player.EyeRotation.Forward * force);
 			}
 		}
 	}

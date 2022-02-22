@@ -82,20 +82,23 @@ namespace infinitearcade
 					string debugText = "";
 					const int pad = 6;
 
-					debugText += $"{"Entity".PadLeft(pad)}: {tr.Entity} ({tr.Entity.GetType().FullName}, engine name {tr.Entity.EngineEntityName})";
+					debugText += $"{"Entity",pad}: {tr.Entity} ({tr.Entity.GetType().FullName}, engine name {tr.Entity.EngineEntityName})";
 					if (tr.Entity is ModelEntity model)
-						debugText += $"\n{"Model".PadLeft(pad)}: {model.GetModelName()}";
-					debugText += $"\n{"Index".PadLeft(pad)}: {tr.Entity.NetworkIdent}";
-					debugText += $"\n{"Health".PadLeft(pad)}: {tr.Entity.Health}";
+						debugText += $"\n{"Model",pad}: {model.GetModelName()}";
+					debugText += $"\n{"Index",pad}: {tr.Entity.NetworkIdent}";
+					debugText += $"\n{"Health",pad}: {tr.Entity.Health}";
 					if (tr.Entity.IsClientOnly)
-						debugText += $"\n{"Clientside".PadLeft(pad)}: Clientside only";
+						debugText += $"\n{"Clientside",pad}: Clientside only";
 
 					DebugOverlay.Text(tr.EndPos + Vector3.Up * 20, debugText, Color.White);
 
+					var bbox_world = tr.Entity.WorldSpaceBounds;
+					DebugOverlay.Box(0, Vector3.Zero, Rotation.Identity, bbox_world.Mins, bbox_world.Maxs, Color.Red.WithAlpha(0.4f));
+
 					if (tr.Entity is ModelEntity modelEnt)
 					{
-						var bbox = modelEnt.CollisionBounds;
-						DebugOverlay.Box(0, tr.Entity.Position, tr.Entity.Rotation, bbox.Mins * tr.Entity.LocalScale, bbox.Maxs * tr.Entity.LocalScale, Color.Green);
+						var bbox_collision = modelEnt.CollisionBounds;
+						DebugOverlay.Box(0, tr.Entity.Position, tr.Entity.Rotation, bbox_collision.Mins * tr.Entity.LocalScale, bbox_collision.Maxs * tr.Entity.LocalScale, Color.Green.WithAlpha(0.4f));
 
 						for (int i = 0; i < modelEnt.BoneCount; i++)
 						{
@@ -106,7 +109,7 @@ namespace infinitearcade
 							if (parent > -1)
 							{
 								var ptx = modelEnt.GetBoneTransform(parent);
-								DebugOverlay.Line(tx.Position, ptx.Position, Color.White, depthTest: false);
+								DebugOverlay.Line(tx.Position, ptx.Position, Color.White.WithAlpha(0.2f), depthTest: false);
 							}
 						}
 
