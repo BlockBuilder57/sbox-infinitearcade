@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using infinitearcade.UI;
 using Sandbox;
 
 namespace infinitearcade
@@ -62,6 +63,9 @@ namespace infinitearcade
 		public override void ActiveStart(Entity ent)
 		{
 			base.ActiveStart(ent);
+
+			if (Host.IsClient && Local.Hud is InfiniteArcadeHud hud)
+				hud.InventorySwitchActive(this);
 
 			TimeSinceDeployed = 0;
 		}

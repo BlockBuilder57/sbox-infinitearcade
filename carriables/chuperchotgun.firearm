@@ -6,7 +6,6 @@
 		primaryrate = 0.01
 		secondaryrate = 1.0
 		identifier = "ia_firearm_chuperchotgun"
-		bucketidentifier = "primary"
 		worldmodelpath = resource:"weapons/rust_pumpshotgun/rust_pumpshotgun.vmdl"
 		viewmodelpath = resource:"weapons/rust_pumpshotgun/v_rust_pumpshotgun.vmdl"
 		basetype = "2"
@@ -34,5 +33,7 @@
 				type = "1"
 			},
 		]
+		bucket = "100"
+		subbucket = 0
 	}
 }

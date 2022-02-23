@@ -3,9 +3,11 @@
 	data = 
 	{
 		identifier = "ia_carriable_default"
-		bucketidentifier = "none"
 		basetype = "0"
 		worldmodelpath = resource:"models/sbox_props/burger_box/burger_box.vmdl"
 		viewmodelpath = resource:"models/dev/error.vmdl"
+		bucket = "0"
+		subbucket = 0
+		animgraphsettings = [  ]
 	}
 }

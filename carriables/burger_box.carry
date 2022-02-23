@@ -3,7 +3,6 @@
 	data = 
 	{
 		identifier = "ia_carriable_burger_box"
-		bucketidentifier = "none"
 		basetype = "0"
 		worldmodelpath = resource:"models/sbox_props/burger_box/burger_box.vmdl"
 		viewmodelpath = resource:""
@@ -15,5 +14,7 @@
 				type = "1"
 			},
 		]
+		bucket = "0"
+		subbucket = 0
 	}
 }

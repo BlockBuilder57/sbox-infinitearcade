@@ -31,8 +31,7 @@ namespace infinitearcade
 
 		public ArcadePlayer()
 		{
-			if (Host.IsServer)
-				Inventory = new IAInventory(this);
+			Inventory = new IAInventory(this);
 		}
 
 		public ArcadePlayer(Client cl) : this()
@@ -76,8 +75,6 @@ namespace infinitearcade
 
 			CreateHull();
 
-			
-
 			Game.Current?.MoveToSpawnpoint(this);
 			ResetInterpolation();
 		}
@@ -96,6 +93,7 @@ namespace infinitearcade
 		{
 			Inventory?.Add(IACarriableDefinition.GetEntity("carriables/shotgun.firearm"));
 			Inventory?.Add(IACarriableDefinition.GetEntity("carriables/pistol.firearm"));
+			Inventory?.Add(IACarriableDefinition.GetEntity("carriables/smg.firearm"));
 			Inventory?.Add(IACarriableDefinition.GetEntity("carriables/flashlight.tool"));
 		}
 
@@ -187,7 +185,7 @@ namespace infinitearcade
 
 				SimulateActiveChild(cl, ActiveChild);
 
-				if (Host.IsServer && Inventory is IAInventory inv)
+				if (Inventory is IAInventory inv)
 				{
 					if (Input.MouseWheel != 0)
 						inv.SwitchActiveSlot(-Input.MouseWheel, true);
@@ -253,7 +251,7 @@ namespace infinitearcade
 			// ZNear: 7 (3 in HL1/HL:S)
 			//  ZFar: ~28378 (r_mapextents * 1.73205080757f)
 
-			//Game.Current.LastCamera = CameraMode as Camera;
+			Game.Current.LastCamera = CameraMode;
 
 			if (Input.VR.IsActive || VR.Enabled)
 			{
@@ -577,25 +575,6 @@ namespace infinitearcade
 			ent.DeleteAsync(10.0f);
 
 			return ent;
-		}
-
-		// This is kinda weird, but with a serverside inventory I think it's the best I can do
-		[ClientRpc]
-		public void HudFullUpdate(IACarriable[] inv)
-		{
-			InfiniteArcadeHud hud = Local.Hud as InfiniteArcadeHud;
-
-			if (hud != null)
-				hud.InventoryFullUpdate(inv);
-		}
-
-		[ClientRpc]
-		public void HudSwitchActive(IACarriable prev, IACarriable next)
-		{
-			InfiniteArcadeHud hud = Local.Hud as InfiniteArcadeHud;
-
-			if (hud != null)
-				hud.InventorySwitchActive(prev, next);
 		}
 
 		protected bool IsUseDisabled()

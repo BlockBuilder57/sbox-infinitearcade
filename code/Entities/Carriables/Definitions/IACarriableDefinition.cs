@@ -33,6 +33,15 @@ namespace infinitearcade
 			Vector3
 		}
 
+		public enum BucketCategory : int
+		{
+			Default = 0,
+			Primary = 100,
+			Secondary = 200,
+			Melee = 300,
+			Tool = 400
+		}
+
 		public class AnimGraphSetting
 		{
 			public string Key { get; set; }
@@ -40,9 +49,10 @@ namespace infinitearcade
 			public AnimGraphTypes Type { get; set; }
 		}
 
-		public string Identifier { get; set; } = "ia_carriable_new";
-		public string BucketIdentifier { get; set; } = "none";
 		public BaseTypes BaseType { get; set; } = BaseTypes.Carriable;
+		public string Identifier { get; set; } = "ia_carriable_new";
+		public BucketCategory Bucket { get; set; } = 0;
+		public int SubBucket { get; set; } = 0;
 
 		[ResourceType("vmdl")] public string WorldModelPath { get; set; }
 		public AnimGraphSetting[] AnimGraphSettings { get; set; } = new AnimGraphSetting[] { new() { Key = "holdtype", Value = "0", Type = AnimGraphTypes.Int } };

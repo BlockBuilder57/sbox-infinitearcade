@@ -14,16 +14,14 @@ namespace infinitearcade
 
 		public ArcadePlayer Owner { get; init; }
 		public List<IACarriable> List { get; set; } = new List<IACarriable>();
-		public Dictionary<string, List<IACarriable>> BucketList { get; set; } = new();
 
-		public enum Bucket
+		public enum Buckets
 		{
-			Flat, // eg fp's sandbox
+			FlatUnordered, // eg fp's sandbox
+			FlatOrdered,
 			Bucketed // eg Source games, ULTRAKILL
 		}
-		public Bucket BucketType = Bucket.Flat;
-
-		private int m_cachedSlot = -1;
+		public Buckets BucketType { get; set; } = Buckets.FlatOrdered;
 
 		public virtual Entity Active => Owner.ActiveChild;
 		public virtual int Count() => List.Count;
@@ -32,11 +30,7 @@ namespace infinitearcade
 
 		public IAInventory(ArcadePlayer owner)
 		{
-			Host.AssertServer();
-
 			Owner = owner;
-
-			DeleteContents();
 		}
 
 		[ServerCmd("inv_clear")]
@@ -58,14 +52,6 @@ namespace infinitearcade
 				item.Delete();
 
 			List.Clear();
-			BucketList.Clear();
-			BucketList = new()
-			{
-				{ "primary", new() },
-				{ "secondary", new() },
-				{ "tool", new() },
-				{ "none", new() }
-			};
 		}
 
 		public virtual Entity GetSlot(int i)
@@ -78,19 +64,11 @@ namespace infinitearcade
 
 		public virtual int GetActiveSlot()
 		{
-			if (m_cachedSlot >= 0)
-				return m_cachedSlot;
-
 			var ae = Owner.ActiveChild;
 
 			for (int i = 0; i < Count(); i++)
-			{
 				if (List[i] == ae)
-				{
-					m_cachedSlot = i;
 					return i;
-				}
-			}
 
 			return -1;
 		}
@@ -156,7 +134,7 @@ namespace infinitearcade
 			if (child is IACarriable carriable)
 				List?.Add(carriable);
 
-			BucketListFullUpdate();
+			ListReorder();
 		}
 
 		public virtual void OnChildRemoved(Entity child)
@@ -164,7 +142,7 @@ namespace infinitearcade
 			if (child is IACarriable carriable)
 				List?.Remove(carriable);
 
-			BucketListFullUpdate();
+			ListReorder();
 		}
 
 		public virtual bool Drop(Entity ent)
@@ -194,8 +172,7 @@ namespace infinitearcade
 
 			if (Drop(ac))
 			{
-				using (Prediction.Off())
-					Owner.ActiveChild = null;
+				Owner.ActiveChild = null;
 				return ac;
 			}
 
@@ -207,13 +184,7 @@ namespace infinitearcade
 			if (Active == ent) return false;
 			if (!Contains(ent)) return false;
 
-			Entity prev = Owner.ActiveChild;
-			using (Prediction.Off())
-				Owner.ActiveChild = ent;
-
-			Owner.HudSwitchActive(To.Single(Owner), prev as IACarriable, Owner.ActiveChild as IACarriable);
-
-			m_cachedSlot = -1;
+			Owner.ActiveChild = ent;
 
 			return true;
 		}
@@ -232,8 +203,13 @@ namespace infinitearcade
 			if (Owner.ActiveChild == ent)
 			{
 				// press the slot number again to remove as active
-				if (evenIfEmpty && BucketType == Bucket.Flat && Owner.Client.GetClientData<bool>(nameof(ia_inventory_flat_deploy_toggle)))
+				if (evenIfEmpty && BucketType != Buckets.Bucketed && Owner.Client.GetClientData<bool>(nameof(ia_inventory_flat_deploy_toggle)))
+				{
 					ent = null;
+
+					if (Host.IsClient && Local.Hud is InfiniteArcadeHud hud)
+						hud.InventorySwitchActive(null);
+				}
 				else
 					return false;
 			}
@@ -241,12 +217,7 @@ namespace infinitearcade
 			if (!evenIfEmpty && ent == null)
 				return false;
 
-			using (Prediction.Off())
-				Owner.ActiveChild = ent;
-
-			Owner.HudSwitchActive(To.Single(Owner), prev as IACarriable, Owner.ActiveChild as IACarriable);
-
-			m_cachedSlot = -1;
+			Owner.ActiveChild = ent;
 
 			return ent.IsValid();
 		}
@@ -273,25 +244,13 @@ namespace infinitearcade
 			return SetActiveSlot(nextSlot, false);
 		}
 
-		public void BucketListFullUpdate()
+		public void ListReorder()
 		{
-			//Log.Info($"BucketListFullUpdate called from {(Host.IsClient ? "CLIENT" : "SERVER")}");
-			// dirty function, please replace me
+			if (BucketType != Buckets.FlatUnordered)
+				List = List.OrderBy(x => x.Definition?.Bucket).ThenBy(x => x.Definition?.SubBucket).ThenBy(x => x.NetworkIdent).ToList();
 
-			//BucketList.Clear();
-			foreach (var list in BucketList.Values)
-				list.Clear();
-
-			foreach (IACarriable carriable in List)
-				BucketList.AddOrCreate(carriable.Definition.BucketIdentifier).Add(carriable);
-
-			List.Clear();
-
-			foreach (var list in BucketList.Values)
-				foreach (var carriable in list)
-					List.Add(carriable);
-
-			Owner.HudFullUpdate(To.Single(Owner), List.ToArray());
+			if (Host.IsClient && Local.Hud is InfiniteArcadeHud hud)
+				hud.InventoryFullUpdate(List.ToArray());
 		}
 	}
 }

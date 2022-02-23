@@ -46,34 +46,19 @@ namespace infinitearcade
 			// server or clientside stuff
 			int cl_debug_client = cl.GetClientData<int>("debug_client", 0);
 
-			if (Host.IsServer && cl.HasPermission("debug") && cl_debug_client > 0 && Client.All.FirstOrDefault(x => x.NetworkIdent == cl_debug_client)?.Pawn is ArcadePlayer player)
+			if (cl.HasPermission("debug") && cl_debug_client > 0 && Client.All.FirstOrDefault(x => x.NetworkIdent == cl_debug_client)?.Pawn is ArcadePlayer player)
 			{
 				if (player.Inventory is IAInventory inv)
 				{
-					Entity ent;
+					IACarriable ent;
 					for (int i = 0; i < inv.List?.Count; i++)
 					{
 						ent = inv.List[i];
 
 						if (ent.IsValid())
-							ScreenText($"[{i}] {ent.Name}");
+							ScreenText($"[{i}] {ent.Definition.Identifier} {ent.NetworkIdent} {ent.Definition.Bucket}:{(int)ent.Definition.Bucket}, {ent.Definition.SubBucket}");
 						else
 							ScreenText($"[{i}] (null)");
-					}
-
-					foreach (var kvp in inv.BucketList)
-					{
-						ScreenText(kvp.Key);
-
-						for (int i = 0; i < inv.BucketList[kvp.Key].Count; i++)
-						{
-							ent = inv.BucketList[kvp.Key][i];
-
-							if (ent.IsValid())
-								ScreenText($"    [{i}] {ent.Name}");
-							else
-								ScreenText($"    [{i}] (null)");
-						}
 					}
 				}
 			}

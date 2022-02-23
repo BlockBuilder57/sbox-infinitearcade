@@ -31,5 +31,7 @@
 				type = "1"
 			},
 		]
+		bucket = "200"
+		subbucket = 0
 	}
 }

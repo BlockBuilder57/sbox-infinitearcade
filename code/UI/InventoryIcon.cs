@@ -20,7 +20,7 @@ namespace infinitearcade.UI
 		{
 			Parent = parent;
 			Carriable = carriable;
-			Name = Add.Label(carriable.Definition.Identifier);
+			Name = Add.Label(carriable.Definition?.Identifier);
 			//Icon = Add.Image("https://thiscatdoesnotexist.com/");
 
 			StyleSheet.Load("UI/InventoryIcon.scss");

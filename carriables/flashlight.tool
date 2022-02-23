@@ -5,7 +5,6 @@
 		primaryrate = 1.0
 		secondaryrate = 0.0
 		identifier = "ia_tool_flashlight"
-		bucketidentifier = "tool"
 		basetype = "4"
 		worldmodelpath = resource:"weapons/rust_pistol/rust_pistol.vmdl"
 		viewmodelpath = resource:"weapons/rust_flashlight/v_rust_flashlight.vmdl"
@@ -27,5 +26,7 @@
 				type = "2"
 			},
 		]
+		bucket = "400"
+		subbucket = 0
 	}
 }
