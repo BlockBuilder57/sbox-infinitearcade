@@ -12,12 +12,11 @@ namespace infinitearcade
 	{
 		[ConVar.Replicated] public static bool debug_firearm { get; set; } = false;
 
-		[Net] public WeaponAmmo Primary { get; set; }
-		[Net] public WeaponAmmo[] Secondaries { get; set; }
+		[Net] public WeaponCapacity PrimaryCapacity { get; set; }
+		[Net] public WeaponCapacity SecondaryCapacity { get; set; }
 
 		[Net] protected IAWeaponFirearmDefinition m_firearmDef { get; set; }
 
-		[Net] public float ReloadTime { get; set; } = 1.35f; // default
 		[Net] public TimeSince TimeSinceReload { get; set; }
 		[Net] public bool IsReloading { get; set; }
 
@@ -27,16 +26,10 @@ namespace infinitearcade
 
 			if (def is IAWeaponFirearmDefinition firearmDef)
 			{
-				Primary = new WeaponAmmo(firearmDef.Primary.MaxClip, firearmDef.Primary.MaxAmmo, firearmDef.Primary.FireModes);
-
-				Secondaries = new WeaponAmmo[firearmDef.Secondaries.Length];
-				for (int i = 0; i < firearmDef.Secondaries.Length; i++)
-				{
-					IAWeaponFirearmDefinition.AmmoSetting setting = firearmDef.Secondaries[i];
-					Secondaries[i] = new WeaponAmmo(setting.MaxClip, setting.MaxAmmo, setting.FireModes);
-				}
-
-				ReloadTime = firearmDef.ReloadTime;
+				if (firearmDef.PrimaryCapacity.MaxClip > 0)
+					PrimaryCapacity = new WeaponCapacity(firearmDef.PrimaryCapacity);
+				if (firearmDef.SecondaryCapacity.MaxClip > 0)
+					SecondaryCapacity = new WeaponCapacity(firearmDef.SecondaryCapacity);
 
 				m_firearmDef = firearmDef;
 			}
@@ -51,15 +44,15 @@ namespace infinitearcade
 
 			if (!IsReloading)
 				base.Simulate(cl);
-			else if (TimeSinceReload > ReloadTime * 1)
+			else if (TimeSinceReload > m_firearmDef.ReloadTime * 1)
 				OnReloadFinish();
 
 			if (debug_firearm && (Owner as Player).ActiveChild == this)
 			{
 				if (IsServer)
-					DebugOverlay.Text(Position, "srv: " + Primary.ToString());
+					DebugOverlay.Text(Position, $"srv: {Primary.CurMode}");
 				if (IsClient)
-					DebugOverlay.Text(Position + Vector3.Down * 2, "cli: " + Primary.ToString());
+					DebugOverlay.Text(Position + Vector3.Down * 2, $"cli: {Primary.CurMode}");
 			}
 		}
 
@@ -78,7 +71,7 @@ namespace infinitearcade
 			if (!Owner.IsValid() || !Input.Down(InputButton.Reload))
 				return false;
 
-			if (Primary == null || Primary.Clip == Primary.MaxClip || (Primary.Ammo <= 0 && Primary.Clip <= Primary.MaxClip))
+			if (PrimaryCapacity == null || PrimaryCapacity.Clip == PrimaryCapacity.MaxClip || (PrimaryCapacity.Ammo <= 0 && PrimaryCapacity.Clip <= PrimaryCapacity.MaxClip))
 				return false;
 
 			return true;
@@ -86,7 +79,7 @@ namespace infinitearcade
 
 		public override void Reload()
 		{
-			if (IsReloading || (Primary.Ammo <= 0 && Primary.Clip <= Primary.MaxClip))
+			if (IsReloading || (PrimaryCapacity.Ammo <= 0 && PrimaryCapacity.Clip <= PrimaryCapacity.MaxClip))
 				return;
 
 			TimeSinceReload = 0;
@@ -99,7 +92,7 @@ namespace infinitearcade
 		{
 			IsReloading = false;
 
-			Primary.TryReload();
+			PrimaryCapacity.TryReload();
 		}
 
 		[ClientRpc]
@@ -133,23 +126,23 @@ namespace infinitearcade
 			}
 		}
 
-		public virtual void ShootBullet(int numBullets, Vector3 pos, Vector3 dir, float spread, float force, float damage, float bulletSize, bool perBullet = false)
+		public virtual void ShootBullet(int numPellets, Vector3 pos, Vector3 dir, float spread, float force, float damage, float bulletSize, bool perPellet = false)
 		{
-			for (int i = 0; i < numBullets; i++)
+			for (int i = 0; i < numPellets; i++)
 			{
-				if (perBullet)
-					ShootBullet(pos, dir, spread, force, damage, bulletSize);
+				if (perPellet)
+					ShootBullet(pos, dir, spread, force / numPellets, damage / numPellets, bulletSize);
 				else
-					ShootBullet(pos, dir, spread, force / numBullets, damage / numBullets, bulletSize);
+					ShootBullet(pos, dir, spread, force, damage, bulletSize);
 			}
 		}
 
-		public virtual void ShootBullet(Vector3 pos, Vector3 dir)
+		public virtual void ShootBullet(WeaponCapacity cap, Vector3 pos, Vector3 dir)
 		{
-			ShootBullet(m_firearmDef.BulletSettings.Pellets, pos, dir,
-				m_firearmDef.BulletSettings.Spread, m_firearmDef.BulletSettings.Force,
-				m_firearmDef.BulletSettings.Damage, m_firearmDef.BulletSettings.BulletSize,
-				m_firearmDef.BulletSettings.CalculatedPerPellet);
+			ShootBullet(cap.BulletSettings.Pellets, pos, dir,
+				cap.BulletSettings.Spread, cap.BulletSettings.Force,
+				cap.BulletSettings.Damage, cap.BulletSettings.BulletSize,
+				cap.BulletSettings.DividedAcrossPellets);
 		}
 
 		[AdminCmd("setclip")]
@@ -163,7 +156,7 @@ namespace infinitearcade
 			IAWeaponFirearm firearm = player.ActiveChild as IAWeaponFirearm;
 
 			if (firearm.IsValid())
-				firearm.Primary.SetClip(clip);
+				firearm.PrimaryCapacity.SetClip(clip);
 		}
 
 		[AdminCmd("setammo")]
@@ -177,35 +170,69 @@ namespace infinitearcade
 			IAWeaponFirearm firearm = player.ActiveChild as IAWeaponFirearm;
 
 			if (firearm.IsValid())
-				firearm.Primary.SetAmmo(ammo);
+				firearm.PrimaryCapacity.SetAmmo(ammo);
+		}
+
+		[AdminCmd("givecurrentammo")]
+		public static void GiveCurrentAmmoCommand()
+		{
+			Entity pawn = ConsoleSystem.Caller?.Pawn;
+			Player player = pawn as Player;
+			if (!player.IsValid())
+				return;
+
+			IAWeaponFirearm firearm = player.ActiveChild as IAWeaponFirearm;
+
+			if (firearm.IsValid())
+				firearm.PrimaryCapacity.SetAmmo(firearm.PrimaryCapacity.MaxAmmo);
 		}
 	}
 
-	public partial class WeaponAmmo : BaseNetworkable
+	public partial class WeaponCapacity : BaseNetworkable
 	{
 		[Net] public int Clip { get; private set; }
-		[Net] public int MaxClip { get; private set; }
 		[Net] public int Ammo { get; private set; }
+		[Net] public int MaxClip { get; private set; }
 		[Net] public int MaxAmmo { get; private set; }
+
+		public struct BulletSetting
+		{
+			public int Pellets { get; set; } = 1;
+			public float Spread { get; set; } = 0.05f;
+			public float Force { get; set; } = 0.6f;
+			public float Damage { get; set; } = 5f;
+			public float BulletSize { get; set; } = 2f;
+			public bool DividedAcrossPellets { get; set; } = false;
+		}
+
+		[Net] public BulletSetting BulletSettings { get; set; }
 
 		[Net] public bool InfiniteClip { get; set; } = false;
 		[Net] public bool InfiniteAmmo { get; set; } = false;
 
-		[Net] public IAWeaponFirearmDefinition.FireMode AllowedFireModes { get; private set; }
-		[Net] public IAWeaponFirearmDefinition.FireMode CurrentFireMode { get; private set; }
-
-		public WeaponAmmo()
+		public WeaponCapacity()
 		{
 			Clip = MaxClip = 8;
-			Ammo = MaxAmmo = 32;
-			AllowedFireModes = IAWeaponFirearmDefinition.FireMode.Single;
+			Ammo = MaxAmmo = 24;
 		}
 
-		public WeaponAmmo(int clip, int ammo, IAWeaponFirearmDefinition.FireMode firemodes)
+		public WeaponCapacity(IAWeaponFirearmDefinition.CapacitySetting settings)
 		{
-			Clip = MaxClip = clip;
-			Ammo = MaxAmmo = ammo;
-			AllowedFireModes = firemodes;
+			Clip = MaxClip = settings.MaxClip;
+			Ammo = MaxAmmo = settings.MaxAmmo;
+
+			if (settings.BulletSettings != null)
+			{
+				BulletSettings = new BulletSetting
+				{
+					Pellets = settings.BulletSettings.Pellets,
+					Spread = settings.BulletSettings.Spread,
+					Force = settings.BulletSettings.Force,
+					Damage = settings.BulletSettings.Damage,
+					BulletSize = settings.BulletSettings.BulletSize,
+					DividedAcrossPellets = settings.BulletSettings.DividedAcrossPellets,
+				};
+			}
 		}
 
 		public void SetClip(int amount) => Clip = amount;
@@ -260,23 +287,6 @@ namespace infinitearcade
 				// done reloading
 				return false;
 			}
-		}
-
-		public void NextFireMode()
-		{
-			List<IAWeaponFirearmDefinition.FireMode> modes = new();
-
-			// modified https://stackoverflow.com/a/42557518
-			bool[] bits = new BitArray(new[] { (int)AllowedFireModes }).OfType<bool>().ToArray();
-			for (int i = 0; i < bits.Length; i++)
-			{
-				modes.Add((IAWeaponFirearmDefinition.FireMode)(i+1 << 1));
-			}
-
-			if (modes.Count <= 1)
-				return; // we've only got one value, don't even bother
-
-			// iterate throught the list
 		}
 
 		public override string ToString()

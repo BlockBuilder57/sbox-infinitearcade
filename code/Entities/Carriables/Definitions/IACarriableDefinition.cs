@@ -13,7 +13,7 @@ namespace infinitearcade
 		[Hammer.Skip] public static IReadOnlyList<IACarriableDefinition> AllCarriables => _allCarriables;
 		[Hammer.Skip] internal static List<IACarriableDefinition> _allCarriables = new();
 
-		public enum BaseTypes : byte
+		public enum BaseTypes
 		{
 			// bases
 			Carriable,
@@ -25,21 +25,12 @@ namespace infinitearcade
 			Flashlight
 		}
 
-		public enum AnimGraphTypes : byte
+		public enum AnimGraphTypes
 		{
 			Bool,
 			Int,
 			Float,
 			Vector3
-		}
-
-		public enum BucketCategory : int
-		{
-			Default = 0,
-			Primary = 100,
-			Secondary = 200,
-			Melee = 300,
-			Tool = 400
 		}
 
 		public class AnimGraphSetting
@@ -51,7 +42,7 @@ namespace infinitearcade
 
 		public BaseTypes BaseType { get; set; } = BaseTypes.Carriable;
 		public string Identifier { get; set; } = "ia_carriable_new";
-		public BucketCategory Bucket { get; set; } = 0;
+		public IACarriable.BucketCategory Bucket { get; set; } = 0;
 		public int SubBucket { get; set; } = 0;
 
 		[ResourceType("vmdl")] public string WorldModelPath { get; set; }

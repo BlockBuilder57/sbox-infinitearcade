@@ -2,8 +2,6 @@
 {
 	data = 
 	{
-		primaryrate = 1.0
-		secondaryrate = 0.0
 		identifier = "ia_tool_flashlight"
 		basetype = "4"
 		worldmodelpath = resource:"weapons/rust_pistol/rust_pistol.vmdl"
@@ -28,5 +26,15 @@
 		]
 		bucket = "400"
 		subbucket = 0
+		primaryinput = 
+		{
+			rate = 0.0
+		}
+		secondaryinput = 
+		{
+		}
+		reloadinput = 
+		{
+		}
 	}
 }

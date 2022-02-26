@@ -56,9 +56,6 @@ namespace infinitearcade
 
 			var owner = ConsoleSystem.Caller.Pawn;
 
-			if (!path.StartsWith("carriables/"))
-				path = "carriables/" + path;
-
 			IACarriable carriable = IACarriableDefinition.GetEntity(path);
 			if (carriable == null)
 				return;

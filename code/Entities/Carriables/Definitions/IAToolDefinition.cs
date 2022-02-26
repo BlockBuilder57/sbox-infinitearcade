@@ -13,8 +13,16 @@ namespace infinitearcade
 		[Hammer.Skip] public static IReadOnlyList<IAToolDefinition> AllTools => _allTools;
 		[Hammer.Skip] internal static List<IAToolDefinition> _allTools = new();
 
-		public float PrimaryRate { get; set; }
-		public float SecondaryRate { get; set; }
+		public class InputSettings
+		{
+			public float Rate { get; set; }
+			public int BurstAmount { get; set; }
+			[BitFlags] public IATool.InputMode AllowedModes { get; set; } = IATool.InputMode.Single;
+		}
+
+		public InputSettings PrimaryInput { get; set; }
+		public InputSettings SecondaryInput { get; set; }
+		public InputSettings ReloadInput { get; set; }
 
 		protected override void PostLoad()
 		{

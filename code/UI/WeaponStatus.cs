@@ -33,8 +33,8 @@ namespace infinitearcade.UI
 			{
 				SetClass("hidden", false);
 
-				if (firearm.Primary != null)
-					m_primaryDisplay.Update(firearm.Primary.Clip, firearm.Primary.Ammo);
+				if (firearm.PrimaryCapacity != null)
+					m_primaryDisplay.Update(firearm.PrimaryCapacity.Clip, firearm.PrimaryCapacity.Ammo);
 			}
 
 		}

@@ -57,7 +57,7 @@ namespace infinitearcade
 
 		public override void GiveWeapons()
 		{
-			Inventory?.Add(IACarriableDefinition.GetEntity("carriables/pistol.firearm"), true);
+			Inventory?.Add(IACarriableDefinition.GetEntity("assets/carriables/pistol.firearm"), true);
 		}
 
 		public override void Clothe()

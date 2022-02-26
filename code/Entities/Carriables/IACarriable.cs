@@ -12,6 +12,15 @@ namespace infinitearcade
 	{
 		[Net] public IACarriableDefinition Definition { get; set; }
 
+		public enum BucketCategory
+		{
+			Default = 0,
+			Primary = 100,
+			Secondary = 200,
+			Melee = 300,
+			Tool = 400
+		}
+
 		[Net, Predicted] public TimeSince TimeSinceDeployed { get; set; }
 		[Net] public TimeSince TimeSinceDropped { get; set; }
 
@@ -40,12 +49,6 @@ namespace infinitearcade
 		{
 			base.Spawn();
 
-			if (!m_definitionLoaded)
-				SetupFromDefinition(Asset.FromPath<IACarriableDefinition>("carriables/default.carry"));
-
-			if (!m_definitionLoaded)
-				Delete();
-
 			CollisionGroup = CollisionGroup.Weapon; // so players touch it as a trigger but not as a solid
 			SetInteractsAs(CollisionLayer.Debris); // so player movement doesn't walk into it
 
@@ -58,6 +61,19 @@ namespace infinitearcade
 			};
 
 			PickupTrigger.PhysicsBody.AutoSleep = false;
+		}
+
+		[Event.Tick]
+		public virtual void OnTick()
+		{
+			if (Host.IsServer)
+			{
+				if (!m_definitionLoaded)
+					SetupFromDefinition(Asset.FromPath<IACarriableDefinition>("carriables/default.carry"));
+
+				if (!m_definitionLoaded)
+					Delete();
+			}
 		}
 
 		public override void ActiveStart(Entity ent)

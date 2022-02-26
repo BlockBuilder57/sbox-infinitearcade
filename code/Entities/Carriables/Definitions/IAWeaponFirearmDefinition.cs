@@ -13,36 +13,25 @@ namespace infinitearcade
 		[Hammer.Skip] public static IReadOnlyList<IAToolDefinition> AllFirearms => _allFirearms;
 		[Hammer.Skip] internal static List<IAToolDefinition> _allFirearms = new();
 
-		[Flags]
-		public enum FireMode : byte
-		{
-			None     = 0,
-			Single   = 1 << 0,
-			FullAuto = 1 << 1,
-			Burst    = 1 << 2
-		}
-
-		public class AmmoSetting
-		{
-			public int MaxClip { get; set; }
-			public int MaxAmmo { get; set; }
-			public FireMode FireModes { get; set; } = FireMode.Single;
-			public int BurstAmount { get; set; } = 3;
-		}
-
 		public class BulletSetting
 		{
-			public int Pellets { get; set; } = 1;
+			public int Pellets { get; set; } = 0;
 			public float Spread { get; set; } = 0.05f;
 			public float Force { get; set; } = 0.6f;
 			public float Damage { get; set; } = 5f;
 			public float BulletSize { get; set; } = 2f;
-			public bool CalculatedPerPellet { get; set; } = false;
+			public bool DividedAcrossPellets { get; set; } = false;
 		}
 
-		public AmmoSetting Primary { get; set; }
-		public AmmoSetting[] Secondaries { get; set; }
-		public BulletSetting BulletSettings { get; set; }
+		public class CapacitySetting
+		{
+			public int MaxClip { get; set; } = -1;
+			public int MaxAmmo { get; set; } = -1;
+			public BulletSetting BulletSettings { get; set; }
+		}
+
+		public CapacitySetting PrimaryCapacity { get; set; }
+		public CapacitySetting SecondaryCapacity { get; set; }
 
 		public float ReloadTime { get; set; } = 1.0f;
 

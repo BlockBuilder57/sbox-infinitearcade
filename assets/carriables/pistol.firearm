@@ -2,24 +2,11 @@
 {
 	data = 
 	{
-		primaryrate = 0.2
-		secondaryrate = 0.125
 		identifier = "ia_firearm_pistol"
-		bucketidentifier = "secondary"
 		basetype = "3"
 		worldmodelpath = resource:"weapons/rust_pistol/rust_pistol.vmdl"
 		viewmodelpath = resource:"weapons/rust_pistol/v_rust_pistol.vmdl"
 		reloadtime = 1.35
-		primary = 
-		{
-			maxclip = 8
-			maxammo = 32
-		}
-		secondaries = [  ]
-		bulletsettings = 
-		{
-			spread = 0.025
-		}
 		firesound = "rust_pistol.shoot"
 		animgraphsettings = 
 		[
@@ -28,8 +15,42 @@
 				value = "1"
 				type = "1"
 			},
+			{
+				key = "holdtype_handedness"
+				type = "1"
+				value = "0"
+			},
 		]
 		bucket = "200"
 		subbucket = 0
+		primarycapacity = 
+		{
+			maxclip = 12
+			maxammo = 48
+			bulletsettings = 
+			{
+				pellets = 1
+				damage = 6.0
+			}
+		}
+		secondarycapacity = 
+		{
+		}
+		primaryinput = 
+		{
+			allowedmodes = "5"
+			rate = 0.08
+			burstamount = 3
+		}
+		secondaryinput = 
+		{
+			allowedmodes = "1"
+			rate = 0.0
+		}
+		reloadinput = 
+		{
+			allowedmodes = "2"
+			rate = 0.0
+		}
 	}
 }

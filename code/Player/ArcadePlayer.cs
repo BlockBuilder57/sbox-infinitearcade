@@ -91,10 +91,10 @@ namespace infinitearcade
 
 		public virtual void GiveWeapons()
 		{
-			Inventory?.Add(IACarriableDefinition.GetEntity("carriables/shotgun.firearm"));
-			Inventory?.Add(IACarriableDefinition.GetEntity("carriables/pistol.firearm"));
-			Inventory?.Add(IACarriableDefinition.GetEntity("carriables/smg.firearm"));
-			Inventory?.Add(IACarriableDefinition.GetEntity("carriables/flashlight.tool"));
+			Inventory?.Add(IACarriableDefinition.GetEntity("assets/carriables/pistol.firearm"));
+			Inventory?.Add(IACarriableDefinition.GetEntity("assets/carriables/shotgun.firearm"));
+			Inventory?.Add(IACarriableDefinition.GetEntity("assets/carriables/smg.firearm"));
+			Inventory?.Add(IACarriableDefinition.GetEntity("assets/carriables/flashlight.tool"));
 		}
 
 		public readonly List<ModelEntity> Clothing = new();

@@ -2,26 +2,11 @@
 {
 	data = 
 	{
-		primaryrate = 0.125
-		secondaryrate = 0.05
 		identifier = "ia_firearm_smg"
-		bucketidentifier = "secondary"
 		basetype = "3"
 		worldmodelpath = resource:"weapons/rust_smg/rust_smg.vmdl"
 		viewmodelpath = resource:"weapons/rust_smg/v_rust_smg.vmdl"
 		reloadtime = 5.5
-		primary = 
-		{
-			maxclip = 40
-			maxammo = 120
-		}
-		secondaries = [  ]
-		bulletsettings = 
-		{
-			spread = 0.05
-			force = 0.3
-			bulletsize = 1.0
-		}
 		firesound = "rust_smg.shoot"
 		animgraphsettings = 
 		[
@@ -33,5 +18,32 @@
 		]
 		bucket = "200"
 		subbucket = 0
+		primarycapacity = 
+		{
+			maxclip = 40
+			maxammo = 120
+			bulletsettings = 
+			{
+				pellets = 1
+				spread = 0.12
+				damage = 4.0
+			}
+		}
+		secondarycapacity = 
+		{
+		}
+		primaryinput = 
+		{
+			rate = 0.08
+			allowedmodes = "2"
+		}
+		secondaryinput = 
+		{
+			allowedmodes = "1"
+		}
+		reloadinput = 
+		{
+			allowedmodes = "1"
+		}
 	}
 }
