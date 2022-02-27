@@ -10,7 +10,6 @@ namespace infinitearcade
 	[Library("weapon_pistol", Title = "Pistol", Spawnable = true)]
 	public partial class Pistol : IAWeaponFirearm
 	{
-
 		public override void AttackPrimary()
 		{
 			if (PrimaryCapacity.Clip <= 0)
@@ -20,21 +19,18 @@ namespace infinitearcade
 				return;
 			}
 
-			PrimaryCapacity.TakeClip();
+			if (PrimaryCapacity.CanTakeClip())
+			{
+				PrimaryCapacity.TakeClip();
 
-			if (Owner is AnimEntity anim)
-				anim.SetAnimParameter("b_attack", true);
+				if (Owner is AnimEntity anim)
+					anim.SetAnimParameter("b_attack", true);
 
-			ViewModelEntity?.SetAnimParameter("fire", true);
+				ViewModelEntity?.SetAnimParameter("fire", true);
 
-			PlaySound(m_firearmDef.FireSound);
-			ShootBullet(PrimaryCapacity, Owner.EyePosition, Owner.EyeRotation.Forward);
-		}
-
-		public override void AttackSecondary()
-		{
-			//AttackPrimary();
-			NextPrimaryFireMode();
+				PlaySound(m_firearmDef.PrimaryFireSound);
+				ShootBullet(PrimaryCapacity, Owner.EyePosition, Owner.EyeRotation.Forward);
+			}
 		}
 	}
 }

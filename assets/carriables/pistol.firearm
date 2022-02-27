@@ -7,7 +7,6 @@
 		worldmodelpath = resource:"weapons/rust_pistol/rust_pistol.vmdl"
 		viewmodelpath = resource:"weapons/rust_pistol/v_rust_pistol.vmdl"
 		reloadtime = 1.35
-		firesound = "rust_pistol.shoot"
 		animgraphsettings = 
 		[
 			{
@@ -52,5 +51,10 @@
 			allowedmodes = "2"
 			rate = 0.0
 		}
+		primaryfunction = "1"
+		secondaryfunction = "3"
+		reloadfunction = "4"
+		primaryfiresound = "rust_pistol.shoot"
+		secondaryfiresound = ""
 	}
 }

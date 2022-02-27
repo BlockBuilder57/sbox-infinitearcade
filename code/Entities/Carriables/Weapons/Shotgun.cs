@@ -21,21 +21,44 @@ namespace infinitearcade
 				return;
 			}
 
-			PrimaryCapacity.TakeClip();
+			if (PrimaryCapacity.CanTakeClip())
+			{
+				PrimaryCapacity.TakeClip();
 
-			if (Owner is AnimEntity anim)
-				anim.SetAnimParameter("b_attack", true);
+				if (Owner is AnimEntity anim)
+					anim.SetAnimParameter("b_attack", true);
 
-			ViewModelEntity?.SetAnimParameter("fire", true);
+				ViewModelEntity?.SetAnimParameter("fire", true);
 
-			PlaySound(m_firearmDef.FireSound);
-			ShootBullet(PrimaryCapacity, Owner.EyePosition, Owner.EyeRotation.Forward);
+				PlaySound(m_firearmDef.PrimaryFireSound);
+				ShootBullet(PrimaryCapacity, Owner.EyePosition, Owner.EyeRotation.Forward);
+			}
 		}
 
 		public override void AttackSecondary()
 		{
-			//AttackPrimary();
-			NextPrimaryFireMode();
+			if (PrimaryCapacity.Clip <= 0)
+			{
+				PlaySound("weapon_empty_click");
+				Reload();
+				return;
+			}
+
+			if (PrimaryCapacity.CanTakeClip(2))
+			{
+				PrimaryCapacity.TakeClip(2);
+
+				if (Owner is AnimEntity anim)
+					anim.SetAnimParameter("b_attack", true);
+
+				ViewModelEntity?.SetAnimParameter("fire", true);
+
+				PlaySound(m_firearmDef.SecondaryFireSound);
+				ShootBullet(PrimaryCapacity, Owner.EyePosition, Owner.EyeRotation.Forward);
+				ShootBullet(PrimaryCapacity, Owner.EyePosition, Owner.EyeRotation.Forward);
+			}
+			else
+				AttackPrimary();
 		}
 
 		public override void StartReloadEffects()

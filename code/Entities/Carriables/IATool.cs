@@ -65,7 +65,7 @@ namespace infinitearcade
 		public override void Simulate(Client cl)
 		{
 			if (CanReload())
-				Reload();
+				TryReload();
 
 			// Reload could have changed our owner
 			if (!Owner.IsValid())
@@ -76,7 +76,7 @@ namespace infinitearcade
 				using (LagCompensation())
 				{
 					Primary.TimeSince = 0;
-					AttackPrimary();
+					TryAttackPrimary();
 				}
 			}
 
@@ -89,7 +89,7 @@ namespace infinitearcade
 				using (LagCompensation())
 				{
 					Secondary.TimeSince = 0;
-					AttackSecondary();
+					TryAttackSecondary();
 				}
 			}
 		}
@@ -99,6 +99,11 @@ namespace infinitearcade
 			if (!Owner.IsValid()) return false;
 
 			return true;
+		}
+
+		public virtual void TryReload()
+		{
+			Reload();
 		}
 
 		public virtual void Reload()
@@ -144,6 +149,10 @@ namespace infinitearcade
 			return canFire;
 		}
 
+		public virtual void TryAttackPrimary()
+		{
+			AttackPrimary();
+		}
 		public virtual void AttackPrimary()
 		{
 
@@ -185,6 +194,11 @@ namespace infinitearcade
 			}
 
 			return canFire;
+		}
+
+		public virtual void TryAttackSecondary()
+		{
+			AttackSecondary();
 		}
 
 		public virtual void AttackSecondary()

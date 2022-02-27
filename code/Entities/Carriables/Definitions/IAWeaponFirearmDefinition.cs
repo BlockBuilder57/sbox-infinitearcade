@@ -33,10 +33,14 @@ namespace infinitearcade
 		public CapacitySetting PrimaryCapacity { get; set; }
 		public CapacitySetting SecondaryCapacity { get; set; }
 
+		public IAWeaponFirearm.InputFunction PrimaryFunction { get; set; }
+		public IAWeaponFirearm.InputFunction SecondaryFunction { get; set; }
+		public IAWeaponFirearm.InputFunction ReloadFunction { get; set; }
+
 		public float ReloadTime { get; set; } = 1.0f;
 
-		[FGDType("sound")]
-		public string FireSound { get; set; }
+		[FGDType("sound")] public string PrimaryFireSound { get; set; }
+		[FGDType("sound")] public string SecondaryFireSound { get; set; }
 
 		protected override void PostLoad()
 		{

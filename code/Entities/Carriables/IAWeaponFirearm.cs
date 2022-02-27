@@ -12,8 +12,21 @@ namespace infinitearcade
 	{
 		[ConVar.Replicated] public static bool debug_firearm { get; set; } = false;
 
+		public enum InputFunction
+		{
+			None,
+			FirePrimary,
+			FireSecondary, // projectiles?
+			ModeSelector,
+			Reload
+		}
+
 		[Net] public WeaponCapacity PrimaryCapacity { get; set; }
 		[Net] public WeaponCapacity SecondaryCapacity { get; set; }
+
+		[Net] public InputFunction PrimaryFunction { get; set; } = InputFunction.FirePrimary;
+		[Net] public InputFunction SecondaryFunction { get; set; } = InputFunction.ModeSelector;
+		[Net] public InputFunction ReloadFunction { get; set; } = InputFunction.Reload;
 
 		[Net] protected IAWeaponFirearmDefinition m_firearmDef { get; set; }
 
@@ -30,6 +43,10 @@ namespace infinitearcade
 					PrimaryCapacity = new WeaponCapacity(firearmDef.PrimaryCapacity);
 				if (firearmDef.SecondaryCapacity.MaxClip > 0)
 					SecondaryCapacity = new WeaponCapacity(firearmDef.SecondaryCapacity);
+
+				PrimaryFunction = firearmDef.PrimaryFunction;
+				SecondaryFunction = firearmDef.SecondaryFunction;
+				ReloadFunction = firearmDef.ReloadFunction;
 
 				m_firearmDef = firearmDef;
 			}
@@ -49,10 +66,14 @@ namespace infinitearcade
 
 			if (debug_firearm && (Owner as Player).ActiveChild == this)
 			{
-				if (IsServer)
-					DebugOverlay.Text(Position, $"srv: {Primary.CurMode}");
-				if (IsClient)
-					DebugOverlay.Text(Position + Vector3.Down * 2, $"cli: {Primary.CurMode}");
+				string debug = IsServer ? "~ srv ~\n" : "~ cli ~\n";
+				debug += $"Primary: func {PrimaryFunction} | {(PrimaryCapacity == null ? "(null)" : PrimaryCapacity)}, {(Primary.CurMode)}\n";
+				debug += $"Secondary: func {SecondaryFunction} | {(SecondaryCapacity == null ? "(null)" : SecondaryCapacity)}, {Secondary.CurMode}\n";
+				debug += $"Reload: func {ReloadFunction}\n";
+
+				// debug code does not have to be good, it just has to debug
+				Vector3 offset = IsServer ? Vector3.Down * (debug.Where(x => x == '\n').Count() + 2) * 2 : 0;
+				DebugOverlay.Text(Position + offset, debug);
 			}
 		}
 
@@ -65,6 +86,32 @@ namespace infinitearcade
 		{
 			base.OnCarryDrop(dropper);
 		}
+
+		public void TryInput(InputFunction inputFunc, Action modeSelectorMethod)
+		{
+			if (modeSelectorMethod == null)
+				return;
+
+			switch (inputFunc)
+			{
+				case InputFunction.FirePrimary:
+					AttackPrimary();
+					break;
+				case InputFunction.FireSecondary:
+					AttackSecondary();
+					break;
+				case InputFunction.ModeSelector:
+					modeSelectorMethod.Invoke();
+					break;
+				case InputFunction.Reload:
+					Reload();
+					break;
+			}
+		}
+
+		public override void TryAttackPrimary() => TryInput(PrimaryFunction, NextSecondaryFireMode);
+		public override void TryAttackSecondary() => TryInput(SecondaryFunction, NextPrimaryFireMode);
+		public override void TryReload() => TryInput(ReloadFunction, NextPrimaryFireMode);
 
 		public override bool CanReload()
 		{
@@ -237,6 +284,9 @@ namespace infinitearcade
 
 		public void SetClip(int amount) => Clip = amount;
 		public void SetAmmo(int amount) => Ammo = amount;
+
+		public bool CanTakeClip(int amount = 1) { return InfiniteClip || Clip >= amount; }
+		public bool CanTakeAmmo(int amount = 1) { return InfiniteAmmo || Ammo >= amount; }
 
 		public int TakeClip(int amount = 1) { if (!InfiniteClip) { Clip -= amount; } return Clip; }
 		public int TakeAmmo(int amount = 1) { if (!InfiniteAmmo) { Ammo -= amount; } return Ammo; }

@@ -7,7 +7,6 @@
 		worldmodelpath = resource:"weapons/rust_pumpshotgun/rust_pumpshotgun.vmdl"
 		viewmodelpath = resource:"weapons/rust_pumpshotgun/v_rust_pumpshotgun.vmdl"
 		basetype = "2"
-		firesound = "rust_pumpshotgun.shoot"
 		animgraphsettings = 
 		[
 			{
@@ -27,7 +26,7 @@
 				pellets = 8
 				dividedacrosspellets = true
 				damage = 24.0
-				spread = 0.2
+				spread = 0.25
 				force = 2.0
 			}
 		}
@@ -41,11 +40,16 @@
 		}
 		secondaryinput = 
 		{
-			allowedmodes = "1"
-			rate = 1.4
+			allowedmodes = "2"
+			rate = 1.25
 		}
 		reloadinput = 
 		{
 		}
+		primaryfunction = "1"
+		secondaryfunction = "2"
+		reloadfunction = "4"
+		primaryfiresound = "rust_pumpshotgun.shoot"
+		secondaryfiresound = "rust_pumpshotgun.shootdouble"
 	}
 }

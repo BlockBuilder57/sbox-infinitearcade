@@ -7,7 +7,6 @@
 		worldmodelpath = resource:"weapons/rust_smg/rust_smg.vmdl"
 		viewmodelpath = resource:"weapons/rust_smg/v_rust_smg.vmdl"
 		reloadtime = 5.5
-		firesound = "rust_smg.shoot"
 		animgraphsettings = 
 		[
 			{
@@ -45,5 +44,10 @@
 		{
 			allowedmodes = "1"
 		}
+		primaryfunction = "1"
+		secondaryfunction = "0"
+		reloadfunction = "4"
+		primaryfiresound = "rust_smg.shoot"
+		secondaryfiresound = ""
 	}
 }
