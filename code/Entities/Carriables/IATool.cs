@@ -17,10 +17,6 @@ namespace infinitearcade
 			Single     = 1 << 0,
 			FullAuto   = 1 << 1,
 			Burst      = 1 << 2,
-			ModeToggle = 1 << 3,
-
-			// usually projectiles
-			IsAlternate = 1 << 4,
 		}
 
 		public partial class InputSettings : BaseNetworkable
@@ -121,9 +117,9 @@ namespace infinitearcade
 			}
 
 			var rate = Primary.Rate;
-			if (rate <= 0) return true;
 
-			if (Primary.TimeSince < rate) return false;
+			if (rate > 0)
+				if (Primary.TimeSince < rate) return false;
 
 			bool canFire = false;
 			switch (Primary.CurMode)
@@ -164,9 +160,9 @@ namespace infinitearcade
 			}
 
 			var rate = Secondary.Rate;
-			if (rate <= 0) return true;
 
-			if (Secondary.TimeSince < rate) return false;
+			if (rate > 0)
+				if (Secondary.TimeSince < rate) return false;
 
 			bool canFire = false;
 			switch (Secondary.CurMode)
@@ -201,7 +197,7 @@ namespace infinitearcade
 			List<InputMode> modes = new();
 
 			// modified https://stackoverflow.com/a/42557518
-			bool[] bits = new BitArray(new[] { (int)m_toolDef.PrimaryInput.AllowedModes }).OfType<bool>().ToArray();
+			bool[] bits = new BitArray(new[] { (int)allowed }).OfType<bool>().ToArray();
 			for (int i = 0; i < bits.Length; i++)
 			{
 				if (bits[i])
