@@ -27,7 +27,7 @@
 				dividedacrosspellets = true
 				damage = 24.0
 				spread = 0.25
-				force = 2.0
+				force = 0.35
 			}
 		}
 		secondarycapacity = 

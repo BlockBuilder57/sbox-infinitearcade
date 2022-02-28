@@ -26,6 +26,7 @@
 				pellets = 1
 				spread = 0.12
 				damage = 4.0
+				force = 0.08
 			}
 		}
 		secondarycapacity = 

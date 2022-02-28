@@ -30,6 +30,7 @@
 			{
 				pellets = 1
 				damage = 6.0
+				force = 0.06
 			}
 		}
 		secondarycapacity = 

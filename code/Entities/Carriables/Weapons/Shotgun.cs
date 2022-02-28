@@ -21,6 +21,8 @@ namespace infinitearcade
 				return;
 			}
 
+			Secondary.TimeSince = 0;
+
 			if (PrimaryCapacity.CanTakeClip())
 			{
 				PrimaryCapacity.TakeClip();
@@ -43,6 +45,8 @@ namespace infinitearcade
 				Reload();
 				return;
 			}
+
+			Primary.TimeSince = 0;
 
 			if (PrimaryCapacity.CanTakeClip(2))
 			{
@@ -78,7 +82,7 @@ namespace infinitearcade
 			IsReloading = false;
 
 			// if reloading worked and we aren't attacking, try reloading
-			if (PrimaryCapacity.TryReload(1) && !CanPrimaryAttack())
+			if (PrimaryCapacity.TryReload(1) && !CanPrimaryAttack() && !CanSecondaryAttack())
 			{
 				// we can reload, so keep going!
 				Reload();
