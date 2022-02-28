@@ -27,25 +27,21 @@ namespace infinitearcade
 			var tr = Trace.Ray(owner.EyePosition, owner.EyePosition + owner.EyeRotation.Forward * 500)
 				.UseHitboxes()
 				.Ignore(owner)
-				.Size(2)
 				.Run();
+
+			var model = Model.Load(modelname);
+			if (model == null || model.IsError)
+				return;
 
 			var ent = new Prop
 			{
-				Position = tr.EndPosition,
-				Rotation = Rotation.From(new Angles(0, owner.EyeRotation.Angles().yaw, 0)) * Rotation.FromAxis(Vector3.Up, 180)
+				Position = tr.EndPosition + Vector3.Down * model.PhysicsBounds.Mins.z,
+				Rotation = Rotation.From(new Angles(0, owner.EyeRotation.Angles().yaw, 0)) * Rotation.FromAxis(Vector3.Up, 180),
+				Model = model
 			};
-			ent.SetModel(modelname);
 
-			// Drop to floor
-			if (ent.PhysicsBody != null && ent.PhysicsGroup.BodyCount == 1)
-			{
-				var p = ent.PhysicsBody.FindClosestPoint(tr.EndPosition);
-
-				var delta = p - tr.EndPosition;
-				ent.PhysicsBody.Position -= delta;
-				//DebugOverlay.Line( p, tr.EndPos, 10, false );
-			}
+			// Let's make sure physics are ready to go instead of waiting
+			ent.SetupPhysicsFromModel(PhysicsMotionType.Dynamic);
 		}
 
 		[ServerCmd("spawncarriable")]
