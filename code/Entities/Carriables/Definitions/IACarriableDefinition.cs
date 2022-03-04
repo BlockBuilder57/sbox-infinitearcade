@@ -20,9 +20,14 @@ namespace infinitearcade
 			Tool,
 
 			// individual classes
+
+			// weapons
 			Shotgun,
 			Pistol,
-			Flashlight
+
+			// tools
+			Flashlight,
+			PhysicsManipulator
 		}
 
 		public enum AnimGraphTypes
@@ -73,14 +78,20 @@ namespace infinitearcade
 					entity = new IATool();
 					break;
 
+				// weapons
 				case BaseTypes.Shotgun:
 					entity = new Shotgun();
 					break;
 				case BaseTypes.Pistol:
 					entity = new Pistol();
 					break;
+
+				// tools
 				case BaseTypes.Flashlight:
 					entity = new Flashlight();
+					break;
+				case BaseTypes.PhysicsManipulator:
+					entity = new PhysicsManipulator();
 					break;
 			}
 

@@ -95,6 +95,7 @@ namespace infinitearcade
 			Inventory?.Add(IACarriableDefinition.GetEntity("assets/carriables/shotgun.firearm"));
 			Inventory?.Add(IACarriableDefinition.GetEntity("assets/carriables/smg.firearm"));
 			Inventory?.Add(IACarriableDefinition.GetEntity("assets/carriables/flashlight.tool"));
+			Inventory?.Add(IACarriableDefinition.GetEntity("assets/carriables/physmanip.tool"));
 
 			Inventory?.Add(IACarriableDefinition.GetEntity("assets/carriables/debug.firearm"));
 		}

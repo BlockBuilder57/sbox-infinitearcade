@@ -1,0 +1,233 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using Sandbox;
+
+namespace infinitearcade
+{
+	public partial class PhysicsManipulator : IATool
+	{
+		private PhysicsBody m_grabBody;
+		private FixedJoint m_grabJoint;
+
+		private PhysicsBody m_heldBody;
+		private Rotation m_heldRot;
+
+		private float m_holdDistance;
+		private ArcadePlayer m_owner;
+		private bool m_holding;
+
+		private InputButton m_inputHold = InputButton.Attack1;
+		private InputButton m_inputGravity = InputButton.Reload;
+		private InputButton m_inputRotate = InputButton.Use;
+		private InputButton m_inputRotationSnap = InputButton.Use | InputButton.Run;
+
+		[Net] public float LinearFrequency { get; set; } = 20.0f;
+		[Net] public float LinearDampingRatio { get; set; } = 1.0f;
+		[Net] public float AngularFrequency { get; set; } = 20.0f;
+		[Net] public float AngularDampingRatio { get; set; } = 1.0f;
+		[Net] public float RotationSnapAngle { get; set; } = 45f;
+
+		public enum ManipulationMode
+		{
+			Physics,
+			Gravity
+		}
+
+		[Net] public ManipulationMode Mode { get; set; }
+
+		public bool Holding => HeldEntity.IsValid();
+		[Net] public Entity HeldEntity { get; set; }
+
+		public override void Simulate(Client cl)
+		{
+			if (Owner is not ArcadePlayer owner)
+				return;
+			m_owner = owner;
+
+			if (IsServer)
+			{
+				Vector3 eyePos = m_owner.EyePosition;
+				Vector3 eyeDir = m_owner.EyeRotation.Forward;
+				Rotation eyeRot = Rotation.From(new Angles(0.0f, m_owner.EyeRotation.Angles().yaw, 0.0f));
+
+				using (Prediction.Off())
+				{
+					if (Input.Down(m_inputHold))
+					{
+						if (m_heldBody.IsValid())
+							UpdatePhysicsHold(eyePos, eyeDir, eyeRot);
+						else
+							StartPhysicsHold(eyePos, eyeDir, eyeRot);
+					}
+					else
+						EndPhysicsHold();
+				}
+			}
+
+			// don't let the inventory scroll out of this
+			if (Holding)
+				Input.MouseWheel = 0;
+		}
+
+		public override void ActiveStart(Entity ent)
+		{
+			base.ActiveStart(ent);
+			EnableManipulator();
+		}
+
+		public override void ActiveEnd(Entity ent, bool dropped)
+		{
+			base.ActiveEnd(ent, dropped);
+			DisableManipulator();
+		}
+
+		protected override void OnDestroy()
+		{
+			base.OnDestroy();
+			DisableManipulator();
+		}
+
+		public void EnableManipulator()
+		{
+			if (!Host.IsServer)
+				return;
+
+			if (!m_grabBody.IsValid())
+			{
+				m_grabBody = new PhysicsBody(Map.Physics)
+				{
+					BodyType = PhysicsBodyType.Keyframed
+				};
+			}
+		}
+
+		public void DisableManipulator()
+		{
+			EndPhysicsHold();
+
+			m_grabBody?.Remove();
+			m_grabBody = null;
+		}
+
+		public void StartPhysicsHold(Vector3 eyePos, Vector3 eyeDir, Rotation eyeRot)
+		{
+			var tr = Trace.Ray(eyePos, eyePos + eyeDir * 1024)
+						.UseHitboxes(true)
+						.Ignore(m_owner, false)
+						.HitLayer(CollisionLayer.Debris)
+						.Run();
+
+			if (!tr.Hit || !tr.Entity.IsValid() || tr.Entity.IsWorld)
+				return;
+
+			Entity rootEnt = tr.Entity.Root;
+			PhysicsBody body = tr.Body;
+
+			if (!body.IsValid())
+				return;
+
+			// don't move keyframed (animated/code controlled) bodies
+			if (body.BodyType == PhysicsBodyType.Keyframed)
+				return;
+
+			// make sure we wipe other holds
+			EndPhysicsHold();
+
+			m_holding = true;
+			HeldEntity = tr.Entity;
+
+			m_heldBody = body;
+			m_holdDistance = Vector3.DistanceBetween(eyePos, tr.EndPosition);
+
+			m_heldRot = eyeRot.Inverse * m_heldBody.Rotation;
+
+			m_grabBody.Position = tr.EndPosition;
+			m_grabBody.Rotation = m_heldBody.Rotation;
+
+			m_heldBody.Sleeping = false;
+			m_heldBody.AutoSleep = false;
+
+			m_grabJoint = PhysicsJoint.CreateFixed(m_grabBody, m_heldBody.WorldPoint(tr.EndPosition));
+			m_grabJoint.SpringLinear = new PhysicsSpring(LinearFrequency, LinearDampingRatio);
+			m_grabJoint.SpringAngular = new PhysicsSpring(AngularFrequency, AngularDampingRatio);
+		}
+
+		public void UpdatePhysicsHold(Vector3 eyePos, Vector3 eyeDir, Rotation eyeRot)
+		{
+			if (!m_heldBody.IsValid())
+			{
+				EndPhysicsHold();
+				return;
+			}
+
+			m_holdDistance += (Input.MouseWheel * 10);
+
+			// do the rotation here, this'll modify m_heldRot
+			if (Input.Down(m_inputRotate))
+				Rotate(eyeRot, Input.MouseDelta * 0.2f);
+
+			//DebugOverlay.Axis(m_grabBody.Position, m_grabBody.Rotation, 10, 0, false);
+			//DebugOverlay.Axis(m_heldBody.Position, m_heldBody.Rotation, 10, 0, false);
+
+			// if m_inputGravity is held down, disable the angular constraint so it's like pinning it on the end of the beam
+			// having this will ignore the rest of this
+			if (m_grabJoint != null)
+				m_grabJoint.EnableAngularConstraint = !Input.Down(m_inputGravity);
+
+			// once the above is released, set m_heldRot to it to avoid snapping weirdness
+			if (Input.Released(m_inputGravity))
+				m_heldRot = eyeRot.Inverse * m_heldBody.Rotation;
+
+			m_grabBody.Position = eyePos + eyeDir * m_holdDistance;
+			m_grabBody.Rotation = eyeRot * m_heldRot;
+
+			if (Input.Down(m_inputRotationSnap))
+			{
+				Angles euler = m_grabBody.Rotation.Angles();
+
+				m_grabBody.Rotation = Rotation.From(
+					MathF.Round(euler.pitch / RotationSnapAngle) * RotationSnapAngle,
+					MathF.Round(euler.yaw / RotationSnapAngle) * RotationSnapAngle,
+					MathF.Round(euler.roll / RotationSnapAngle) * RotationSnapAngle
+				);
+			}
+		}
+
+		public void EndPhysicsHold()
+		{
+			m_holding = false;
+			HeldEntity = null;
+
+			m_grabJoint?.Remove();
+			m_grabJoint = null;
+
+			m_heldBody = null;
+
+			if (m_heldBody.IsValid())
+				m_heldBody.AutoSleep = true;
+		}
+
+		public override void BuildInput(InputBuilder inputBuilder)
+		{
+			if (!Holding)
+				return;
+
+			if (inputBuilder.Down(m_inputRotate))
+				inputBuilder.ViewAngles = inputBuilder.OriginalViewAngles;
+		}
+
+		public void Rotate(Rotation eyeRot, Vector3 input)
+		{
+			var localRot = eyeRot;
+			localRot *= Rotation.FromAxis(Vector3.Up, input.x);
+			localRot *= Rotation.FromAxis(Vector3.Right, input.y);
+			localRot = eyeRot.Inverse * localRot;
+
+			// order of operations matters with quaterions!!
+			m_heldRot = localRot * m_heldRot;
+		}
+	}
+}
