@@ -19,27 +19,34 @@ namespace infinitearcade
 		private ArcadePlayer m_owner;
 		private bool m_holding;
 
-		private InputButton m_inputHold = InputButton.Attack1;
-		private InputButton m_inputGravity = InputButton.Reload;
-		private InputButton m_inputRotate = InputButton.Use;
-		private InputButton m_inputRotationSnap = InputButton.Use | InputButton.Run;
+		// Phys inputs
+		private const InputButton m_inputHold = InputButton.Attack1;
+		private const InputButton m_inputFreeze = InputButton.Attack2;
+		private const InputButton m_inputGravity = InputButton.Reload;
+		private const InputButton m_inputSlow = InputButton.Walk;
+		private const InputButton m_inputRotate = InputButton.Use;
+		private const InputButton m_inputRotationSnap = InputButton.Use | InputButton.Run;
 
+		// Grav inputs
+		private const InputButton m_inputPunt = InputButton.Attack1;
+		private const InputButton m_inputPull = InputButton.Attack2;
+
+		// Shared settings
 		[Net] public float LinearFrequency { get; set; } = 20.0f;
 		[Net] public float LinearDampingRatio { get; set; } = 1.0f;
 		[Net] public float AngularFrequency { get; set; } = 20.0f;
 		[Net] public float AngularDampingRatio { get; set; } = 1.0f;
+
+		// Phys settings
+		[Net] public float DistanceTargetDeltaSpeed { get; set; } = 20f;
+		[Net] public float DistanceTargetDeltaFadeDist { get; set; } = 128;
+		[Net] public float DistanceTargetDeltaFadeMult { get; set; } = 0.7f;
+		[Net] public float RotationSpeed { get; set; } = 0.25f;
+		[Net] public float RotationSpeedSlowMult { get; set; } = 0.25f;
 		[Net] public float RotationSnapAngle { get; set; } = 45f;
 
-		public enum ManipulationMode
-		{
-			Physics,
-			Gravity
-		}
-
-		[Net] public ManipulationMode Mode { get; set; }
-
 		public bool Holding => HeldEntity.IsValid();
-		[Net] public Entity HeldEntity { get; set; }
+		[Net] public Entity HeldEntity { get; private set; }
 
 		public override void Simulate(Client cl)
 		{
@@ -114,7 +121,7 @@ namespace infinitearcade
 
 		public void StartPhysicsHold(Vector3 eyePos, Vector3 eyeDir, Rotation eyeRot)
 		{
-			var tr = Trace.Ray(eyePos, eyePos + eyeDir * 1024)
+			var tr = Trace.Ray(eyePos, eyePos + eyeDir * short.MaxValue)
 						.UseHitboxes(true)
 						.Ignore(m_owner, false)
 						.HitLayer(CollisionLayer.Debris)
@@ -163,11 +170,19 @@ namespace infinitearcade
 				return;
 			}
 
-			m_holdDistance += (Input.MouseWheel * 10);
+			float distanceDelta = Input.MouseWheel * DistanceTargetDeltaSpeed;
+			if (Input.Down(m_inputSlow))
+			{
+				// slow the beam as it gets closer to the player
+				float targetfrac = m_holdDistance / DistanceTargetDeltaFadeDist;
+				distanceDelta *= MathX.LerpTo(-MathF.Sin(targetfrac) * DistanceTargetDeltaFadeMult, 1, targetfrac);
+			}
+			m_holdDistance += distanceDelta;
+			m_holdDistance = Math.Max(m_holdDistance, 0);
 
 			// do the rotation here, this'll modify m_heldRot
 			if (Input.Down(m_inputRotate))
-				Rotate(eyeRot, Input.MouseDelta * 0.2f);
+				Rotate(eyeRot, Input.MouseDelta * RotationSpeed * (Input.Down(m_inputSlow) ? RotationSpeedSlowMult : 1));
 
 			//DebugOverlay.Axis(m_grabBody.Position, m_grabBody.Rotation, 10, 0, false);
 			//DebugOverlay.Axis(m_heldBody.Position, m_heldBody.Rotation, 10, 0, false);
@@ -205,6 +220,7 @@ namespace infinitearcade
 			m_grabJoint = null;
 
 			m_heldBody = null;
+			m_heldRot = Rotation.Identity;
 
 			if (m_heldBody.IsValid())
 				m_heldBody.AutoSleep = true;
