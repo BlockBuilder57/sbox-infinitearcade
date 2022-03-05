@@ -9,6 +9,8 @@ namespace infinitearcade
 {
 	public partial class PhysicsManipulator : IATool
 	{
+		private ArcadePlayer m_owner;
+
 		private PhysicsBody m_grabBody;
 		private FixedJoint m_grabJoint;
 
@@ -16,7 +18,6 @@ namespace infinitearcade
 		private Rotation m_heldRot;
 
 		private float m_holdDistance;
-		private ArcadePlayer m_owner;
 		private bool m_holding;
 		private bool m_stickyHold;
 
@@ -46,6 +47,18 @@ namespace infinitearcade
 		[Net] public float RotationSpeedSlowMult { get; set; } = 0.25f;
 		[Net] public float RotationSnapAngle { get; set; } = 45f;
 
+		// Grav settings
+		[Net] public float PullStrength { get; set; } = 35f;
+		[Net] public float PuntStrength { get; set; } = 3000f;
+		[Net] public float HoldDistance { get; set; } = 64f;
+		[Net] public float HoldStart { get; set; } = 128f;
+		[Net] public float HoldBreakForce { get; set; } = 2250f;
+
+		public TimeSince TimeSincePunt;
+
+		public enum ManipulationMode { None, Phys, Grav }
+		[Net] public ManipulationMode Mode { get; set; }
+
 		public bool Holding => HeldEntity.IsValid();
 		[Net] public Entity HeldEntity { get; private set; }
 
@@ -63,15 +76,24 @@ namespace infinitearcade
 
 				using (Prediction.Off())
 				{
-					if (Input.Down(m_inputHold))
+					if (Mode != ManipulationMode.Grav && Input.Down(m_inputHold))
 					{
 						if (m_heldBody.IsValid())
-							UpdatePhysicsHold(eyePos, eyeDir, eyeRot);
+							UpdatePhysHold(eyePos, eyeDir, eyeRot);
 						else
-							StartPhysicsHold(eyePos, eyeDir, eyeRot);
+							StartPhysHold(eyePos, eyeDir, eyeRot);
+					}
+					else if (Mode != ManipulationMode.Phys)
+					{
+						if (Input.Down(m_inputPull) && !m_holding)
+							GravPull(eyePos, eyeDir, eyeRot);
+						else if (Input.Pressed(m_inputPunt) && m_holding)
+							GravPunt(eyePos, eyeDir, eyeRot);
+
+						GravHold(eyePos, eyeDir, eyeRot);
 					}
 					else
-						EndPhysicsHold();
+						EndHold();
 				}
 			}
 
@@ -117,13 +139,13 @@ namespace infinitearcade
 
 		public void DisableManipulator()
 		{
-			EndPhysicsHold();
+			EndHold();
 
 			m_grabBody?.Remove();
 			m_grabBody = null;
 		}
 
-		public void StartPhysicsHold(Vector3 eyePos, Vector3 eyeDir, Rotation eyeRot)
+		public void StartPhysHold(Vector3 eyePos, Vector3 eyeDir, Rotation eyeRot)
 		{
 			var tr = Trace.Ray(eyePos, eyePos + eyeDir * short.MaxValue)
 						.UseHitboxes(true)
@@ -152,7 +174,9 @@ namespace infinitearcade
 				body.BodyType = PhysicsBodyType.Dynamic;
 
 			// make sure we wipe other holds
-			EndPhysicsHold();
+			EndHold();
+
+			Mode = ManipulationMode.Phys;
 
 			m_holding = true;
 			HeldEntity = tr.Entity;
@@ -173,11 +197,11 @@ namespace infinitearcade
 			m_grabJoint.SpringAngular = new PhysicsSpring(AngularFrequency, AngularDampingRatio);
 		}
 
-		public void UpdatePhysicsHold(Vector3 eyePos, Vector3 eyeDir, Rotation eyeRot)
+		public void UpdatePhysHold(Vector3 eyePos, Vector3 eyeDir, Rotation eyeRot)
 		{
 			if (!m_heldBody.IsValid())
 			{
-				EndPhysicsHold();
+				EndHold();
 				return;
 			}
 
@@ -186,8 +210,8 @@ namespace infinitearcade
 				if (m_heldBody.BodyType == PhysicsBodyType.Dynamic)
 					m_heldBody.BodyType = PhysicsBodyType.Static;
 
+				EndHold();
 				m_stickyHold = true;
-				EndPhysicsHold();
 				return;
 			}
 
@@ -232,7 +256,7 @@ namespace infinitearcade
 			}
 		}
 
-		public void EndPhysicsHold()
+		public void EndHold()
 		{
 			m_holding = false;
 			HeldEntity = null;
@@ -243,17 +267,10 @@ namespace infinitearcade
 			m_heldBody = null;
 			m_heldRot = Rotation.Identity;
 
+			Mode = ManipulationMode.None;
+
 			if (m_heldBody.IsValid())
 				m_heldBody.AutoSleep = true;
-		}
-
-		public override void BuildInput(InputBuilder inputBuilder)
-		{
-			if (!Holding)
-				return;
-
-			if (inputBuilder.Down(m_inputRotate))
-				inputBuilder.ViewAngles = inputBuilder.OriginalViewAngles;
 		}
 
 		public void Rotate(Rotation eyeRot, Vector3 input)
@@ -265,6 +282,127 @@ namespace infinitearcade
 
 			// order of operations matters with quaterions!!
 			m_heldRot = localRot * m_heldRot;
+		}
+
+		public void GravPull(Vector3 eyePos, Vector3 eyeDir, Rotation eyeRot)
+		{
+			// pull objects towards player, grab hold of them if in range
+
+			if (m_holding)
+				return;
+
+			var tr = Trace.Ray(eyePos, eyePos + eyeDir * short.MaxValue)
+						.UseHitboxes(true)
+						.Ignore(m_owner, false)
+						.HitLayer(CollisionLayer.Debris)
+						.Size(8) // because nobody likes a sloppy gravity gun
+						.Run();
+
+			if (!tr.Hit || !tr.Entity.IsValid() || tr.Entity.IsWorld)
+				return;
+
+			Entity rootEnt = tr.Entity.Root;
+			PhysicsBody body = tr.Body;
+
+			if (!body.IsValid() || !body.PhysicsGroup.IsValid())
+				return;
+
+			// don't move keyframed (animated/code controlled) bodies
+			if (body.BodyType == PhysicsBodyType.Keyframed)
+				return;
+
+			// make sure we wipe other holds
+			EndHold();
+
+			if (eyePos.Distance(body.MassCenter) <= HoldStart)
+			{
+				// lock on
+				Mode = ManipulationMode.Grav;
+
+				m_holding = true;
+				HeldEntity = tr.Entity;
+
+				m_heldBody = body;
+
+				m_heldRot = eyeRot.Inverse * m_heldBody.Rotation;
+
+				var closestPoint = m_heldBody.FindClosestPoint(eyePos);
+				var holdDist = HoldDistance + closestPoint.Distance(m_heldBody.MassCenter);
+
+				//DebugOverlay.Axis(eyePos + (eyeDir * holdDist), Rotation.Identity, 200, 3);
+
+				m_grabBody.Position = eyePos + (eyeDir * holdDist);
+				m_grabBody.Rotation = m_heldBody.Rotation;
+
+				m_heldBody.Sleeping = false;
+				m_heldBody.AutoSleep = false;
+
+				m_grabJoint = PhysicsJoint.CreateFixed(m_grabBody, m_heldBody.MassCenterPoint());
+				m_grabJoint.SpringLinear = new PhysicsSpring(LinearFrequency/2f, LinearDampingRatio);
+				m_grabJoint.SpringAngular = new PhysicsSpring(AngularFrequency/2f, AngularDampingRatio);
+				m_grabJoint.Strength = m_heldBody.Mass * HoldBreakForce;
+				m_grabJoint.OnBreak += EndHold;
+			}
+			else // just pull it closer
+			{
+				body.PhysicsGroup.ApplyImpulse(eyeDir * -PullStrength, true);
+				//DebugOverlay.Axis(body.Position, body.Rotation, 200, 3f);
+			}
+		}
+
+		public void GravPunt(Vector3 eyePos, Vector3 eyeDir, Rotation eyeRot)
+		{
+			// hehe punt
+
+			if (TimeSincePunt < 0.2f)
+				return;
+
+			if (!m_heldBody.IsValid())
+				return;
+
+			if (m_heldBody.PhysicsGroup.BodyCount > 1)
+			{
+				// Don't throw ragdolls as hard
+				m_heldBody.PhysicsGroup.ApplyImpulse(eyeDir * PuntStrength, true);
+				m_heldBody.PhysicsGroup.ApplyAngularImpulse(Vector3.Random * PuntStrength, true);
+			}
+			else
+			{
+				m_heldBody.ApplyImpulse(eyeDir * (m_heldBody.Mass * PuntStrength));
+				m_heldBody.ApplyAngularImpulse(Vector3.Random * (m_heldBody.Mass * PuntStrength));
+			}
+
+			EndHold();
+			// when we punt, we don't want to immediately grab with the phys beam
+			m_stickyHold = true;
+			TimeSincePunt = 0;
+		}
+
+		public void GravHold(Vector3 eyePos, Vector3 eyeDir, Rotation eyeRot)
+		{
+			if (!m_heldBody.IsValid() || !m_grabJoint.IsValid())
+			{
+				EndHold();
+				return;
+			}
+
+			var closestPoint = m_heldBody.FindClosestPoint(eyePos);
+			var holdDist = HoldDistance + closestPoint.Distance(m_heldBody.MassCenter);
+
+			m_grabBody.Position = eyePos + eyeDir * holdDist;
+			m_grabBody.Rotation = eyeRot * m_heldRot;
+		}
+
+		public override void BuildInput(InputBuilder inputBuilder)
+		{
+			if (Mode == ManipulationMode.Phys)
+			{
+				if (!Holding)
+					return;
+
+				if (inputBuilder.Down(m_inputRotate))
+					inputBuilder.ViewAngles = inputBuilder.OriginalViewAngles;
+			}
 		}
 	}
 }

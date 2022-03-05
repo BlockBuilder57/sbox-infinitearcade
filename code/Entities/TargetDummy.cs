@@ -71,7 +71,8 @@ namespace infinitearcade
 
 		public override void TakeDamage(DamageInfo info)
 		{
-			DebugOverlay.Text(info.Position, info.Damage.ToString(), Color.Yellow, .75f, 4096);
+			Vector3 textPos = info.Position == Vector3.Zero ? Position : info.Position;
+			DebugOverlay.Text(textPos, info.Damage.ToString(), Color.Yellow, .75f, 4096);
 
 			base.TakeDamage(info);
 		}
