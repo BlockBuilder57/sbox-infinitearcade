@@ -18,6 +18,7 @@ namespace infinitearcade
 		private float m_holdDistance;
 		private ArcadePlayer m_owner;
 		private bool m_holding;
+		private bool m_stickyHold;
 
 		// Phys inputs
 		private const InputButton m_inputHold = InputButton.Attack1;
@@ -73,6 +74,9 @@ namespace infinitearcade
 						EndPhysicsHold();
 				}
 			}
+
+			if (m_stickyHold && Input.Released(m_inputHold))
+				m_stickyHold = false;
 
 			// don't let the inventory scroll out of this
 			if (Holding)
@@ -130,6 +134,10 @@ namespace infinitearcade
 			if (!tr.Hit || !tr.Entity.IsValid() || tr.Entity.IsWorld)
 				return;
 
+			// after freezing, we want to make sure the hold button gets repressed
+			if (m_stickyHold)
+				return;
+
 			Entity rootEnt = tr.Entity.Root;
 			PhysicsBody body = tr.Body;
 
@@ -139,6 +147,9 @@ namespace infinitearcade
 			// don't move keyframed (animated/code controlled) bodies
 			if (body.BodyType == PhysicsBodyType.Keyframed)
 				return;
+
+			if (body.BodyType == PhysicsBodyType.Static)
+				body.BodyType = PhysicsBodyType.Dynamic;
 
 			// make sure we wipe other holds
 			EndPhysicsHold();
@@ -166,6 +177,16 @@ namespace infinitearcade
 		{
 			if (!m_heldBody.IsValid())
 			{
+				EndPhysicsHold();
+				return;
+			}
+
+			if (Input.Pressed(m_inputFreeze))
+			{
+				if (m_heldBody.BodyType == PhysicsBodyType.Dynamic)
+					m_heldBody.BodyType = PhysicsBodyType.Static;
+
+				m_stickyHold = true;
 				EndPhysicsHold();
 				return;
 			}
