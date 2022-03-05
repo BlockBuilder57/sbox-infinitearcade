@@ -20,6 +20,10 @@ namespace infinitearcade
 		private float m_holdDistance;
 		private bool m_holding;
 		private bool m_stickyHold;
+		private bool m_stickyPull;
+
+		public TimeSince m_timeSinceDrop;
+		public TimeSince m_timeSincePunt;
 
 		// Phys inputs
 		private const InputButton m_inputHold = InputButton.Attack1;
@@ -54,8 +58,6 @@ namespace infinitearcade
 		[Net] public float HoldStart { get; set; } = 128f;
 		[Net] public float HoldBreakForce { get; set; } = 2250f;
 
-		public TimeSince TimeSincePunt;
-
 		public enum ManipulationMode { None, Phys, Grav }
 		[Net] public ManipulationMode Mode { get; set; }
 
@@ -72,16 +74,17 @@ namespace infinitearcade
 			{
 				Vector3 eyePos = m_owner.EyePosition;
 				Vector3 eyeDir = m_owner.EyeRotation.Forward;
-				Rotation eyeRot = Rotation.From(new Angles(0.0f, m_owner.EyeRotation.Angles().yaw, 0.0f));
+				Rotation eyeRot = m_owner.EyeRotation;
+				Rotation eyeRotYawOnly = Rotation.From(new Angles(0.0f, eyeRot.Angles().yaw, 0.0f));
 
 				using (Prediction.Off())
 				{
 					if (Mode != ManipulationMode.Grav && Input.Down(m_inputHold))
 					{
 						if (m_heldBody.IsValid())
-							UpdatePhysHold(eyePos, eyeDir, eyeRot);
+							UpdatePhysHold(eyePos, eyeDir, eyeRotYawOnly);
 						else
-							StartPhysHold(eyePos, eyeDir, eyeRot);
+							StartPhysHold(eyePos, eyeDir, eyeRotYawOnly);
 					}
 					else if (Mode != ManipulationMode.Phys)
 					{
@@ -99,6 +102,8 @@ namespace infinitearcade
 
 			if (m_stickyHold && Input.Released(m_inputHold))
 				m_stickyHold = false;
+			if (m_stickyPull && Input.Released(m_inputPull))
+				m_stickyPull = false;
 
 			// don't let the inventory scroll out of this
 			if (Holding)
@@ -256,8 +261,12 @@ namespace infinitearcade
 			}
 		}
 
-		public void EndHold()
+		public void EndHold() { EndHold(false); }
+		public void EndHold(bool force = false)
 		{
+			if (!force && !m_holding)
+				return;
+
 			m_holding = false;
 			HeldEntity = null;
 
@@ -268,6 +277,7 @@ namespace infinitearcade
 			m_heldRot = Rotation.Identity;
 
 			Mode = ManipulationMode.None;
+			m_timeSinceDrop = 0;
 
 			if (m_heldBody.IsValid())
 				m_heldBody.AutoSleep = true;
@@ -312,12 +322,17 @@ namespace infinitearcade
 				return;
 
 			// make sure we wipe other holds
-			EndHold();
+			if (m_holding)
+				EndHold();
+
+			if (m_timeSinceDrop < 0.5f)
+				return;
 
 			if (eyePos.Distance(body.MassCenter) <= HoldStart)
 			{
 				// lock on
 				Mode = ManipulationMode.Grav;
+				m_stickyPull = true;
 
 				m_holding = true;
 				HeldEntity = tr.Entity;
@@ -352,9 +367,9 @@ namespace infinitearcade
 
 		public void GravPunt(Vector3 eyePos, Vector3 eyeDir, Rotation eyeRot)
 		{
-			// hehe punt
+			// punts the object away
 
-			if (TimeSincePunt < 0.2f)
+			if (m_timeSincePunt < 0.5f)
 				return;
 
 			if (!m_heldBody.IsValid())
@@ -375,12 +390,19 @@ namespace infinitearcade
 			EndHold();
 			// when we punt, we don't want to immediately grab with the phys beam
 			m_stickyHold = true;
-			TimeSincePunt = 0;
+			m_stickyPull = false;
+			m_timeSincePunt = 0;
 		}
 
 		public void GravHold(Vector3 eyePos, Vector3 eyeDir, Rotation eyeRot)
 		{
 			if (!m_heldBody.IsValid() || !m_grabJoint.IsValid())
+			{
+				EndHold();
+				return;
+			}
+
+			if (!m_stickyPull && Input.Pressed(m_inputPull))
 			{
 				EndHold();
 				return;
