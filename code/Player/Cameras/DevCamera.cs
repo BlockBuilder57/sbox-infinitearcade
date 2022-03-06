@@ -19,7 +19,7 @@ namespace infinitearcade
 		float MoveSpeed;
 		float FovOverride = 0;
 
-		float LerpMode = 0;
+		float LerpMode = 0.01f;
 
 		public static bool Overlays = true;
 		public static bool LockInput = false;
@@ -136,8 +136,9 @@ namespace infinitearcade
 				PivotEnabled = input.Down(InputButton.Walk);
 
 				if (input.Down(InputButton.Slot1)) LerpSpeed(0.0f);
-				if (input.Down(InputButton.Slot2)) LerpSpeed(0.5f);
-				if (input.Down(InputButton.Slot3)) LerpSpeed(0.9f);
+				if (input.Down(InputButton.Slot2)) LerpSpeed(0.01f);
+				if (input.Down(InputButton.Slot3)) LerpSpeed(0.5f);
+				if (input.Down(InputButton.Slot4)) LerpSpeed(0.9f);
 
 				if (input.Pressed(InputButton.Walk))
 				{
@@ -170,8 +171,8 @@ namespace infinitearcade
 				if (input.Pressed(InputButton.Attack1))
 				{
 					var tr = Trace.Ray(Position, Position + Rotation.Forward * 4096).HitLayer(CollisionLayer.All).UseHitboxes().Run();
-					if (tr.Entity.IsValid())
-						tr.Entity.DebugFlags ^= EntityDebugFlags.Text;
+					//if (tr.Entity.IsValid())
+					//	tr.Entity.DebugFlags ^= EntityDebugFlags.Text;
 				}
 
 				if (input.Down(InputButton.Attack2))
@@ -220,8 +221,16 @@ namespace infinitearcade
 			TargetRot = Rotation.From(LookAngles);
 			TargetPos += mv;
 
-			Position = Vector3.Lerp(Position, TargetPos, 10 * RealTime.Delta * (1 - LerpMode));
-			Rotation = Rotation.Slerp(Rotation, TargetRot, 10 * RealTime.Delta * (1 - LerpMode));
+			if (LerpMode > 0)
+			{
+				Position = Vector3.Lerp(Position, TargetPos, 10 * RealTime.Delta * (1 - LerpMode));
+				Rotation = Rotation.Slerp(Rotation, TargetRot, 10 * RealTime.Delta * (1 - LerpMode));
+			}
+			else
+			{
+				Position = Vector3.Lerp(Position, TargetPos, 10 * RealTime.Delta * (1 - LerpMode));
+				Rotation = Rotation.Slerp(Rotation, TargetRot, 10 * RealTime.Delta * (1 - LerpMode));
+			}
 		}
 
 		void PivotMove()
@@ -230,7 +239,10 @@ namespace infinitearcade
 			PivotDist = PivotDist.Clamp(1, 1000);
 
 			TargetRot = Rotation.From(LookAngles);
-			Rotation = Rotation.Slerp(Rotation, TargetRot, 10 * RealTime.Delta * (1 - LerpMode));
+			if (LerpMode > 0)
+				Rotation = Rotation.Slerp(Rotation, TargetRot, 10 * RealTime.Delta * (1 - LerpMode));
+			else
+				Rotation = TargetRot;
 
 			TargetPos = PivotPos + Rotation.Forward * -PivotDist;
 			Position = TargetPos;

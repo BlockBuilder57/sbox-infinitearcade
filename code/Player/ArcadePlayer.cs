@@ -249,11 +249,6 @@ namespace infinitearcade
 
 		public void ChangeCamera()
 		{
-			// block: by default, Z near and far are 0
-			// this is just a lie, their true values are:
-			// ZNear: 7 (3 in HL1/HL:S)
-			//  ZFar: ~28378 (r_mapextents * 1.73205080757f)
-
 			Game.Current.LastCamera = CameraMode;
 
 			if (Input.VR.IsActive || VR.Enabled)
@@ -269,7 +264,6 @@ namespace infinitearcade
 				if (CameraMode is not FirstPersonCamera)
 				{
 					CameraMode = new FirstPersonCamera();
-					(CameraMode as FirstPersonCamera).SetZNear(7);
 				}
 				else
 				{
@@ -473,6 +467,9 @@ namespace infinitearcade
 			base.OnKilled();
 
 			BecomeRagdollOnClient(Velocity, m_lastDamage.Flags, m_lastDamage.Position, m_lastDamage.Force, GetHitboxBone(m_lastDamage.HitboxIndex));
+			ClothesSetVisiblity(false);
+			RemoveAllDecals();
+
 			CameraMode = new SpectateRagdollCamera();
 			Controller = null;
 
@@ -494,12 +491,10 @@ namespace infinitearcade
 			Inventory?.DeleteContents();
 		}
 
+		[ClientRpc]
 		private void BecomeRagdollOnClient(Vector3 velocity, DamageFlags damageFlags, Vector3 forcePos, Vector3 force, int bone)
 		{
 			ModelEntity ent = CreateDeathRagdoll();
-
-			ClothesSetVisiblity(false);
-			RemoveAllDecals();
 
 			ent.PhysicsGroup.Velocity = velocity;
 
@@ -541,7 +536,6 @@ namespace infinitearcade
 				UsePhysicsCollision = true,
 				EnableAllCollisions = true,
 				EnableHitboxes = true,
-				CollisionGroup = CollisionGroup.Debris,
 				SurroundingBoundsMode = SurroundingBoundsType.Physics
 			};
 

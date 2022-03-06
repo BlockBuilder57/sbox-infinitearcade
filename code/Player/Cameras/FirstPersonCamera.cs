@@ -4,15 +4,22 @@ namespace infinitearcade
 {
 	public partial class FirstPersonCamera : CameraMode
 	{
-		private float m_realZNear = 0;
-		private float m_lastScale = 0;
+		// block: by default, Z near and far are 0
+		// this is just a lie, their true values are:
+		// ZNear: 7 (3 in HL1/HL:S)
+		//  ZFar: ~28378 (r_mapextents * 1.73205080757f)
+
+		private float m_realZNear = 7;
 
 		/*public FirstPersonCamera(float zNear = 0, float zFar = 0) : base()
 		{
 			m_realZNear = zNear;
 
 			ZFar = zFar;
-			ZNear = m_realZNear * m_lastScale;
+			ZNear = m_realZNear;
+
+			if (Local.Pawn.IsValid())
+				ZNear = Local.Pawn.Scale;
 		}*/
 
 		public override void Activated()
@@ -32,11 +39,7 @@ namespace infinitearcade
 			Position = pawn.EyePosition;
 			Rotation = pawn.EyeRotation;
 
-			if (m_lastScale != pawn.Scale || m_realZNear == 0)
-			{
-				m_lastScale = pawn.Scale;
-				ZNear = m_realZNear * m_lastScale;
-			}
+			ZNear = m_realZNear * pawn.Scale;
 
 			Viewer = pawn;
 		}
