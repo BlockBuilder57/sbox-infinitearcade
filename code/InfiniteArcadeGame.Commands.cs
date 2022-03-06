@@ -17,17 +17,30 @@ namespace infinitearcade
 		}
 
 		[ServerCmd("spawn")]
-		public static void SpawnCommand(string modelname)
+		public static async Task SpawnCommand(string modelname)
 		{
 			if (ConsoleSystem.Caller == null)
 				return;
-
 			var owner = ConsoleSystem.Caller.Pawn;
+
+			// just treat vmdl_c as normal so you can paste stuff in from the asset browser
+			if (modelname.EndsWith(".vmdl_c", System.StringComparison.OrdinalIgnoreCase))
+				modelname = modelname.Remove(modelname.Length - 2, 2);
 
 			var tr = Trace.Ray(owner.EyePosition, owner.EyePosition + owner.EyeRotation.Forward * 500)
 				.UseHitboxes()
 				.Ignore(owner)
 				.Run();
+
+			var modelRotation = Rotation.From(new Angles(0, owner.EyeRotation.Angles().yaw, 0)) * Rotation.FromAxis(Vector3.Up, 180);
+
+			// Does this look like a package?
+			if (modelname.Count(x => x == '.') == 1 && !modelname.EndsWith(".vmdl", System.StringComparison.OrdinalIgnoreCase))
+			{
+				modelname = await SpawnPackageModel(modelname, tr.EndPosition, modelRotation, owner);
+				if (modelname == null)
+					return;
+			}
 
 			var model = Model.Load(modelname);
 			if (model == null || model.IsError)
@@ -36,12 +49,58 @@ namespace infinitearcade
 			var ent = new Prop
 			{
 				Position = tr.EndPosition + Vector3.Down * model.PhysicsBounds.Mins.z,
-				Rotation = Rotation.From(new Angles(0, owner.EyeRotation.Angles().yaw, 0)) * Rotation.FromAxis(Vector3.Up, 180),
+				Rotation = modelRotation,
 				Model = model
 			};
 
 			// Let's make sure physics are ready to go instead of waiting
 			ent.SetupPhysicsFromModel(PhysicsMotionType.Dynamic);
+		}
+
+		static async Task<string> SpawnPackageModel(string packageName, Vector3 pos, Rotation rotation, Entity source)
+		{
+			DebugOverlay.Text(pos, $"Spawning {packageName}", 5.0f);
+
+			var package = await Package.Fetch(packageName, false);
+			if (package == null || package.PackageType != Package.Type.Model || package.Revision == null)
+			{
+				// spawn error particles
+				return null;
+			}
+
+			if (!source.IsValid) return null; // source entity died or disconnected or something
+
+			var model = package.GetMeta("PrimaryAsset", "models/dev/error.vmdl");
+			var mins = package.GetMeta("RenderMins", Vector3.Zero);
+			var maxs = package.GetMeta("RenderMaxs", Vector3.Zero);
+
+			DebugOverlay.Box(10, pos, rotation, mins, maxs, Color.White);
+			DebugOverlay.Text(pos + Vector3.Up * 20, $"Found {package.Title}", 5.0f);
+
+			// downloads if not downloads, mounts if not mounted
+			await package.MountAsync();
+
+			return model;
+		}
+
+		[ClientCmd("query_sandworks_packages")]
+		public static async Task QuerySandworksPackagesCommand(string search, Package.Type type, Package.Order order = Package.Order.Popular)
+		{
+			var q = new Package.Query();
+			q.SearchText = search;
+			q.Type = type;
+			q.Order = order;
+
+			var found = await q.RunAsync(default);
+
+			List<string> results = new();
+			foreach (var package in found)
+			{
+				results.Add(package.FullIdent);
+			}
+
+			Log.Info($"Search results of {search}, type {type}, order {order}");
+			Log.Info(string.Join(", ", results));
 		}
 
 		[ServerCmd("spawncarriable")]
@@ -141,8 +200,8 @@ namespace infinitearcade
 			Game.Current.ClientJoined(cl);
 		}
 
-		[ServerCmd("create_ragdoll")]
-		public static void CreateRagdollCommand(float force = 0)
+		[ServerCmd("create_death_ragdoll")]
+		public static void CreateDeathRagdollCommand(float force = 0, bool physical = false)
 		{
 			Client cl = ConsoleSystem.Caller;
 
@@ -154,6 +213,11 @@ namespace infinitearcade
 
 				ent.SetRagdollVelocityFrom(player);
 				ent.PhysicsGroup.Velocity = player.Velocity + (player.EyeRotation.Forward * force);
+
+				/*if (physical)
+				{
+					ent.
+				}*/
 			}
 		}
 	}
