@@ -228,8 +228,8 @@ namespace infinitearcade
 			}
 			else
 			{
-				Position = Vector3.Lerp(Position, TargetPos, 10 * RealTime.Delta * (1 - LerpMode));
-				Rotation = Rotation.Slerp(Rotation, TargetRot, 10 * RealTime.Delta * (1 - LerpMode));
+				Position = TargetPos;
+				Rotation = TargetRot;
 			}
 		}
 
