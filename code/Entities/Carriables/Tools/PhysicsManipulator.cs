@@ -90,8 +90,8 @@ namespace infinitearcade
 							GravPull(eyePos, eyeDir, eyeRot);
 						else if (Input.Pressed(m_inputPunt) && m_holding)
 							GravPunt(eyePos, eyeDir, eyeRot);
-
-						GravHold(eyePos, eyeDir, eyeRot);
+						else
+							GravHold(eyePos, eyeDir, eyeRot);
 					}
 					else
 						EndHold();
@@ -151,6 +151,12 @@ namespace infinitearcade
 
 		public void StartPhysHold(Vector3 eyePos, Vector3 eyeDir, Rotation eyeRot)
 		{
+			// after freezing, we want to make sure the hold button gets repressed
+			if (m_stickyHold)
+				return;
+
+			Mode = ManipulationMode.Phys;
+
 			var tr = Trace.Ray(eyePos, eyePos + eyeDir * PhysMaxDistance)
 						.UseHitboxes(true)
 						.Ignore(Owner, false)
@@ -158,10 +164,6 @@ namespace infinitearcade
 						.Run();
 
 			if (!tr.Hit || !tr.Entity.IsValid() || tr.Entity.IsWorld)
-				return;
-
-			// after freezing, we want to make sure the hold button gets repressed
-			if (m_stickyHold)
 				return;
 
 			Entity rootEnt = tr.Entity.Root;
@@ -205,6 +207,8 @@ namespace infinitearcade
 
 		public void UpdatePhysHold(Vector3 eyePos, Vector3 eyeDir, Rotation eyeRot)
 		{
+			Mode = ManipulationMode.Phys;
+
 			if (!m_heldBody.IsValid())
 			{
 				EndHold();
@@ -262,11 +266,9 @@ namespace infinitearcade
 			}
 		}
 
-		public void EndHold() { EndHold(false); }
-		public void EndHold(bool force = false)
+		public void EndHold()
 		{
-			if (!force && !m_holding)
-				return;
+			Mode = ManipulationMode.None;
 
 			m_holding = false;
 			HeldEntity = null;
@@ -277,7 +279,6 @@ namespace infinitearcade
 			m_heldBody = null;
 			m_heldRot = Rotation.Identity;
 
-			Mode = ManipulationMode.None;
 			m_timeSinceDrop = 0;
 
 			if (m_heldBody.IsValid())
@@ -302,11 +303,13 @@ namespace infinitearcade
 			if (m_holding)
 				return;
 
+			Mode = ManipulationMode.Grav;
+
 			var tr = Trace.Ray(eyePos, eyePos + eyeDir * GravMaxDistance)
 						.UseHitboxes(true)
 						.Ignore(Owner, false)
 						.HitLayer(CollisionLayer.Debris)
-						.Size(8) // because nobody likes a sloppy gravity gun
+						.Size(16) // because nobody likes a sloppy gravity gun
 						.Run();
 
 			if (!tr.Hit || !tr.Entity.IsValid() || tr.Entity.IsWorld)
@@ -332,7 +335,6 @@ namespace infinitearcade
 			if (eyePos.Distance(body.MassCenter) <= HoldStart)
 			{
 				// lock on
-				Mode = ManipulationMode.Grav;
 				m_stickyPull = true;
 
 				m_holding = true;
@@ -397,6 +399,8 @@ namespace infinitearcade
 
 		public void GravHold(Vector3 eyePos, Vector3 eyeDir, Rotation eyeRot)
 		{
+			Mode = ManipulationMode.Grav;
+
 			if (!m_heldBody.IsValid() || !m_grabJoint.IsValid())
 			{
 				EndHold();

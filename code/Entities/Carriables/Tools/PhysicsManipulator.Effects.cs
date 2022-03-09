@@ -12,8 +12,11 @@ namespace infinitearcade
 		// effects: particles and the like
 		// remember, all this is clientside!!
 
-		Particles PhysBeam;
-		Particles PhysBeamEnd;
+		Particles FxPhysBeam;
+		Particles FxPhysBeamEnd;
+
+		Particles FxGravPull;
+		Particles FxGravBeam;
 
 		[Event.Frame]
 		public void OnFrame()
@@ -23,7 +26,23 @@ namespace infinitearcade
 
 		public void UpdateEffects()
 		{
-			if (Owner == null || !Input.Down(m_inputHold) || OwnerPlayer.ActiveChild != this)
+			switch (Mode)
+			{
+				case ManipulationMode.Phys:
+					UpdatePhysEffects();
+					break;
+				case ManipulationMode.Grav:
+					UpdateGravEffects();
+					break;
+				default:
+					EndEffects();
+					break;
+			}
+		}
+
+		public void UpdatePhysEffects()
+		{
+			if (Owner == null || OwnerPlayer.ActiveChild != this)
 			{
 				EndEffects();
 				return;
@@ -35,13 +54,13 @@ namespace infinitearcade
 						.HitLayer(CollisionLayer.Debris)
 						.Run();
 
-			if (PhysBeam == null)
-				PhysBeam = Particles.Create("particles/physmanip_beam.vpcf", Position);
-			if (PhysBeamEnd == null)
-				PhysBeamEnd = Particles.Create("particles/physmanip_beamend.vpcf", tr.EndPosition);
+			if (FxPhysBeam == null)
+				FxPhysBeam = Particles.Create("particles/physmanip_beam.vpcf", Position);
+			if (FxPhysBeamEnd == null)
+				FxPhysBeamEnd = Particles.Create("particles/physmanip_beamend.vpcf", tr.EndPosition);
 
-			PhysBeam.SetEntityAttachment(0, EffectEntity, "muzzle");
-			PhysBeamEnd.SetPosition(0, tr.StartPosition + tr.Direction * (tr.Distance - 6));
+			FxPhysBeam.SetEntityAttachment(0, EffectEntity, "muzzle");
+			FxPhysBeamEnd.SetPosition(0, tr.StartPosition + tr.Direction * (tr.Distance - 6));
 
 			if (HeldEntity.IsValid() && !HeldEntity.IsWorld)
 			{
@@ -49,22 +68,27 @@ namespace infinitearcade
 				{
 					var body = HeldEntity.PhysicsGroup.GetBody(HeldGroupIndex);
 					if (body.IsValid())
-						PhysBeam.SetPosition(1, body.Transform.PointToWorld(HeldBodyLocalPos));
+						FxPhysBeam.SetPosition(1, body.Transform.PointToWorld(HeldBodyLocalPos));
 				}
 				else
-					PhysBeam.SetEntity(1, HeldEntity, HeldBodyLocalPos);
+					FxPhysBeam.SetEntity(1, HeldEntity, HeldBodyLocalPos);
 			}
 			else
-				PhysBeam.SetPosition(1, tr.EndPosition);
+				FxPhysBeam.SetPosition(1, tr.EndPosition);
+		}
+
+		public void UpdateGravEffects()
+		{
+
 		}
 
 		public void EndEffects()
 		{
-			PhysBeam?.Destroy(true);
-			PhysBeam = null;
+			FxPhysBeam?.Destroy(true);
+			FxPhysBeam = null;
 
-			PhysBeamEnd?.Destroy(true);
-			PhysBeamEnd = null;
+			FxPhysBeamEnd?.Destroy(true);
+			FxPhysBeamEnd = null;
 		}
 	}
 }
