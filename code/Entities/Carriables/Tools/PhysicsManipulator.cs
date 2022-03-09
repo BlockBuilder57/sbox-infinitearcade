@@ -9,8 +9,6 @@ namespace infinitearcade
 {
 	public partial class PhysicsManipulator : IATool
 	{
-		private ArcadePlayer m_owner;
-
 		private PhysicsBody m_grabBody;
 		private FixedJoint m_grabJoint;
 
@@ -44,6 +42,7 @@ namespace infinitearcade
 		[Net] public float AngularDampingRatio { get; set; } = 1.0f;
 
 		// Phys settings
+		[Net] public float PhysMaxDistance { get; set; } = short.MaxValue;
 		[Net] public float DistanceTargetDeltaSpeed { get; set; } = 20f;
 		[Net] public float DistanceTargetDeltaFadeDist { get; set; } = 128;
 		[Net] public float DistanceTargetDeltaFadeMult { get; set; } = 0.7f;
@@ -52,6 +51,7 @@ namespace infinitearcade
 		[Net] public float RotationSnapAngle { get; set; } = 45f;
 
 		// Grav settings
+		[Net] public float GravMaxDistance { get; set; } = 2048;
 		[Net] public float PullStrength { get; set; } = 35f;
 		[Net] public float PuntStrength { get; set; } = 3000f;
 		[Net] public float HoldDistance { get; set; } = 64f;
@@ -63,18 +63,16 @@ namespace infinitearcade
 
 		public bool Holding => HeldEntity.IsValid();
 		[Net] public Entity HeldEntity { get; private set; }
+		[Net] public Vector3 HeldBodyLocalPos { get; private set; }
+		[Net] public int HeldGroupIndex { get; private set; }
 
 		public override void Simulate(Client cl)
 		{
-			if (Owner is not ArcadePlayer owner)
-				return;
-			m_owner = owner;
-
 			if (IsServer)
 			{
-				Vector3 eyePos = m_owner.EyePosition;
-				Vector3 eyeDir = m_owner.EyeRotation.Forward;
-				Rotation eyeRot = m_owner.EyeRotation;
+				Vector3 eyePos = Owner.EyePosition;
+				Vector3 eyeDir = Owner.EyeRotation.Forward;
+				Rotation eyeRot = Owner.EyeRotation;
 				Rotation eyeRotYawOnly = Rotation.From(new Angles(0.0f, eyeRot.Angles().yaw, 0.0f));
 
 				using (Prediction.Off())
@@ -145,6 +143,7 @@ namespace infinitearcade
 		public void DisableManipulator()
 		{
 			EndHold();
+			EndEffects();
 
 			m_grabBody?.Remove();
 			m_grabBody = null;
@@ -152,9 +151,9 @@ namespace infinitearcade
 
 		public void StartPhysHold(Vector3 eyePos, Vector3 eyeDir, Rotation eyeRot)
 		{
-			var tr = Trace.Ray(eyePos, eyePos + eyeDir * short.MaxValue)
+			var tr = Trace.Ray(eyePos, eyePos + eyeDir * PhysMaxDistance)
 						.UseHitboxes(true)
-						.Ignore(m_owner, false)
+						.Ignore(Owner, false)
 						.HitLayer(CollisionLayer.Debris)
 						.Run();
 
@@ -189,7 +188,9 @@ namespace infinitearcade
 			m_heldBody = body;
 			m_holdDistance = Vector3.DistanceBetween(eyePos, tr.EndPosition);
 
+			HeldBodyLocalPos = m_heldBody.Transform.PointToLocal(tr.EndPosition);
 			m_heldRot = eyeRot.Inverse * m_heldBody.Rotation;
+			HeldGroupIndex = m_heldBody.GroupIndex;
 
 			m_grabBody.Position = tr.EndPosition;
 			m_grabBody.Rotation = m_heldBody.Rotation;
@@ -301,9 +302,9 @@ namespace infinitearcade
 			if (m_holding)
 				return;
 
-			var tr = Trace.Ray(eyePos, eyePos + eyeDir * short.MaxValue)
+			var tr = Trace.Ray(eyePos, eyePos + eyeDir * GravMaxDistance)
 						.UseHitboxes(true)
-						.Ignore(m_owner, false)
+						.Ignore(Owner, false)
 						.HitLayer(CollisionLayer.Debris)
 						.Size(8) // because nobody likes a sloppy gravity gun
 						.Run();

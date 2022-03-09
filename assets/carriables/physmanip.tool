@@ -15,7 +15,7 @@
 		identifier = "ia_tool_physmanip"
 		bucket = "400"
 		subbucket = -1
-		worldmodelpath = resource:"materials/models/editor/point_aimat.vmdl"
+		worldmodelpath = resource:"weapons/rust_pistol/rust_pistol.vmdl"
 		animgraphsettings = 
 		[
 			{
@@ -24,6 +24,6 @@
 				type = "1"
 			},
 		]
-		viewmodelpath = resource:"weapons/rust_crossbow/v_rust_crossbow.vmdl"
+		viewmodelpath = resource:"weapons/rust_pistol/v_rust_pistol.vmdl"
 	}
 }

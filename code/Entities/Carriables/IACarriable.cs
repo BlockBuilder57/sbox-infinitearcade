@@ -28,6 +28,8 @@ namespace infinitearcade
 
 		private bool m_definitionLoaded;
 
+		[Net] protected Player OwnerPlayer { get; set; }
+
 		public virtual IACarriable SetupFromDefinition(IACarriableDefinition def)
 		{
 			if (def == null)
@@ -89,6 +91,8 @@ namespace infinitearcade
 		public override void OnCarryStart(Entity carrier)
 		{
 			base.OnCarryStart(carrier);
+
+			OwnerPlayer = carrier as Player;
 		}
 
 		public override void OnCarryDrop(Entity dropper)
@@ -97,6 +101,7 @@ namespace infinitearcade
 
 			TimeSinceDropped = 0;
 			PickupTrigger?.SleepFor(1f);
+			OwnerPlayer = null;
 		}
 
 		public bool OnUse(Entity user)
