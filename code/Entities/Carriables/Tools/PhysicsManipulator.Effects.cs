@@ -18,6 +18,8 @@ namespace infinitearcade
 		Particles FxGravPull;
 		Particles FxGravBeam;
 
+		private bool m_fxStarted = false;
+
 		[Event.Frame]
 		public void OnFrame()
 		{
@@ -26,18 +28,12 @@ namespace infinitearcade
 
 		public void UpdateEffects()
 		{
-			switch (Mode)
-			{
-				case ManipulationMode.Phys:
-					UpdatePhysEffects();
-					break;
-				case ManipulationMode.Grav:
-					UpdateGravEffects();
-					break;
-				default:
-					EndEffects();
-					break;
-			}
+			if ((Mode == ManipulationMode.None && Input.Down(m_inputHold) && !m_stickyHold) || Mode == ManipulationMode.Phys)
+				UpdatePhysEffects();
+			else if (Mode == ManipulationMode.Grav)
+				UpdateGravEffects();
+			else
+				EndEffects();
 		}
 
 		public void UpdatePhysEffects()
@@ -59,8 +55,10 @@ namespace infinitearcade
 			if (FxPhysBeamEnd == null)
 				FxPhysBeamEnd = Particles.Create("particles/physmanip_beamend.vpcf", tr.EndPosition);
 
+			m_fxStarted = true;
+
 			FxPhysBeam.SetEntityAttachment(0, EffectEntity, "muzzle");
-			FxPhysBeamEnd.SetPosition(0, tr.StartPosition + tr.Direction * (tr.Distance - 6));
+
 
 			if (HeldEntity.IsValid() && !HeldEntity.IsWorld)
 			{
@@ -68,13 +66,22 @@ namespace infinitearcade
 				{
 					var body = HeldEntity.PhysicsGroup.GetBody(HeldGroupIndex);
 					if (body.IsValid())
+					{
 						FxPhysBeam.SetPosition(1, body.Transform.PointToWorld(HeldBodyLocalPos));
+						FxPhysBeamEnd.SetPosition(0, body.Transform.PointToWorld(HeldBodyLocalPos));
+					}
 				}
 				else
+				{ 
 					FxPhysBeam.SetEntity(1, HeldEntity, HeldBodyLocalPos);
+					FxPhysBeamEnd.SetEntity(0, HeldEntity, HeldBodyLocalPos);
+				}
 			}
 			else
+			{
 				FxPhysBeam.SetPosition(1, tr.EndPosition);
+				FxPhysBeamEnd.SetPosition(0, tr.StartPosition + tr.Direction * (tr.Distance - 6));
+			}
 		}
 
 		public void UpdateGravEffects()
@@ -84,11 +91,16 @@ namespace infinitearcade
 
 		public void EndEffects()
 		{
+			if (!m_fxStarted)
+				return;
+
 			FxPhysBeam?.Destroy(true);
 			FxPhysBeam = null;
 
 			FxPhysBeamEnd?.Destroy(true);
 			FxPhysBeamEnd = null;
+
+			m_fxStarted = false;
 		}
 	}
 }
