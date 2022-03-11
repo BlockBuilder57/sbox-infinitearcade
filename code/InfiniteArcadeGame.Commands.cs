@@ -84,11 +84,12 @@ namespace infinitearcade
 		}
 
 		[ClientCmd("query_sandworks_packages")]
-		public static async Task QuerySandworksPackagesCommand(string search, Package.Type type, Package.Order order = Package.Order.Popular)
+		public static async Task QuerySandworksPackagesCommand(Package.Type type, string search = "", int take = 64, Package.Order order = Package.Order.Newest)
 		{
 			var q = new Package.Query();
-			q.SearchText = search;
 			q.Type = type;
+			q.SearchText = search;
+			q.Take = take;
 			q.Order = order;
 
 			var found = await q.RunAsync(default);
