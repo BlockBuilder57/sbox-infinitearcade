@@ -204,6 +204,10 @@ namespace infinitearcade
 				{
 					if (Input.MouseWheel != 0)
 						inv.SwitchActiveSlot(-Input.MouseWheel, true);
+					if (Input.Pressed(InputButton.SlotNext))
+						inv.SwitchActiveSlot(1, true);
+					if (Input.Pressed(InputButton.SlotPrev))
+						inv.SwitchActiveSlot(-1, true);
 
 					void SlotInput(InputButton btn)
 					{

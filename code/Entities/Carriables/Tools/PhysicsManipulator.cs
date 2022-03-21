@@ -420,6 +420,10 @@ namespace infinitearcade
 				return;
 			}
 
+			// just like phys' gravity feature
+			if (m_grabJoint != null)
+				m_grabJoint.EnableAngularConstraint = !Input.Down(m_inputGravity);
+
 			var closestPoint = m_heldBody.FindClosestPoint(eyePos);
 			var holdDist = HoldDistance + closestPoint.Distance(m_heldBody.MassCenter);
 
@@ -433,6 +437,9 @@ namespace infinitearcade
 			{
 				if (!Holding)
 					return;
+
+				inputBuilder.SetButton(InputButton.SlotNext, false);
+				inputBuilder.SetButton(InputButton.SlotPrev, false);
 
 				if (inputBuilder.Down(m_inputRotate))
 					inputBuilder.ViewAngles = inputBuilder.OriginalViewAngles;
