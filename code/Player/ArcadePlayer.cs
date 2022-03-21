@@ -77,6 +77,18 @@ namespace infinitearcade
 
 			Game.Current?.MoveToSpawnpoint(this);
 			ResetInterpolation();
+
+			PostRespawn(To.Single(Client));
+		}
+
+		[ClientRpc]
+		public void PostRespawn()
+		{
+			if (Host.IsClient)
+			{
+				if (Inventory is IAInventory inv)
+					inv.ListReorder();
+			}
 		}
 
 		public virtual void InitStats()
