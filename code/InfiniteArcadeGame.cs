@@ -104,6 +104,28 @@ namespace infinitearcade
 			}
 		}
 
+		public override void DoPlayerNoclip(Client player)
+		{
+			if (!player.HasPermission("noclip"))
+				return;
+
+			if (player.Pawn is Player basePlayer)
+			{
+				if (basePlayer.DevController is NoclipController)
+				{
+					Log.Info("Noclip Mode Off");
+					basePlayer.DevController = null;
+					basePlayer.EnableSolidCollisions = true;
+				}
+				else
+				{
+					Log.Info("Noclip Mode On");
+					basePlayer.DevController = new NoclipController();
+					basePlayer.EnableSolidCollisions = false;
+				}
+			}
+		}
+
 		public override void DoPlayerDevCam(Client cl)
 		{
 			Host.AssertServer();
