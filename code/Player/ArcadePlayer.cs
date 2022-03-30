@@ -511,6 +511,10 @@ namespace infinitearcade
 		private void BecomeRagdollOnClient(Vector3 velocity, DamageFlags damageFlags, Vector3 forcePos, Vector3 force, int bone)
 		{
 			ModelEntity ent = CreateDeathRagdoll();
+			if (!ent.IsValid())
+				return;
+
+			ent.DeleteAsync(10.0f);
 
 			ent.PhysicsGroup.Velocity = velocity;
 
@@ -557,7 +561,8 @@ namespace infinitearcade
 
 			ent.SetInteractsAs(CollisionLayer.Debris);
 			ent.SetInteractsWith(CollisionLayer.WORLD_GEOMETRY);
-			ent.SetInteractsExclude(CollisionLayer.Player | CollisionLayer.Debris);
+			// PhysicsProp is purposefully excluded here, cause client-only ragdolls don't actually affect shared objects!
+			ent.SetInteractsExclude(CollisionLayer.Player | CollisionLayer.Debris | CollisionLayer.PhysicsProp);
 
 			ent.SetModel(GetModelName());
 
@@ -584,8 +589,6 @@ namespace infinitearcade
 					clothing.RenderColor = e.RenderColor;
 				}
 			}
-
-			ent.DeleteAsync(10.0f);
 
 			return ent;
 		}

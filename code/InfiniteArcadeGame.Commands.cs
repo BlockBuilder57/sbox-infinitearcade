@@ -126,6 +126,31 @@ namespace infinitearcade
 			carriable.Rotation = Rotation.From(new Angles(0, owner.EyeRotation.Angles().yaw, 0));
 		}
 
+		[ServerCmd("spawn_player_ragdoll")]
+		public static void SpawnPlayerRagdollCommand(int client = 1)
+		{
+			Client cl = Client.All.Where(x => x.NetworkIdent == client).FirstOrDefault();
+
+			if (cl?.Pawn is ArcadePlayer player)
+			{
+				ModelEntity ent = player.CreateDeathRagdoll();
+				if (ent == null)
+					return;
+
+				var tr = Trace.Ray(player.EyePosition, player.EyePosition + player.EyeRotation.Forward * 500)
+								.UseHitboxes()
+								.Ignore(player)
+								.Run();
+
+				ent.Position = tr.EndPosition;
+
+				ent.SetInteractsAs(CollisionLayer.All);
+				ent.SetInteractsExclude(CollisionLayer.Empty);
+				ent.SetInteractsWith(CollisionLayer.All);
+				ent.CollisionGroup = CollisionGroup.Always;
+			}
+		}
+
 		[ServerCmd("hurtme")]
 		public static void HurtMeCommand(float amount)
 		{
@@ -212,13 +237,11 @@ namespace infinitearcade
 				if (ent == null)
 					return;
 
+				ent.DeleteAsync(10.0f);
 				ent.SetRagdollVelocityFrom(player);
 				ent.PhysicsGroup.Velocity = player.Velocity + (player.EyeRotation.Forward * force);
 
-				/*if (physical)
-				{
-					ent.
-				}*/
+				// need to wait for joints to have swing/twist params available...
 			}
 		}
 	}
