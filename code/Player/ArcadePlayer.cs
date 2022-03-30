@@ -236,7 +236,7 @@ namespace infinitearcade
 
 							const float throwForce = 500f;
 
-							if (GetActiveController() is QPhysController qPhys && !qPhys.Ducked)
+							if (GetActiveController() is QPhysController qPhys && !qPhys.Ducking)
 							{
 								active.PhysicsGroup.AddAngularVelocity(active.Rotation.Left * 20f);
 								Vector3 throwVector = ((EyeRotation.Forward * 500) + (Vector3.Up * 200)).Normal;
