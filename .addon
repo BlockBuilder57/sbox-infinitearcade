@@ -11,5 +11,10 @@
   ],
   "HasCode": true,
   "CodePath": "code",
-  "RootNamespace": "infinitearcade"
+  "RootNamespace": "infinitearcade",
+  "Metadata": {
+    "MapList": [],
+    "MinPlayers": 0,
+    "MaxPlayers": 64
+  }
 }
