@@ -12,6 +12,7 @@ namespace infinitearcade
 		TimeSince TimeSinceFootShuffle = 60;
 
 		float duck;
+		float skidAmount = 0;
 
 		public override void Simulate()
 		{
@@ -50,14 +51,61 @@ namespace infinitearcade
 
 			SetAnimParameter("duck", duck);
 
-			if (Pawn is Player player && player.ActiveChild is BaseCarriable carry)
+			if (Pawn is Player player)
 			{
-				carry.SimulateAnimator(this);
-			}
-			else
-			{
-				SetAnimParameter("holdtype", 0);
-				SetAnimParameter("aim_body_weight", 0.5f);
+				if (player.ActiveChild is BaseCarriable carry)
+				{
+					carry.SimulateAnimator(this);
+				}
+				else
+				{
+					SetAnimParameter("holdtype", 0);
+					SetAnimParameter("aim_body_weight", 0.5f);
+				}
+
+				if (player.Controller is QPhysController qPhys)
+				{
+					if (GroundEntity.IsValid())
+					{
+						// skidding!
+
+						float curSpeed = Velocity.Length;
+						float wishSpeed = WishVelocity.Length;
+						float maxSpeed = qPhys.SprintSpeed * Pawn.Scale * 1.25f; // mm, strafe fudge
+
+						float fracSpeed = curSpeed / maxSpeed;
+						float fracWish = wishSpeed / maxSpeed;
+
+						// finish existing skids, unless we're moving faster than them
+						if (skidAmount > 0 && (skidAmount > fracWish + 0.1f)) // more fudge
+							skidAmount = fracSpeed;
+
+						// if we're over speed, start a skid.
+						else if (curSpeed > maxSpeed)
+							skidAmount = fracSpeed - 1f; // push the range so we need at least 2x maxSpeed to count
+
+						// otherwise, reset skids
+						else
+							skidAmount = 0;
+
+						skidAmount = MathF.Max(0, skidAmount);
+						SetAnimParameter("skid", skidAmount);
+
+						/*if (Host.IsServer)
+						{
+							if (skidAmount > 0)
+								DebugOverlay.Text(Position + Vector3.Up * 70, $"SKIDDING! {skidAmount:F2}\nfracWish: {fracWish:F2}");
+
+							DebugOverlay.Line(Position, Position + qPhys.Velocity.ClampLength(32), Color.White);
+							DebugOverlay.Line(Position, Position + qPhys.WishVelocity.ClampLength(32), Color.Yellow);
+							DebugOverlay.Line(Position, Position + qPhys.DeltaVelocity, Color.Red);
+
+							DebugOverlay.Text(Position + qPhys.Velocity.ClampLength(32), qPhys.Velocity.ToString(), Color.White);
+							DebugOverlay.Text(Position + qPhys.WishVelocity.ClampLength(32), qPhys.WishVelocity.ToString(), Color.Yellow);
+							DebugOverlay.Text(Position + qPhys.DeltaVelocity, qPhys.DeltaVelocity.ToString(), Color.Red);
+						}*/
+					}
+				}
 			}
 
 		}
@@ -95,7 +143,7 @@ namespace infinitearcade
 		{
 			// Move Speed
 			{
-				var dir = Velocity * 1/Pawn.Scale;
+				var dir = Velocity * 1 / Pawn.Scale;
 				var forward = Rotation.Forward.Dot(dir);
 				var sideward = Rotation.Right.Dot(dir);
 
@@ -110,7 +158,7 @@ namespace infinitearcade
 
 			// Wish Speed
 			{
-				var dir = WishVelocity * 1/Pawn.Scale;
+				var dir = WishVelocity * 1 / Pawn.Scale;
 				var forward = Rotation.Forward.Dot(dir);
 				var sideward = Rotation.Right.Dot(dir);
 

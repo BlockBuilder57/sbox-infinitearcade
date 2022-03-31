@@ -28,6 +28,9 @@ namespace infinitearcade
 		[Net] public float AirControl { get; set; } = 30.0f;
 		public bool Swimming { get; set; } = false;
 
+		public Vector3 DeltaVelocity => Velocity - m_lastVelocity;
+		private Vector3 m_lastVelocity;
+
 		[Net] public float HullGirth { get; set; } = 32.0f;
 		[Net] public float HullHeight { get; set; } = 72.0f;
 		[Net] public float DuckHullHeight { get; set; } = 36.0f;
@@ -141,6 +144,8 @@ namespace infinitearcade
 				m_player = Pawn as ArcadePlayer;
 			if (!m_player.IsValid())
 				return;
+
+			m_lastVelocity = Velocity;
 
 			//Gravity = -m_player.PhysicsBody.World.Gravity;
 
@@ -313,7 +318,7 @@ namespace infinitearcade
 		{
 			float ws = -1;
 
-			if (Ducking) ws = DefaultSpeed * (1/3f);
+			if (Ducking) ws = DefaultSpeed * (1 / 3f);
 			else if (Input.Down(InputButton.Walk)) ws = WalkSpeed;
 			else if (Input.Down(InputButton.Run)) ws = SprintSpeed;
 			else ws = DefaultSpeed;
@@ -508,7 +513,7 @@ namespace infinitearcade
 
 			float drop = 0;
 
-			if (GroundEntity != null)
+			if (GroundEntity.IsValid())
 			{
 				float friction = GroundFriction * SurfaceFriction;
 
@@ -525,10 +530,7 @@ namespace infinitearcade
 			if (newspeed < 0) newspeed = 0;
 
 			if (newspeed != speed)
-			{
-				newspeed /= speed;
-				Velocity *= newspeed;
-			}
+				Velocity *= newspeed / speed;
 
 			// mv->m_outWishVel -= (1.f-newspeed) * mv->m_vecVelocity;
 		}
