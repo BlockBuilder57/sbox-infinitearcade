@@ -14,22 +14,26 @@ namespace infinitearcade
 		[Net] public float WalkSpeed { get; set; } = 150.0f;
 		[Net] public float SprintSpeed { get; set; } = 320.0f;
 		[Net] public float Acceleration { get; set; } = 10.0f;
-		[Net] public float AirAcceleration { get; set; } = 100.0f;
-		[Net] public float FallSoundZ { get; set; } = -30.0f;
-		[Net] public float GroundFriction { get; set; } = 4.0f;
 		[Net] public float StopSpeed { get; set; } = 100.0f;
-		[Net] public float DistEpsilon { get; set; } = 0.03125f;
-		[Net] public float GroundAngle { get; set; } = 46.0f;
-		[Net] public float Bounce { get; set; } = 0.0f;
-		[Net] public float MoveFriction { get; set; } = 1.0f;
+		[Net] public float GroundFriction { get; set; } = 4.0f;
+		[Net] public float GroundStandableAngle { get; set; } = 46.0f;
 		[Net] public float StepSize { get; set; } = 18.0f;
 		[Net] public float MaxNonJumpVelocity { get; set; } = 140.0f;
-		[Net] public Vector3 Gravity { get; set; } = new Vector3(0, 0, 800);
 		[Net] public float AirControl { get; set; } = 30.0f;
-		public bool Swimming { get; set; } = false;
+		[Net] public float AirAcceleration { get; set; } = 100.0f;
+		[Net] public bool Swimming { get; set; } = false;
+		[Net] public Vector3 Gravity { get; set; } = new Vector3(0, 0, 800);
+		[Net] public float DistEpsilon { get; set; } = 0.03125f;
 
 		public Vector3 DeltaVelocity => Velocity - m_lastVelocity;
 		private Vector3 m_lastVelocity;
+
+		public enum FallDamageModes { None, Fixed, Progressive, Scaled };
+		[Net] public FallDamageModes FallDamageMode { get; set; } = FallDamageModes.None;
+		[Net] public float FallDamageFixedAmount { get; set; } = 10;
+		[Net] public float FallDamageMaxSafeHeight { get; set; } = 240;
+		[Net] public float FallDamageFatalHeight { get; set; } = 720;
+		private float m_fallVelocity;
 
 		[Net] public float HullGirth { get; set; } = 32.0f;
 		[Net] public float HullHeight { get; set; } = 72.0f;
@@ -153,20 +157,18 @@ namespace infinitearcade
 			EyeLocalPosition += TraceOffset;
 			CalculateEyeRot();
 
-			if (Unstuck.TestAndFix())
-				return;
-
 			// Check Stuck
 			// Unstuck - or return if stuck
+			if (Unstuck.TestAndFix())
+				return;
 
 			if (Velocity.z > 250.0f)
 				ClearGroundEntity();
 
-			// store water level to compare later
-
 			// if not on ground, store fall velocity
+			if (!GroundEntity.IsValid())
+				m_fallVelocity = -Velocity.z;
 
-			//player->UpdateStepSound( player->m_pSurfaceData, mv->GetAbsOrigin(), mv->m_vecVelocity )
 
 			bool attemptDuck = Input.Down(InputButton.Duck);
 
@@ -179,9 +181,7 @@ namespace infinitearcade
 			if (Ducking)
 				SetTag("ducked");
 
-			//
 			// block: here on out is CGameMovement::FulLWalkMove
-			//
 
 			// RunLadderMode
 
@@ -192,38 +192,18 @@ namespace infinitearcade
 			// Start Gravity
 			//
 			if (!Swimming && !m_isTouchingLadder)
-			{
 				StartGravity();
-			}
-
-			/*
-			 if (player->m_flWaterJumpTime)
-				{
-					WaterJump();
-					TryPlayerMove();
-					// See if we are still in water?
-					CheckWater();
-					return;
-				}
-			*/
-
-			// if ( underwater ) do underwater movement
 
 			if (Input.Down(InputButton.Jump))
-			{
 				CheckJumpButton();
-			}
 
 			// Friction is handled before we add in any base velocity. That way, if we are on a conveyor,
-			//  we don't slow when standing still, relative to the conveyor.
+			// we don't slow when standing still, relative to the conveyor.
 			bool bStartOnGround = GroundEntity != null;
 			//bool bDropSound = false;
 			if (bStartOnGround)
 			{
-				//if ( Velocity.z < FallSoundZ ) bDropSound = true;
-
 				Velocity = Velocity.WithZ(0);
-				//player->m_Local.m_flFallVelocity = 0.0f;
 
 				Friction();
 
@@ -231,17 +211,14 @@ namespace infinitearcade
 				Position = Position.RotateAroundPoint(GroundEntity.Position, toRotate);
 			}
 
-			//
 			// Work out wish velocity.. just take input, rotate it to view, clamp to -1, 1
-			//
 			WishVelocity = new Vector3(Input.Forward, Input.Left, 0);
 			var inSpeed = WishVelocity.Length.Clamp(0, 1);
 			WishVelocity *= EyeRotation.Angles().WithPitch(0).ToRotation();
 
+			// need to be swimming or touching a ladder
 			if (!Swimming && !m_isTouchingLadder)
-			{
 				WishVelocity = WishVelocity.WithZ(0);
-			}
 
 			WishVelocity = WishVelocity.Normal * inSpeed;
 			WishVelocity *= GetWishSpeed();
@@ -266,15 +243,16 @@ namespace infinitearcade
 
 			CategorizePosition();
 
+			//
+			// Finish Gravity
+			//
 			if (!Swimming && !m_isTouchingLadder)
 				FinishGravity();
 
-			if (GroundEntity != null)
-			{
-				Velocity = Velocity.WithZ(0);
-			}
+			CheckFalling();
 
-			//CheckFalling(); // block: fall damage effects, calls CGameMovement::PlayerRoughLandingEffects which sets the view punch
+			if (GroundEntity.IsValid())
+				Velocity = Velocity.WithZ(0);
 
 			// Land Sound
 			// Swim Sounds
@@ -338,14 +316,6 @@ namespace infinitearcade
 			Accelerate(wishdir, wishspeed, 0, Acceleration);
 			Velocity = Velocity.WithZ(0);
 
-			//   Player.SetAnimParam( "forward", Input.Forward );
-			//   Player.SetAnimParam( "sideward", Input.Right );
-			//   Player.SetAnimParam( "wishspeed", wishspeed );
-			//    Player.SetAnimParam( "walkspeed_scale", 2.0f / 190.0f );
-			//   Player.SetAnimParam( "runspeed_scale", 2.0f / 320.0f );
-
-			//  DebugOverlay.Text( 0, Pos + Vector3.Up * 100, $"forward: {Input.Forward}\nsideward: {Input.Right}" );
-
 			// Add in any base velocity to the current velocity.
 			Velocity += BaseVelocity;
 
@@ -385,11 +355,9 @@ namespace infinitearcade
 		{
 			MoveHelper mover = new(Position, Velocity);
 			mover.Trace = mover.Trace.Size(GetHull().Mins, GetHull().Maxs).Ignore(Pawn);
-			mover.MaxStandableAngle = GroundAngle;
+			mover.MaxStandableAngle = GroundStandableAngle;
 
 			// block: this is essentially a minified version of CGameMovement::TryPlayerMove
-			// a lot of the functionality is split into other parts of this class (MoveHelper)
-			// it simplifies a lot of it down, but it all does look correct
 			// the only thing that seems to be missing is the ability to slam into a wall at the end
 			mover.TryMoveWithStep(Time.Delta, (StepSize * Pawn.Scale) + DistEpsilon);
 
@@ -401,7 +369,7 @@ namespace infinitearcade
 		{
 			MoveHelper mover = new(Position, Velocity);
 			mover.Trace = mover.Trace.Size(GetHull().Mins, GetHull().Maxs).Ignore(Pawn);
-			mover.MaxStandableAngle = GroundAngle;
+			mover.MaxStandableAngle = GroundStandableAngle;
 
 			mover.TryMove(Time.Delta);
 
@@ -464,11 +432,6 @@ namespace infinitearcade
 		/// </summary>
 		public virtual void Accelerate(Vector3 wishdir, float wishspeed, float speedLimit, float acceleration)
 		{
-			// This gets overridden because some games (CSPort) want to allow dead (observer) players
-			// to be able to move around.
-			// if ( !CanAccelerate() )
-			//     return;
-
 			if (speedLimit > 0 && wishspeed > speedLimit)
 				wishspeed = speedLimit;
 
@@ -500,13 +463,6 @@ namespace infinitearcade
 		/// </summary>
 		public virtual void Friction()
 		{
-			// If we are in water jump cycle, don't apply friction
-			//if ( player->m_flWaterJumpTime )
-			//   return;
-
-			// Not on ground - no friction
-
-
 			// Calculate speed
 			float speed = Velocity.Length;
 			//if (speed < 0.1f) return;
@@ -531,8 +487,63 @@ namespace infinitearcade
 
 			if (newspeed != speed)
 				Velocity *= newspeed / speed;
+		}
 
-			// mv->m_outWishVel -= (1.f-newspeed) * mv->m_vecVelocity;
+		public void CheckFalling()
+		{
+			// do fall damage and landing effects here
+			if (!GroundEntity.IsValid() || m_fallVelocity <= 0 || FallDamageMode == FallDamageModes.None)
+				return;
+
+			float maxSafeSpeed = MathF.Sqrt(2 * Gravity.Length * FallDamageMaxSafeHeight);
+
+			if (m_fallVelocity >= maxSafeSpeed)
+			{
+				if (GroundEntity.Velocity.z != 0)
+				{
+					// we've landed on a moving object, add its velocity on
+					// this will make our landing softer on objects moving down and harder on objects moving up
+					m_fallVelocity += GroundEntity.Velocity.z;
+					m_fallVelocity = MathF.Max(0, m_fallVelocity);
+				}
+
+				if (m_fallVelocity > maxSafeSpeed)
+				{
+					float fatalSpeed = MathF.Sqrt(2 * Gravity.Length * FallDamageFatalHeight);
+					float damageAmt = 0;
+
+					switch (FallDamageMode)
+					{
+						case FallDamageModes.Fixed:
+							damageAmt = FallDamageFixedAmount;
+							break;
+						case FallDamageModes.Progressive:
+							// remove the speed we're already going
+							m_fallVelocity -= maxSafeSpeed;
+							damageAmt = m_fallVelocity * (100f / (fatalSpeed - maxSafeSpeed));
+							break;
+						case FallDamageModes.Scaled:
+							damageAmt = 5 * (m_fallVelocity / 300f);
+							// scale by max health, with 100hp as a base
+							damageAmt *= (m_player.MaxHealth / 100f);
+							break;
+					}
+
+					if (damageAmt > 0)
+					{
+						DamageInfo damage = new DamageInfo()
+						{
+							Damage = damageAmt,
+							Flags = DamageFlags.Fall
+						};
+
+						m_player.TakeDamage(damage);
+					}
+				}
+			}
+
+			// clear this so we don't run again until we land
+			m_fallVelocity = 0;
 		}
 
 		[ConVar.Replicated] public static bool player_movement_pogo_jumps { get; set; } = true;
@@ -543,37 +554,12 @@ namespace infinitearcade
 
 		public virtual void CheckJumpButton()
 		{
-			//if ( !player->CanJump() )
-			//    return false;
-
-
-			/*
-			if ( player->m_flWaterJumpTime )
-			{
-				player->m_flWaterJumpTime -= gpGlobals->frametime();
-				if ( player->m_flWaterJumpTime < 0 )
-					player->m_flWaterJumpTime = 0;
-
-				return false;
-			}*/
-
-
-
-			// If we are in the water most of the way...
 			if (Swimming)
 			{
 				// swimming, not jumping
 				ClearGroundEntity();
-
 				Velocity = Velocity.WithZ(100);
-
 				// play swimming sound
-				//  if ( player->m_flSwimSoundTime <= 0 )
-				{
-					// Don't play sound again for 1 second
-					//   player->m_flSwimSoundTime = 1000;
-					//   PlaySwimSound();
-				}
 
 				return;
 			}
@@ -591,15 +577,8 @@ namespace infinitearcade
 
 			ClearGroundEntity();
 
-			// player->PlayStepSound( (Vector &)mv->GetAbsOrigin(), player->m_pSurfaceData, 1.0, true );
-
-			// MoveHelper()->PlayerSetAnimation( PLAYER_JUMP );
-
 			float flGroundFactor = 1.0f;
-			//if ( player->m_pSurfaceData )
-			{
-				//   flGroundFactor = g_pPhysicsQuery->GetGameSurfaceproperties( player->m_pSurfaceData )->m_flJumpFactor;
-			}
+			// set based on currently touching surface (ie goop should slow us)
 
 			float flMul;
 
@@ -688,18 +667,7 @@ namespace infinitearcade
 
 			FinishGravity();
 
-			// mv->m_outJumpVel.z += mv->m_vecVelocity[2] - startz;
-			// mv->m_outStepHeight += 0.15f;
-
-			// HL2 does this when maxplayers = 1
-			//m_flJumpTime = GAMEMOVEMENT_JUMP_TIME;
-			//InDuckJump = true;
-
-			// don't jump again until released
-			//mv->m_nOldButtons |= IN_JUMP;
-
 			AddEvent("jump");
-
 		}
 
 		public virtual void AirMove()
@@ -794,13 +762,6 @@ namespace infinitearcade
 		{
 			SurfaceFriction = 1.0f;
 
-			// Doing this before we move may introduce a potential latency in water detection, but
-			// doing it after can get us stuck on the bottom in water if the amount we move up
-			// is less than the 1 pixel 'threshold' we're about to snap to.	Also, we'll call
-			// this several times per frame, so we really need to avoid sticking to the bottom of
-			// water on each call, and the converse case will correct itself if called twice.
-			//CheckWater();
-
 			var point = Position.WithZ(Position.z - (2.0f * Pawn.Scale));
 			var bumpOrigin = Position;
 
@@ -815,7 +776,7 @@ namespace infinitearcade
 
 			var pm = TraceBBox(bumpOrigin, point);
 
-			if (pm.Entity == null || Vector3.GetAngle(Vector3.Up, pm.Normal) > GroundAngle)
+			if (pm.Entity == null || Vector3.GetAngle(Vector3.Up, pm.Normal) > GroundStandableAngle)
 			{
 				ClearGroundEntity();
 
@@ -843,11 +804,6 @@ namespace infinitearcade
 
 			//if ( tr.Entity == GroundEntity ) return;
 
-			Vector3 oldGroundVelocity = default;
-			if (GroundEntity != null) oldGroundVelocity = GroundEntity.Velocity;
-
-			bool wasOffGround = GroundEntity == null;
-
 			GroundEntity = tr.Entity;
 
 			if (GroundEntity != null)
@@ -874,16 +830,6 @@ namespace infinitearcade
 				SurfaceFriction = tr.Surface.Friction * 1.25f;
 				if (SurfaceFriction > 1) SurfaceFriction = 1;
 			}
-
-			/*
-				m_vecGroundUp = pm.m_vHitNormal;
-				player->m_surfaceProps = pm.m_pSurfaceProperties->GetNameHash();
-				player->m_pSurfaceData = pm.m_pSurfaceProperties;
-				const CPhysSurfaceProperties *pProp = pm.m_pSurfaceProperties;
-
-				const CGameSurfaceProperties *pGameProps = g_pPhysicsQuery->GetGameSurfaceproperties( pProp );
-				player->m_chTextureType = (int8)pGameProps->m_nLegacyGameMaterial;
-			*/
 		}
 
 		/// <summary>
@@ -933,7 +879,7 @@ namespace infinitearcade
 			if (trace.Fraction <= 0) return; // must go somewhere
 			if (trace.Fraction >= 1) return; // must hit something
 			if (trace.StartedSolid) return; // can't be embedded in a solid
-			if (Vector3.GetAngle(Vector3.Up, trace.Normal) > GroundAngle) return; // can't hit a steep slope that we can't stand on anyway
+			if (Vector3.GetAngle(Vector3.Up, trace.Normal) > GroundStandableAngle) return; // can't hit a steep slope that we can't stand on anyway
 
 			Position = trace.EndPosition;
 		}

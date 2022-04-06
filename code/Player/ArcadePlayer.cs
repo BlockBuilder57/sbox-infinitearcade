@@ -379,17 +379,6 @@ namespace infinitearcade
 			{
 				Inventory?.Add(other, Inventory.Active == null);
 			}
-
-			if (other is GlassShard glassShard && DevController == null)
-			{
-				if (!glassShard.ParentPanel.IsBroken && Velocity.Length > 350f)
-					glassShard.ShatterWorldSpace((EyePosition + Position)/2f);
-				else if (glassShard.ParentPanel.IsBroken && glassShard.PhysicsGroup.IsValid())
-				{
-					glassShard.PhysicsGroup.Sleeping = false;
-					glassShard.Velocity += Velocity * 0.2f;
-				}
-			}
 		}
 
 		public override PawnController GetActiveController()
@@ -405,23 +394,28 @@ namespace infinitearcade
 
 		public override void TakeDamage(DamageInfo info)
 		{
+			if (LifeState == LifeState.Dead)
+				return;
+
+			this.ProceduralHitReaction(info);
+
 			LastAttacker = info.Attacker;
 			LastAttackerWeapon = info.Weapon;
 
 			if (ArmorMultiplier == 0)
 				ArmorMultiplier = 1f;
 
-			//int debugLine = -1;
-			//const float debugTime = 0.5f;
-			//Vector2 debugPos = Vector2.One * 40;
+			int debugLine = -1;
+			const float debugTime = 2.5f;
+			Vector2 debugPos = new Vector2(40, 100);
 
 			if (IsServer)
 			{
-				//DebugOverlay.ScreenText(debugPos, debugLine += 1, Color.Yellow, $"Incoming damage: {info.Damage}", debugTime);
+				DebugOverlay.ScreenText(debugPos, debugLine += 1, Color.Yellow, $"Incoming damage: {info.Damage}", debugTime);
 
 				bool hadArmor = false;
 
-				//DebugOverlay.ScreenText(debugPos, debugLine += 1, Color.Yellow, $"We have {(Armor <= 0 || info.Damage < 0 ? "no" : "some")} armor ({Armor} * {ArmorMultiplier} == {Armor * ArmorMultiplier} functional)", debugTime);
+				DebugOverlay.ScreenText(debugPos, debugLine += 1, Color.Yellow, $"We have {(Armor <= 0 || info.Damage < 0 ? "no" : "some")} armor ({Armor} * {ArmorMultiplier} == {Armor * ArmorMultiplier} functional)", debugTime);
 
 				// we have no armor, so let's not run the armor calculations
 				if (Armor <= 0 || info.Damage < 0)
@@ -429,22 +423,22 @@ namespace infinitearcade
 				else
 				{
 					hadArmor = true;
-					//debugPos.x += 32;
+					debugPos.x += 32;
 
 					float trueArmor = Armor * ArmorMultiplier;
 					float min = Math.Min(info.Damage, trueArmor);
 
-					//DebugOverlay.ScreenText(debugPos, debugLine += 1, Color.Yellow, $"min = min({info.Damage}, {trueArmor})\ntrueArmor >= min ({trueArmor} >= {min}) is {trueArmor >= min}", debugTime);
+					DebugOverlay.ScreenText(debugPos, debugLine += 1, Color.Yellow, $"min = min({info.Damage}, {trueArmor})\ntrueArmor >= min ({trueArmor} >= {min}) is {trueArmor >= min}", debugTime);
 
 					// if we either have enough armor to tank it, or the damage is so big it nukes our armor
 					if (trueArmor >= min)
 					{
-						//DebugOverlay.ScreenText(debugPos, debugLine += 3, Color.Yellow, $"{(trueArmor > min ? "had enough to tank" : "will destroy armor")}, armor ({Armor}) -= {info.Damage / ArmorMultiplier}, now {Armor - info.Damage / ArmorMultiplier}", debugTime);
+						DebugOverlay.ScreenText(debugPos, debugLine += 3, Color.Yellow, $"{(trueArmor > min ? "had enough to tank" : "will destroy armor")}, armor ({Armor}) -= {info.Damage / ArmorMultiplier}, now {Armor - info.Damage / ArmorMultiplier}", debugTime);
 						// subtract the damage value, dampened by the armor multiplier
 						Armor -= info.Damage / ArmorMultiplier;
 					}
 
-					//debugPos.x -= 32;
+					debugPos.x -= 32;
 				}
 
 				// take any negative armor values as health
@@ -471,10 +465,9 @@ namespace infinitearcade
 					this.OnKilled();
 				}
 
-				//DebugOverlay.ScreenText(debugPos, debugLine += 1, Color.Yellow, $"Final: {Health} {Armor} (x{ArmorMultiplier}:F1)", debugTime);
+				DebugOverlay.ScreenText(debugPos, debugLine += 1, Color.Yellow, $"Final: {Health} {Armor} (x{ArmorMultiplier:F1})", debugTime);
 			}
 
-			base.TakeDamage(info);
 			m_lastDamage = info;
 		}
 
@@ -505,6 +498,11 @@ namespace infinitearcade
 			//if (this is not ArcadeMachinePlayer)
 			//	Inventory?.DropActive();
 			Inventory?.DeleteContents();
+
+			// Add a score to the killer
+			if (LifeState == LifeState.Dead && LastAttacker != null)
+				if (LastAttacker.Client != null && LastAttacker != this)
+					LastAttacker.Client.AddInt("kills");
 		}
 
 		[ClientRpc]
