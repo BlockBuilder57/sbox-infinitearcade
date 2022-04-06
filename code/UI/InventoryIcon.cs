@@ -21,16 +21,15 @@ namespace infinitearcade.UI
 			Parent = parent;
 			Carriable = carriable;
 			Name = Add.Label(carriable.Definition?.Identifier);
-			//Icon = Add.Image("https://thiscatdoesnotexist.com/");
 
 			StyleSheet.Load("UI/InventoryIcon.scss");
 
 			SceneWorld world = new();
 
-			new SceneModel(world, carriable.Model, Transform.Zero);
+			SceneModel scene_carriable = new(world, carriable.Model, Transform.Zero);
 
 			Vector3 center = carriable.Model.Bounds.Center + Vector3.Left * 64;
-			new SceneLight(world, center, 512, Color.White);
+			SceneLight scene_light = new(world, center, 512, Color.White);
 			Scene = Add.ScenePanel(world, center, Rotation.From(0, -90, 0), 45);
 			Scene.RenderOnce = true;
 			Scene.Style.Width = Length.Percent(100);

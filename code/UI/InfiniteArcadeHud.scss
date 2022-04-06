@@ -20,6 +20,13 @@ WeaponStatus {
 	right: 25px;
 }
 
-InventoryBuckets {
+InventoryLayoutFlat,
+InventoryLayoutBucket {
 	width: 100%;
+	opacity: 0;
+	transition: opacity 0.1s linear;
+	
+	&.active {
+		opacity: 1;
+	}
 }

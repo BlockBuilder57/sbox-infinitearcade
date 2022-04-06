@@ -16,6 +16,8 @@ namespace infinitearcade.UI
 		private CrosshairCanvas m_crosshairCanvas;
 		private InventoryLayoutFlat m_invFlat;
 
+		private TimeSince TimeSinceInventoryUpdate;
+
 		public InfiniteArcadeHud()
 		{
 			if (!Host.IsClient)
@@ -49,6 +51,8 @@ namespace infinitearcade.UI
 				return;
 
 			m_crosshairCanvas?.SetClass("hidden", m_player.CameraMode is not FirstPersonCamera);
+
+			m_invFlat?.SetClass("active", TimeSinceInventoryUpdate < 2f);
 		}
 
 		[Event.Hotload]
@@ -66,14 +70,16 @@ namespace infinitearcade.UI
 
 		public void InventoryFullUpdate(IACarriable[] inv)
 		{
-			if (m_invFlat != null)
-				m_invFlat.FullUpdate(inv);
+			m_invFlat?.FullUpdate(inv);
+
+			TimeSinceInventoryUpdate = 0;
 		}
 
 		public void InventorySwitchActive(IACarriable newActive)
 		{
-			if (m_invFlat != null)
-				m_invFlat.SwitchActive(newActive);
+			m_invFlat?.SwitchActive(newActive);
+
+			TimeSinceInventoryUpdate = 0;
 		}
 	}
 }
