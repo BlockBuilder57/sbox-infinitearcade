@@ -68,27 +68,26 @@ namespace infinitearcade
 		{
 			// all clientside stuff
 
-			if (debug_camera)
+			if (debug_camera && Game.Current.FindActiveCamera() is CameraMode camMode)
 			{
 				const int pad = 14;
-				CameraMode cam = Game.Current.FindActiveCamera();
-				float fov = cam.FieldOfView;
+				float fov = camMode.FieldOfView;
 
-				if (cam.FieldOfView == 0)
+				if (camMode.FieldOfView == 0)
 					fov = float.Parse(ConsoleSystem.GetValue("default_fov"), CultureInfo.InvariantCulture);
 
 				if (LineOffset > 0)
 					LineOffset++;
 
-				ScreenText($"{"Cam Type",pad}: {cam.GetType()}");
-				ScreenText($"{"Cam Position",pad}: {cam.Position:F2}");
-				ScreenText($"{"Cam Rotation",pad}: {cam.Rotation.Angles():F2}");
-				ScreenText($"{"Cam Viewer",pad}: {cam.Viewer}");
-				ScreenText($"{"Cam Projection",pad}: {(cam.Ortho ? "Orthographic" : "Perspective")}");
-				if (!cam.Ortho)
-					ScreenText($"{"Cam FOV",pad}: {fov} {(cam.FieldOfView == 0 ? "(from default_fov)" : "")}");
+				ScreenText($"{"Cam Type",pad}: {camMode.GetType()}");
+				ScreenText($"{"Cam Position",pad}: {camMode.Position:F2}");
+				ScreenText($"{"Cam Rotation",pad}: {camMode.Rotation.Angles():F2}");
+				ScreenText($"{"Cam Viewer",pad}: {camMode.Viewer}");
+				ScreenText($"{"Cam Projection",pad}: {(camMode.Ortho ? "Orthographic" : "Perspective")}");
+				if (!camMode.Ortho)
+					ScreenText($"{"Cam FOV",pad}: {fov} {(camMode.FieldOfView == 0 ? "(from default_fov)" : "")}");
 				else
-					ScreenText($"{"Cam Ortho Size",pad}: {cam.OrthoSize}");
+					ScreenText($"{"Cam Ortho Size",pad}: {camMode.OrthoSize}");
 			}
 
 			if (cl_showmap)
