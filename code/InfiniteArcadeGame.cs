@@ -35,16 +35,12 @@ namespace infinitearcade
 			if (pawn is ArcadePlayer player)
 				player.Simulate(cl);
 
-			if (IsServer)
-				IADebugging.ResetLineOffset();
-
 			IADebugging.Simulate(cl);
 		}
 
 		public override void FrameSimulate(Client cl)
 		{
 			Host.AssertClient();
-			IADebugging.ResetLineOffset();
 
 			Entity pawn = cl.Pawn;
 

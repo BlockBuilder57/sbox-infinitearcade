@@ -258,7 +258,10 @@ namespace infinitearcade
 			// Swim Sounds
 
 			const int pad = 19;
-			if (Debug && Host.IsServer)
+			var cldata_debug_client = Client.GetClientData<int>(nameof(IADebugging.debug_client), 0);
+			var cldata_debug_client_pawncontroller = Client.GetClientData<bool>(nameof(IADebugging.debug_client_pawncontroller), false);
+
+			if (cldata_debug_client == Client.NetworkIdent && cldata_debug_client_pawncontroller && Host.IsServer)
 			{
 				DebugOverlay.Box(Position + TraceOffset, GetHull().Mins, GetHull().Maxs, Color.Red);
 				/*if (Ducking)
@@ -269,25 +272,26 @@ namespace infinitearcade
 					//DebugOverlay.Line(m_player.EyePos, m_player.EyePos + m_player.EyeRotation.Forward * 8, Color.White);
 				}*/
 
-				if (IADebugging.LineOffset > 0)
-					IADebugging.LineOffset++;
+				string debugText = "";
 
-				IADebugging.ScreenText($"{"Position",pad}: {Position:F2}");
-				//IADebugging.ScreenText($"{"Velocity",pad}: {Velocity:F2}");
-				IADebugging.ScreenText($"{"Velocity (hu/s)",pad}: {Velocity.Length:F2}");
-				IADebugging.ScreenText($"{"BaseVelocity",pad}: {BaseVelocity}");
-				IADebugging.ScreenText($"{"BaseAngularVelocity",pad}: {BaseAngularVelocity}");
-				IADebugging.ScreenText($"{"GroundEntity",pad}: {(GroundEntity != null ? $"{GroundEntity} [vel {GroundEntity?.Velocity}]" : "null")}");
+				debugText += $"{"Position",pad}: {Position:F2}";
+				//debugText += $"{"Velocity",pad}: {Velocity:F2}";
+				debugText += $"\n{"Velocity (hu/s)",pad}: {Velocity.Length:F2}";
+				debugText += $"\n{"BaseVelocity",pad}: {BaseVelocity}";
+				debugText += $"\n{"BaseAngularVelocity",pad}: {BaseAngularVelocity}";
+				debugText += $"\n{"GroundEntity",pad}: {(GroundEntity != null ? $"{GroundEntity} [vel {GroundEntity?.Velocity}]" : "null")}";
 				if (GroundEntity != null)
-					IADebugging.ScreenText($"{"GroundNormal",pad}: {GroundNormal} (angle {GroundNormal.Angle(Vector3.Up)})");
-				//IADebugging.ScreenText($"{"SurfaceFriction",pad}: {SurfaceFriction}");
-				//IADebugging.ScreenText($"{"WishVelocity",pad}: {WishVelocity}");
+					debugText += $"\n{"GroundNormal",pad}: {GroundNormal} (angle {GroundNormal.Angle(Vector3.Up)})";
+				//debugText += $"\n{"SurfaceFriction",pad}: {SurfaceFriction}";
+				//debugText += $"\n{"WishVelocity",pad}: {WishVelocity}";
 
-				IADebugging.ScreenText($"{"Ducked (FL_DUCKING)",pad}: {Ducking}");
-				IADebugging.ScreenText($"{"Duckjumping",pad}: {DuckJumping}");
+				debugText += $"\n{"Ducked (FL_DUCKING)",pad}: {Ducking}";
+				debugText += $"\n{"Duckjumping",pad}: {DuckJumping}";
 
 				if (GroundEntity == null && m_debugHopType != HopType.None)
-					IADebugging.ScreenText($"{"Hopping Type",pad}: {m_debugHopName}");
+					debugText += $"\n{"Hopping Type",pad}: {m_debugHopName}";
+
+				IADebugging.ScreenText(debugText, IADebugging.TicksafeDuration);
 			}
 
 		}

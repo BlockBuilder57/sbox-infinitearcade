@@ -405,17 +405,16 @@ namespace infinitearcade
 			if (ArmorMultiplier == 0)
 				ArmorMultiplier = 1f;
 
-			int debugLine = -1;
-			const float debugTime = 2.5f;
-			Vector2 debugPos = new Vector2(40, 100);
+			const float debugTime = 2f;
+			float debugPreHealth = Health;
+			float debugPreArmor = Armor;
+			string debugText = $"Incoming damage: {info.Damage}";
 
 			if (IsServer)
 			{
-				DebugOverlay.ScreenText(debugPos, debugLine += 1, Color.Yellow, $"Incoming damage: {info.Damage}", debugTime);
-
 				bool hadArmor = false;
 
-				DebugOverlay.ScreenText(debugPos, debugLine += 1, Color.Yellow, $"We have {(Armor <= 0 || info.Damage < 0 ? "no" : "some")} armor ({Armor} * {ArmorMultiplier} == {Armor * ArmorMultiplier} functional)", debugTime);
+				debugText += $"\n\tWe have {(Armor <= 0 || info.Damage < 0 ? "no" : "some")} armor ({Armor} * {ArmorMultiplier} == {Armor * ArmorMultiplier} functional)";
 
 				// we have no armor, so let's not run the armor calculations
 				if (Armor <= 0 || info.Damage < 0)
@@ -423,22 +422,19 @@ namespace infinitearcade
 				else
 				{
 					hadArmor = true;
-					debugPos.x += 32;
 
 					float trueArmor = Armor * ArmorMultiplier;
 					float min = Math.Min(info.Damage, trueArmor);
 
-					DebugOverlay.ScreenText(debugPos, debugLine += 1, Color.Yellow, $"min = min({info.Damage}, {trueArmor})\ntrueArmor >= min ({trueArmor} >= {min}) is {trueArmor >= min}", debugTime);
+					debugText += $"\n\tmin = min({info.Damage}, {trueArmor})\ntrueArmor >= min ({trueArmor} >= {min}) is {trueArmor >= min}";
 
 					// if we either have enough armor to tank it, or the damage is so big it nukes our armor
 					if (trueArmor >= min)
 					{
-						DebugOverlay.ScreenText(debugPos, debugLine += 3, Color.Yellow, $"{(trueArmor > min ? "had enough to tank" : "will destroy armor")}, armor ({Armor}) -= {info.Damage / ArmorMultiplier}, now {Armor - info.Damage / ArmorMultiplier}", debugTime);
+						debugText += $"\n\t{(trueArmor > min ? "had enough to tank" : "will destroy armor")}, armor ({Armor}) -= {info.Damage / ArmorMultiplier}, now {Armor - info.Damage / ArmorMultiplier}";
 						// subtract the damage value, dampened by the armor multiplier
 						Armor -= info.Damage / ArmorMultiplier;
 					}
-
-					debugPos.x -= 32;
 				}
 
 				// take any negative armor values as health
@@ -453,7 +449,7 @@ namespace infinitearcade
 				// if we didn't have any armor
 				if (!hadArmor)
 				{
-					//DebugOverlay.ScreenText(debugPos, debugLine += 1, Color.Yellow, "Taking damage directly", debugTime);
+					debugText += "\n\tTaking damage directly";
 					Health -= info.Damage;
 				}
 
@@ -462,10 +458,11 @@ namespace infinitearcade
 					//Health = 0;
 					// set this early
 					m_lastDamage = info;
-					this.OnKilled();
+					OnKilled();
 				}
 
-				DebugOverlay.ScreenText(debugPos, debugLine += 1, Color.Yellow, $"Final: {Health} {Armor} (x{ArmorMultiplier:F1})", debugTime);
+				debugText += $"\nFinal: {Health} {Armor:F0}x{ArmorMultiplier:F1} (Δ of {Health - debugPreHealth} {(Armor - debugPreArmor):F0}x{ArmorMultiplier:F1})";
+				IADebugging.ScreenText(To.Single(Client), debugText, debugTime);
 			}
 
 			m_lastDamage = info;
