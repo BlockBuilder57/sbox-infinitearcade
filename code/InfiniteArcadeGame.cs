@@ -35,7 +35,8 @@ namespace infinitearcade
 			if (pawn is ArcadePlayer player)
 				player.Simulate(cl);
 
-			IADebugging.Simulate(cl);
+			if (!cl.IsBot)
+				IADebugging.Simulate(cl);
 		}
 
 		public override void FrameSimulate(Client cl)
@@ -47,7 +48,8 @@ namespace infinitearcade
 			if (pawn is ArcadePlayer player)
 				player.FrameSimulate(cl);
 
-			IADebugging.FrameSimulate(cl);
+			if (!cl.IsBot)
+				IADebugging.FrameSimulate(cl);
 		}
 
 		public override void MoveToSpawnpoint(Entity pawn)

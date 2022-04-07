@@ -25,7 +25,8 @@ namespace infinitearcade
 		public static Vector2 Offset = new Vector2(20, 20) + (Host.IsClient ? Vector2.Left * Screen.Width / 2 : 0);
 		public static Color GetSideColor() => Host.IsMenuOrClient ? m_colClient : m_colServer;
 		public static float TicksafeDuration => Host.IsClient ? Global.TickInterval : 0;
-		public static To ToLocal = default(To);
+		public static Client LocalClient = default;
+		public static To ToLocal => To.Single(LocalClient);
 
 		public static List<QueuedText> QueuedTexts = new();
 
@@ -51,10 +52,8 @@ namespace infinitearcade
 
 		public static void ScreenText(To to, string text, float duration = 0f)
 		{
-			if (!to.Contains(ToLocal.FirstOrDefault()))
+			if (!to.Contains(LocalClient))
 				return;
-
-			//text = $"{ToLocal.First()} - {to.First()}";
 
 			QueuedTexts.Add(new QueuedText()
 			{
@@ -86,7 +85,7 @@ namespace infinitearcade
 			var cldata_debug_client = cl.GetClientData<int>(nameof(debug_client), 0);
 			var cldata_debug_client_inventory = cl.GetClientData<bool>(nameof(debug_client_inventory), false);
 
-			ToLocal = To.Single(cl);
+			LocalClient = cl;
 
 			if (cldata_debug_client > 0 && Client.All.FirstOrDefault(x => x.NetworkIdent == cldata_debug_client)?.Pawn is ArcadePlayer player)
 			{
@@ -171,10 +170,9 @@ namespace infinitearcade
 				string sanitizedText = text.Text.Replace("\t", "    ");
 				float textDuration = text.Duration <= 0 ? TicksafeDuration : text.Duration;
 
-				// if we have time left OR we're a one-frame text and we should be displaying in the frame/tick
-				if (text.TimeUntil >= 0 || (text.Duration <= 0 && text.TimeUntil > textDuration))
+				// if we have time left OR we're a one-frame text
+				if (text.TimeUntil >= 0 || text.Duration <= 0)
 				{
-					//sanitizedText = text.TimeUntil.ToString();
 					DebugOverlay.ScreenText(text.ScreenPosition, curLine, text.Color, sanitizedText, 0);
 					curLine += sanitizedText.Count(x => x == '\n') + 1;
 

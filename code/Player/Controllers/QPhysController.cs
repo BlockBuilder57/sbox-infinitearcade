@@ -257,12 +257,12 @@ namespace infinitearcade
 			// Land Sound
 			// Swim Sounds
 
-			const int pad = 19;
-			var cldata_debug_client = Client.GetClientData<int>(nameof(IADebugging.debug_client), 0);
-			var cldata_debug_client_pawncontroller = Client.GetClientData<bool>(nameof(IADebugging.debug_client_pawncontroller), false);
-
-			if (cldata_debug_client == Client.NetworkIdent && cldata_debug_client_pawncontroller && Host.IsServer)
+			var _debug_client = IADebugging.LocalClient.GetClientData<int>(nameof(IADebugging.debug_client), 0);
+			var _debug_client_pawncontroller = IADebugging.LocalClient.GetClientData<bool>(nameof(IADebugging.debug_client_pawncontroller), false);
+			if (Host.IsServer && Client.NetworkIdent == _debug_client && _debug_client_pawncontroller)
 			{
+				const int pad = 19;
+
 				DebugOverlay.Box(Position + TraceOffset, GetHull().Mins, GetHull().Maxs, Color.Red);
 				/*if (Ducking)
 					DebugOverlay.Box(Position, m_hullNormal.Mins, m_hullNormal.Maxs, Color.Blue);
@@ -291,9 +291,8 @@ namespace infinitearcade
 				if (GroundEntity == null && m_debugHopType != HopType.None)
 					debugText += $"\n{"Hopping Type",pad}: {m_debugHopName}";
 
-				IADebugging.ScreenText(debugText, IADebugging.TicksafeDuration);
+				IADebugging.ScreenText(IADebugging.ToLocal, debugText);
 			}
-
 		}
 
 		public virtual float GetWishSpeed()
