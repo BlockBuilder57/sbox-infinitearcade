@@ -25,7 +25,7 @@ namespace infinitearcade
 		public static Vector2 Offset = new Vector2(20, 20) + (Host.IsClient ? Vector2.Left * Screen.Width / 2 : 0);
 		public static Color GetSideColor() => Host.IsMenuOrClient ? m_colClient : m_colServer;
 		public static float TicksafeDuration => Host.IsClient ? Global.TickInterval : 0;
-		public static Client LocalClient = default;
+		public static Client LocalClient = Local.Client;
 		public static To ToLocal => To.Single(LocalClient);
 
 		public static List<QueuedText> QueuedTexts = new();

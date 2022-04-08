@@ -14,7 +14,7 @@
   "RootNamespace": "infinitearcade",
   "Metadata": {
     "MapList": [],
-    "MinPlayers": 0,
+    "MinPlayers": 1,
     "MaxPlayers": 64
   }
 }
