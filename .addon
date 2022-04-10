@@ -13,7 +13,9 @@
   "CodePath": "code",
   "RootNamespace": "infinitearcade",
   "Metadata": {
-    "MapList": [],
+    "MapList": [
+      "facepunch.construct"
+    ],
     "MinPlayers": 1,
     "MaxPlayers": 64
   }
