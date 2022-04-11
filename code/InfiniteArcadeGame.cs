@@ -56,17 +56,15 @@ namespace infinitearcade
 		{
 			if (pawn is ArcadePlayer player)
 			{
-				Transform spawnpoint = player.GetSpawnpoint();
+				Transform spawnTransform = player.GetSpawnpoint();
 
-				if (spawnpoint == Transform.Zero)
+				if (spawnTransform == Transform.Zero)
 				{
 					Log.Warning($"Couldn't find spawnpoint for {player}!");
 					return;
 				}
 
-				player.Position = spawnpoint.Position;
-				player.Rotation = spawnpoint.Rotation;
-				player.Scale = spawnpoint.Scale;
+				player.Transform = spawnTransform;
 			}
 		}
 

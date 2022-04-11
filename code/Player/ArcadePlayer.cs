@@ -164,8 +164,8 @@ namespace infinitearcade
 		{
 			SpawnPoint spawnpoint = Entity.All.OfType<PlayerSpawnpoint>().Where(x => x.PlayerType == PlayerSpawnpoint.SpawnType.ArcadePlayer).OrderBy(x => Guid.NewGuid()).FirstOrDefault();
 
-			if (spawnpoint == null)
-				spawnpoint = Entity.All.OfType<SpawnPoint>().OrderBy(x => Guid.NewGuid()).FirstOrDefault();
+			if (spawnpoint == null) // fall back to the base spawnpoint
+				spawnpoint = Entity.All.OfType<SpawnPoint>().Where(x => x is not PlayerSpawnpoint).OrderBy(x => Guid.NewGuid()).FirstOrDefault();
 
 			if (spawnpoint != null)
 				return spawnpoint.Transform;
@@ -401,6 +401,7 @@ namespace infinitearcade
 
 			LastAttacker = info.Attacker;
 			LastAttackerWeapon = info.Weapon;
+			info.Damage *= 1f / Scale;
 
 			if (ArmorMultiplier == 0)
 				ArmorMultiplier = 1f;
