@@ -80,6 +80,8 @@ namespace infinitearcade
 					const int pad = 6;
 
 					debugText += $"{"Entity",pad}: {tr.Entity} ({tr.Entity.GetType().FullName}, engine name {tr.Entity.EngineEntityName})";
+					if (tr.Entity.Owner.IsValid())
+						debugText += $"\n{"Owner",pad}: {tr.Entity.Owner}";
 					if (tr.Entity is ModelEntity model)
 						debugText += $"\n{"Model",pad}: {model.GetModelName()}";
 					debugText += $"\n{"Index",pad}: {tr.Entity.NetworkIdent}";
@@ -135,10 +137,10 @@ namespace infinitearcade
 
 				PivotEnabled = input.Down(InputButton.Walk);
 
-				if (input.Down(InputButton.Slot1)) LerpSpeed(0.0f);
-				if (input.Down(InputButton.Slot2)) LerpSpeed(0.01f);
-				if (input.Down(InputButton.Slot3)) LerpSpeed(0.5f);
-				if (input.Down(InputButton.Slot4)) LerpSpeed(0.9f);
+				if (input.Pressed(InputButton.Slot1)) LerpSpeed(0.0f);
+				if (input.Pressed(InputButton.Slot2)) LerpSpeed(0.01f);
+				if (input.Pressed(InputButton.Slot3)) LerpSpeed(0.5f);
+				if (input.Pressed(InputButton.Slot4)) LerpSpeed(0.9f);
 
 				if (input.Pressed(InputButton.Walk))
 				{
