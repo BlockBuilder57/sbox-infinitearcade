@@ -192,46 +192,46 @@ namespace infinitearcade
 				cap.BulletSettings.DividedAcrossPellets);
 		}
 
-		[AdminCmd("setclip")]
+		[AdminCmd("firearm_setclip")]
 		public static void SetClipCommand(int clip)
 		{
-			Entity pawn = ConsoleSystem.Caller?.Pawn;
-			Player player = pawn as Player;
-			if (!player.IsValid())
-				return;
-
-			IAWeaponFirearm firearm = player.ActiveChild as IAWeaponFirearm;
-
-			if (firearm.IsValid())
-				firearm.PrimaryCapacity.SetClip(clip);
+			if (ConsoleSystem.Caller?.Pawn is Player player && player.IsValid())
+			{
+				if (player.ActiveChild is IAWeaponFirearm firearm)
+					firearm.PrimaryCapacity.SetClip(clip);
+			}
 		}
 
-		[AdminCmd("setammo")]
+		[AdminCmd("firearm_setammo")]
 		public static void SetAmmoCommand(int ammo)
 		{
-			Entity pawn = ConsoleSystem.Caller?.Pawn;
-			Player player = pawn as Player;
-			if (!player.IsValid())
-				return;
-
-			IAWeaponFirearm firearm = player.ActiveChild as IAWeaponFirearm;
-
-			if (firearm.IsValid())
-				firearm.PrimaryCapacity.SetAmmo(ammo);
+			if (ConsoleSystem.Caller?.Pawn is Player player && player.IsValid())
+			{
+				if (player.ActiveChild is IAWeaponFirearm firearm)
+					firearm.PrimaryCapacity.SetAmmo(ammo);
+			}
 		}
 
-		[AdminCmd("givecurrentammo")]
+		[AdminCmd("firearm_givecurrentammo")]
 		public static void GiveCurrentAmmoCommand()
 		{
-			Entity pawn = ConsoleSystem.Caller?.Pawn;
-			Player player = pawn as Player;
-			if (!player.IsValid())
-				return;
-
-			IAWeaponFirearm firearm = player.ActiveChild as IAWeaponFirearm;
-
-			if (firearm.IsValid())
-				firearm.PrimaryCapacity.SetAmmo(firearm.PrimaryCapacity.MaxAmmo);
+			if (ConsoleSystem.Caller?.Pawn is Player player && player.IsValid())
+			{
+				if (player.ActiveChild is IAWeaponFirearm firearm)
+				{
+					if (firearm.PrimaryCapacity != null)
+					{
+						int missingPrimary = firearm.PrimaryCapacity.MaxClip - firearm.PrimaryCapacity.Clip;
+						firearm.PrimaryCapacity.SetAmmo(firearm.PrimaryCapacity.MaxAmmo + missingPrimary);
+					}
+					
+					if (firearm.SecondaryCapacity != null)
+					{
+						int missingSecondary = firearm.SecondaryCapacity.MaxClip - firearm.SecondaryCapacity.Clip;
+						firearm.SecondaryCapacity.SetAmmo(firearm.SecondaryCapacity.MaxAmmo + missingSecondary);
+					}
+				}
+			}
 		}
 	}
 

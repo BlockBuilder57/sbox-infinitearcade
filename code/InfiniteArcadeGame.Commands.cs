@@ -104,10 +104,10 @@ namespace infinitearcade
 			Log.Info(string.Join(", ", results));
 		}
 
-		[ServerCmd("spawncarriable")]
-		public static void SpawnWeaponCommand(string path)
+		[ServerCmd("spawn_carriable")]
+		public static void SpawnCarriableCommand(string path)
 		{
-			if (ConsoleSystem.Caller == null)
+			if (!ConsoleSystem.Caller.IsValid())
 				return;
 
 			var owner = ConsoleSystem.Caller.Pawn;
@@ -127,27 +127,48 @@ namespace infinitearcade
 		}
 
 		[ServerCmd("spawn_player_ragdoll")]
-		public static void SpawnPlayerRagdollCommand(int client = 1)
+		public static void SpawnPlayerRagdollCommand(float force = 0, bool physical = false, string clientSearch = "")
 		{
-			Client cl = Client.All.Where(x => x.NetworkIdent == client).FirstOrDefault();
+			Client cl = ConsoleSystem.Caller;
+			if (!cl.IsValid())
+				return;
+
+			if (!string.IsNullOrWhiteSpace(clientSearch))
+				cl = cl.TryGetClient(clientSearch);
 
 			if (cl?.Pawn is ArcadePlayer player)
 			{
 				ModelEntity ent = player.CreateDeathRagdoll();
-				if (ent == null)
+				if (!ent.IsValid())
 					return;
 
-				var tr = Trace.Ray(player.EyePosition, player.EyePosition + player.EyeRotation.Forward * 500)
+				if (physical)
+				{
+					var tr = Trace.Ray(player.EyePosition, player.EyePosition + player.EyeRotation.Forward * 500)
 								.UseHitboxes()
 								.Ignore(player)
 								.Run();
 
-				ent.Position = tr.EndPosition;
+					ent.Position = tr.EndPosition;
 
-				ent.SetInteractsAs(CollisionLayer.All);
-				ent.SetInteractsExclude(CollisionLayer.Empty);
-				ent.SetInteractsWith(CollisionLayer.All);
-				ent.CollisionGroup = CollisionGroup.Always;
+					ent.SetInteractsAs(CollisionLayer.All);
+					ent.SetInteractsExclude(CollisionLayer.Empty);
+					ent.SetInteractsWith(CollisionLayer.All);
+					ent.CollisionGroup = CollisionGroup.Always;
+				}
+				else
+				{
+					ent.DeleteAsync(10.0f);
+				}
+
+				if (force > 0)
+				{
+					ent.SetRagdollVelocityFrom(player);
+					ent.PhysicsGroup.Velocity = player.Velocity + (player.EyeRotation.Forward * force);
+				}
+
+				// can't do joint freezing yet
+				// need to wait for joints to have swing/twist params available...
 			}
 		}
 
@@ -155,55 +176,10 @@ namespace infinitearcade
 		public static void HurtMeCommand(float amount)
 		{
 			Client cl = ConsoleSystem.Caller;
-			if (!cl.HasPermission("debug"))
+			if (!cl.IsValid() || !cl.HasPermission("debug"))
 				return;
 
 			cl?.Pawn?.TakeDamage(DamageInfo.Generic(amount));
-		}
-
-		[ServerCmd("sethealth")]
-		public static void SetHealthCommand(float amount)
-		{
-			Client cl = ConsoleSystem.Caller;
-			if (!cl.HasPermission("debug"))
-				return;
-
-			if (cl.Pawn is ArcadePlayer player)
-				player.Health = amount;
-		}
-
-		[ServerCmd("setarmor")]
-		public static void SetArmorCommand(float amount, float multiplier = 1.0f)
-		{
-			Client cl = ConsoleSystem.Caller;
-			if (!cl.HasPermission("debug"))
-				return;
-
-			if (cl.Pawn is ArcadePlayer player)
-			{
-				player.Armor = amount;
-				player.ArmorMultiplier = multiplier;
-			}
-		}
-
-		[ServerCmd("setscale")]
-		public static void SetScaleCommand(float amount)
-		{
-			Client cl = ConsoleSystem.Caller;
-			if (!cl.HasPermission("debug"))
-				return;
-
-			Player player = (cl?.Pawn) as Player;
-			if (!player.IsValid())
-				return;
-
-			if (amount <= float.Epsilon)
-				return;
-
-			player.LocalScale = amount;
-
-			if (player.Controller is QPhysController qPhys)
-				player.EyeLocalPosition = Vector3.Up * qPhys.EyeHeight * amount;
 		}
 
 		[ServerCmd("vr_reset_seated_pos")]
@@ -214,34 +190,6 @@ namespace infinitearcade
 			if (cl?.Pawn is ArcadePlayer player)
 			{
 				player.ResetSeatedPos();
-			}
-		}
-
-		[AdminCmd("respawn_pawn")]
-		public static void RespawnPawnCommand()
-		{
-			Client cl = ConsoleSystem.Caller;
-
-			Game.Current.ClientDisconnect(cl, NetworkDisconnectionReason.UNUSUAL);
-			Game.Current.ClientJoined(cl);
-		}
-
-		[ServerCmd("create_death_ragdoll")]
-		public static void CreateDeathRagdollCommand(float force = 0, bool physical = false)
-		{
-			Client cl = ConsoleSystem.Caller;
-
-			if (cl?.Pawn is ArcadePlayer player)
-			{
-				ModelEntity ent = player.CreateDeathRagdoll();
-				if (ent == null)
-					return;
-
-				ent.DeleteAsync(10.0f);
-				ent.SetRagdollVelocityFrom(player);
-				ent.PhysicsGroup.Velocity = player.Velocity + (player.EyeRotation.Forward * force);
-
-				// need to wait for joints to have swing/twist params available...
 			}
 		}
 	}
