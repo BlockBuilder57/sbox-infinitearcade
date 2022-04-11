@@ -19,8 +19,11 @@ namespace infinitearcade
 		public static int debug_client { get; set; } = 0;
 		[ConVar.ClientData(Help = "Enable debugging a client's inventory?")]
 		public static bool debug_client_inventory { get; set; } = false;
-		[ConVar.ClientData(Help = "Enable debugging a client's pawn controller?")]
-		public static bool debug_client_pawncontroller { get; set; } = false;
+		[ConVar.ClientData(Help = "Enable debugging a client's player controller?")]
+		public static bool debug_client_playercontroller { get; set; } = false;
+		[ConVar.ClientData(Help = "Enable debugging a client's incoming damage?")]
+		public static bool debug_client_damage { get; set; } = false;
+
 
 		public static Vector2 Offset = new Vector2(20, 20) + (Host.IsClient ? Vector2.Left * Screen.Width / 2 : 0);
 		public static Color GetSideColor() => Host.IsMenuOrClient ? m_colClient : m_colServer;

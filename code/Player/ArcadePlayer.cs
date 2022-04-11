@@ -466,7 +466,8 @@ namespace infinitearcade
 				if (IADebugging.LocalClient != null)
 				{
 					var _debug_client = IADebugging.LocalClient.GetClientData<int>(nameof(IADebugging.debug_client), 0);
-					if (Client.NetworkIdent == _debug_client)
+					var _debug_client_damage = IADebugging.LocalClient.GetClientData<bool>(nameof(IADebugging.debug_client_damage), false);
+					if (_debug_client_damage && Client.NetworkIdent == _debug_client)
 						IADebugging.ScreenText(IADebugging.ToLocal, debugText, debugTime);
 				}
 			}

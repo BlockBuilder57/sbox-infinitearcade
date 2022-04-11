@@ -260,7 +260,7 @@ namespace infinitearcade
 			if (IADebugging.LocalClient != null)
 			{
 				var _debug_client = IADebugging.LocalClient.GetClientData<int>(nameof(IADebugging.debug_client), 0);
-				var _debug_client_pawncontroller = IADebugging.LocalClient.GetClientData<bool>(nameof(IADebugging.debug_client_pawncontroller), false);
+				var _debug_client_pawncontroller = IADebugging.LocalClient.GetClientData<bool>(nameof(IADebugging.debug_client_playercontroller), false);
 				if (Host.IsServer && Client.NetworkIdent == _debug_client && _debug_client_pawncontroller)
 				{
 					const int pad = 19;
