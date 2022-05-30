@@ -105,6 +105,9 @@ namespace infinitearcade
 		{
 			base.PostReload();
 
+			WorldModel = Model.Load(WorldModelPath);
+			ViewModel = Model.Load(ViewModelPath);
+
 			foreach (IACarriable carry in Entity.All.OfType<IACarriable>())
 				if (carry.Definition == this)
 					carry.SetupFromDefinition(this);

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Globalization;
 using Sandbox;
 
@@ -79,12 +80,15 @@ namespace infinitearcade
 					string debugText = "";
 					const int pad = 6;
 
-					debugText += $"{"Entity",pad}: {tr.Entity} ({tr.Entity.GetType().FullName}, engine name {tr.Entity.EngineEntityName})";
-					if (tr.Entity.Owner.IsValid())
+					debugText += $"{"Entity",pad}: {tr.Entity} (managed {tr.Entity.GetType().FullName}, native {tr.Entity.EngineEntityName})";
+					if (tr.Entity.Owner.IsValid() && tr.Entity.Owner != tr.Entity.Client)
 						debugText += $"\n{"Owner",pad}: {tr.Entity.Owner}";
+					if (tr.Entity.Client.IsValid())
+						debugText += $"\n{"Client",pad}: {tr.Entity.Client.Name} (ident {tr.Entity.Client.NetworkIdent}) {(tr.Entity.Client.IsBot ? "[BOT]" : "")}";
 					if (tr.Entity is ModelEntity model)
 						debugText += $"\n{"Model",pad}: {model.GetModelName()}";
-					debugText += $"\n{"Index",pad}: {tr.Entity.NetworkIdent}";
+					if (!tr.Entity.ToString().EndsWith(tr.Entity.NetworkIdent.ToString()))
+						debugText += $"\n{"Index",pad}: {tr.Entity.NetworkIdent}";
 					debugText += $"\n{"Health",pad}: {tr.Entity.Health}";
 					if (tr.Entity.IsClientOnly)
 						debugText += $"\n{"Clientside",pad}: Clientside only";

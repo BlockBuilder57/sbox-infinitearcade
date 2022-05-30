@@ -20,6 +20,20 @@ namespace infinitearcade
 			Game.Current.ClientJoined(cl);
 		}
 
+		[AdminCmd("bot_kick")]
+		public static void BotKickCommand()
+		{
+			for (int i = 0; i < Client.All.Count; i++)
+			{
+				Client client = Client.All[i];
+				if (client.IsBot)
+				{
+					client.Kick();
+					i--;
+				}
+			}
+		}
+
 		[AdminCmd("pawn_goto")]
 		public static void GotoPlayerCommand(string search)
 		{

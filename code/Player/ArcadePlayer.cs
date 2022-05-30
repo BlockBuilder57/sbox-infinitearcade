@@ -103,6 +103,9 @@ namespace infinitearcade
 
 		public virtual void GiveWeapons()
 		{
+			if (Client.IsBot)
+				return;
+
 			Inventory?.Add(IACarriableDefinition.GetEntity("assets/carriables/pistol.firearm"));
 			Inventory?.Add(IACarriableDefinition.GetEntity("assets/carriables/shotgun.firearm"));
 			Inventory?.Add(IACarriableDefinition.GetEntity("assets/carriables/smg.firearm"));
@@ -183,7 +186,7 @@ namespace infinitearcade
 
 		public override void Simulate(Client cl)
 		{
-			if (IsServer && LifeState == LifeState.Dead && Input.Pressed(InputButton.Attack1))
+			if (IsServer && LifeState == LifeState.Dead && (Input.Pressed(InputButton.Attack1) || Client.IsBot))
 			{
 				Respawn();
 			}
