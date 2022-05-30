@@ -73,7 +73,7 @@ namespace infinitearcade
 
 				// debug code does not have to be good, it just has to debug
 				Vector3 offset = IsServer ? Vector3.Down * (debug.Where(x => x == '\n').Count() + 2) * 2 : 0;
-				DebugOverlay.Text(Position + offset, debug);
+				DebugOverlay.Text(debug, Position + offset);
 			}
 		}
 
@@ -146,7 +146,7 @@ namespace infinitearcade
 		public virtual void StartReloadEffects()
 		{
 			ViewModelEntity?.SetAnimParameter("reload", true);
-			(Owner as AnimEntity)?.SetAnimParameter("b_reload", true);
+			(Owner as AnimatedEntity)?.SetAnimParameter("b_reload", true);
 		}
 
 		public virtual void ShootBullet(Vector3 pos, Vector3 dir, float spread, float force, float damage, float bulletSize)
@@ -192,7 +192,7 @@ namespace infinitearcade
 				cap.BulletSettings.DividedAcrossPellets);
 		}
 
-		[AdminCmd("firearm_setclip")]
+		[ConCmd.Admin("firearm_setclip")]
 		public static void SetClipCommand(int clip)
 		{
 			if (ConsoleSystem.Caller?.Pawn is Player player && player.IsValid())
@@ -202,7 +202,7 @@ namespace infinitearcade
 			}
 		}
 
-		[AdminCmd("firearm_setammo")]
+		[ConCmd.Admin("firearm_setammo")]
 		public static void SetAmmoCommand(int ammo)
 		{
 			if (ConsoleSystem.Caller?.Pawn is Player player && player.IsValid())
@@ -212,7 +212,7 @@ namespace infinitearcade
 			}
 		}
 
-		[AdminCmd("firearm_givecurrentammo")]
+		[ConCmd.Admin("firearm_givecurrentammo")]
 		public static void GiveCurrentAmmoCommand()
 		{
 			if (ConsoleSystem.Caller?.Pawn is Player player && player.IsValid())

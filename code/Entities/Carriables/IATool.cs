@@ -115,7 +115,7 @@ namespace infinitearcade
 		{
 			if (!Owner.IsValid()) return false;
 
-			if (!Input.Down(InputButton.Attack1))
+			if (!Input.Down(InputButton.PrimaryAttack))
 			{
 				Primary.FiredBursts = 0;
 				return false;
@@ -130,15 +130,15 @@ namespace infinitearcade
 			switch (Primary.CurMode)
 			{
 				case InputMode.Single:
-					if (Input.Pressed(InputButton.Attack1))
+					if (Input.Pressed(InputButton.PrimaryAttack))
 						canFire = true;
 					break;
 				case InputMode.FullAuto:
-					if (Input.Down(InputButton.Attack1))
+					if (Input.Down(InputButton.PrimaryAttack))
 						canFire = true;
 					break;
 				case InputMode.Burst:
-					if (Input.Down(InputButton.Attack1) && Primary.FiredBursts < Primary.BurstAmount)
+					if (Input.Down(InputButton.PrimaryAttack) && Primary.FiredBursts < Primary.BurstAmount)
 					{
 						Primary.FiredBursts++;
 						canFire = true;
@@ -162,7 +162,7 @@ namespace infinitearcade
 		{
 			if (!Owner.IsValid()) return false;
 
-			if (!Input.Down(InputButton.Attack2))
+			if (!Input.Down(InputButton.SecondaryAttack))
 			{
 				Secondary.FiredBursts = 0;
 				return false;
@@ -177,15 +177,15 @@ namespace infinitearcade
 			switch (Secondary.CurMode)
 			{
 				case InputMode.Single:
-					if (Input.Pressed(InputButton.Attack2))
+					if (Input.Pressed(InputButton.SecondaryAttack))
 						canFire = true;
 					break;
 				case InputMode.FullAuto:
-					if (Input.Down(InputButton.Attack2))
+					if (Input.Down(InputButton.SecondaryAttack))
 						canFire = true;
 					break;
 				case InputMode.Burst:
-					if (Input.Down(InputButton.Attack2) && Secondary.FiredBursts < Secondary.BurstAmount)
+					if (Input.Down(InputButton.SecondaryAttack) && Secondary.FiredBursts < Secondary.BurstAmount)
 					{
 						Secondary.FiredBursts++;
 						canFire = true;

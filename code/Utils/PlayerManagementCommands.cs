@@ -9,7 +9,7 @@ namespace infinitearcade
 {
 	public class PlayerManagementCommands
 	{
-		[AdminCmd("respawn_pawn")]
+		[ConCmd.Admin("respawn_pawn")]
 		public static void RespawnPawnCommand()
 		{
 			Client cl = ConsoleSystem.Caller;
@@ -20,7 +20,7 @@ namespace infinitearcade
 			Game.Current.ClientJoined(cl);
 		}
 
-		[AdminCmd("bot_kick")]
+		[ConCmd.Admin("bot_kick")]
 		public static void BotKickCommand()
 		{
 			for (int i = 0; i < Client.All.Count; i++)
@@ -34,7 +34,7 @@ namespace infinitearcade
 			}
 		}
 
-		[AdminCmd("pawn_goto")]
+		[ConCmd.Admin("pawn_goto")]
 		public static void GotoPlayerCommand(string search)
 		{
 			Client caller = ConsoleSystem.Caller;
@@ -47,7 +47,7 @@ namespace infinitearcade
 				caller.Pawn.Position = target.Pawn.Position;
 		}
 
-		[AdminCmd("pawn_bring")]
+		[ConCmd.Admin("pawn_bring")]
 		public static void BringPlayerCommand(string search)
 		{
 			Client caller = ConsoleSystem.Caller;
@@ -63,7 +63,7 @@ namespace infinitearcade
 			}
 		}
 
-		[AdminCmd("pawn_sethealth")]
+		[ConCmd.Admin("pawn_sethealth")]
 		public static void SetHealthCommand(float amount, string search = "!self")
 		{
 			Client caller = ConsoleSystem.Caller;
@@ -77,7 +77,7 @@ namespace infinitearcade
 			}
 		}
 
-		[AdminCmd("pawn_setarmor")]
+		[ConCmd.Admin("pawn_setarmor")]
 		public static void SetArmorCommand(float amount, float multiplier = 0, string search = "!self")
 		{
 			Client caller = ConsoleSystem.Caller;
@@ -97,7 +97,7 @@ namespace infinitearcade
 			}
 		}
 
-		[AdminCmd("pawn_setscale")]
+		[ConCmd.Admin("pawn_setscale")]
 		public static void SetScaleCommand(float amount, string search = "!self")
 		{
 			Client caller = ConsoleSystem.Caller;

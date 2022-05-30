@@ -7,11 +7,11 @@ using System.Threading.Tasks;
 
 namespace infinitearcade
 {
-	[Library("firearm"), AutoGenerate]
+	[GameResource("Firearm Definition", "firearm", "The definition for a firearm.")]
 	public partial class IAWeaponFirearmDefinition : IAToolDefinition
 	{
-		[Hammer.Skip] public static IReadOnlyList<IAToolDefinition> AllFirearms => _allFirearms;
-		[Hammer.Skip] internal static List<IAToolDefinition> _allFirearms = new();
+		[HideInEditor] public static IReadOnlyList<IAToolDefinition> AllFirearms => _allFirearms;
+		[HideInEditor] internal static List<IAToolDefinition> _allFirearms = new();
 
 		public class BulletSetting
 		{

@@ -23,16 +23,16 @@ namespace infinitearcade
 		public TimeSince m_timeSincePunt;
 
 		// Phys inputs
-		private const InputButton m_inputHold = InputButton.Attack1;
-		private const InputButton m_inputFreeze = InputButton.Attack2;
+		private const InputButton m_inputHold = InputButton.PrimaryAttack;
+		private const InputButton m_inputFreeze = InputButton.SecondaryAttack;
 		private const InputButton m_inputGravity = InputButton.Reload;
 		private const InputButton m_inputSlow = InputButton.Walk;
 		private const InputButton m_inputRotate = InputButton.Use;
 		private const InputButton m_inputRotationSnap = InputButton.Use | InputButton.Run;
 
 		// Grav inputs
-		private const InputButton m_inputPunt = InputButton.Attack1;
-		private const InputButton m_inputPull = InputButton.Attack2;
+		private const InputButton m_inputPunt = InputButton.PrimaryAttack;
+		private const InputButton m_inputPull = InputButton.SecondaryAttack;
 
 		// Shared settings
 		[Net] public float LinearFrequency { get; set; } = 20.0f;

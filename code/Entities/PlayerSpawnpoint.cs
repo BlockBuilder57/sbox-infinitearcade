@@ -1,6 +1,8 @@
 ﻿using Sandbox;
+using SandboxEditor;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -8,8 +10,8 @@ using System.Threading.Tasks;
 namespace infinitearcade
 {
 	[Library("info_arcadeplayer_start")]
-	[Hammer.EditorModel("models/citizen/citizen.vmdl")]
-	[Hammer.EntityTool("Arcade Player Spawnpoint", "Player", "Defines a point where the player can (re)spawn")]
+	[HammerEntity, EditorModel("models/citizen/citizen.vmdl")]
+	[Title("Arcade Player Spawnpoint"), Category("Player"), Icon("place"), Description("Defines a point where the player can (re)spawn")]
 	public class PlayerSpawnpoint : Sandbox.SpawnPoint
 	{
 		public enum SpawnType

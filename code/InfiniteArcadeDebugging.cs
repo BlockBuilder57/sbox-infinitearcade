@@ -11,8 +11,8 @@ namespace infinitearcade
 	public static partial class IADebugging
 	{
 		// clientside-only convars
-		[ClientVar] public static bool debug_camera { get; set; } = false;
-		[ClientVar] public static bool cl_showmap { get; set; } = false;
+		[ConVar.Client] public static bool debug_camera { get; set; } = false;
+		[ConVar.Client] public static bool cl_showmap { get; set; } = false;
 
 		// shared convars
 		[ConVar.ClientData(Help = "Debugs a client by network identity (entity number).")]
@@ -147,7 +147,7 @@ namespace infinitearcade
 
 			if (cl_showmap)
 			{
-				DebugOverlay.ScreenText(m_gamemodeOffset, 0, Color.White, $"{Global.GameIdent} on {(!Global.MapName.Contains('.') ? @"maps\" + Global.MapName + ".vpk" : Global.MapName)}", Global.TickInterval);
+				DebugOverlay.ScreenText($"{Global.GameIdent} on {(!Global.MapName.Contains('.') ? @"maps\" + Global.MapName + ".vpk" : Global.MapName)}", m_gamemodeOffset, 0, Color.White, Global.TickInterval);
 			}
 
 			// considering clientside things may update per-frame, run this here
@@ -176,7 +176,7 @@ namespace infinitearcade
 				// if we have time left OR we're a one-frame text
 				if (text.TimeUntil >= 0 || text.Duration <= 0)
 				{
-					DebugOverlay.ScreenText(text.ScreenPosition, curLine, text.Color, sanitizedText, 0);
+					DebugOverlay.ScreenText(sanitizedText, text.ScreenPosition, curLine);
 					curLine += sanitizedText.Count(x => x == '\n') + 1;
 
 					// remove one-frame texts

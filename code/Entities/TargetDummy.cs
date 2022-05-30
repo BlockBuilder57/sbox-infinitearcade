@@ -4,11 +4,12 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Sandbox;
+using SandboxEditor;
 
 namespace infinitearcade
 {
-	[Library("prop_targetdummy", Description = "A target dummy, for damage testing.")]
-	[Icon(MaterialIcon.RadioButtonChecked)]
+	[Library("prop_targetdummy")]
+	[Title("Target Dummy"), Icon("outlet"), Description("A target dummy, for damage testing.")]
 	public partial class TargetDummy : Prop
 	{
 		[Property("respawn_at_home", "Respawn At Home", "When the target dummy is broken, should it respawn at the place it was initially spawned at?")]
@@ -57,7 +58,7 @@ namespace infinitearcade
 				if (healthDisplay != null)
 					textPos = healthDisplay.Value.Position;
 
-				DebugOverlay.Text(textPos, Health.ToString(), Color.Yellow, 0, 128);
+				DebugOverlay.Text(Health.ToString(), textPos, Color.Yellow, 0, 128);
 			}
 		}
 
@@ -72,7 +73,7 @@ namespace infinitearcade
 		public override void TakeDamage(DamageInfo info)
 		{
 			Vector3 textPos = info.Position == Vector3.Zero ? Position : info.Position;
-			DebugOverlay.Text(textPos, info.Damage.ToString(), Color.Yellow, .75f, 4096);
+			DebugOverlay.Text(info.Damage.ToString(), textPos, Color.Yellow, .75f, 4096);
 
 			base.TakeDamage(info);
 		}

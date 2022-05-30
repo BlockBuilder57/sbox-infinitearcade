@@ -71,7 +71,7 @@ namespace infinitearcade
 			if (Host.IsServer)
 			{
 				if (!m_definitionLoaded)
-					SetupFromDefinition(Asset.FromPath<IACarriableDefinition>("carriables/default.carry"));
+					SetupFromDefinition(ResourceLibrary.Get<IACarriableDefinition>("carriables/default.carry"));
 
 				if (!m_definitionLoaded)
 					Delete();

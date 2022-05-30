@@ -10,13 +10,13 @@ namespace infinitearcade
 {
 	public partial class InfiniteArcadeGame : Sandbox.Game
 	{
-		[AdminCmd("respawn_entities")]
+		[ConCmd.Admin("respawn_entities")]
 		public static void RespawnEntities()
 		{
 			Map.Reset(DefaultCleanupFilter);
 		}
 
-		[ServerCmd("spawn")]
+		[ConCmd.Server("spawn")]
 		public static async Task SpawnCommand(string modelname)
 		{
 			if (ConsoleSystem.Caller == null)
@@ -59,7 +59,7 @@ namespace infinitearcade
 
 		static async Task<string> SpawnPackageModel(string packageName, Vector3 pos, Rotation rotation, Entity source)
 		{
-			DebugOverlay.Text(pos, $"Spawning {packageName}", 5.0f);
+			DebugOverlay.Text($"Spawning {packageName}", pos, 5.0f);
 
 			var package = await Package.Fetch(packageName, false);
 			if (package == null || package.PackageType != Package.Type.Model || package.Revision == null)
@@ -74,8 +74,8 @@ namespace infinitearcade
 			var mins = package.GetMeta("RenderMins", Vector3.Zero);
 			var maxs = package.GetMeta("RenderMaxs", Vector3.Zero);
 
-			DebugOverlay.Box(10, pos, rotation, mins, maxs, Color.White);
-			DebugOverlay.Text(pos + Vector3.Up * 20, $"Found {package.Title}", 5.0f);
+			DebugOverlay.Box(pos, rotation, mins, maxs, Color.White, 10);
+			DebugOverlay.Text($"Found {package.Title}", pos + Vector3.Up * 20, 5.0f);
 
 			// downloads if not downloads, mounts if not mounted
 			await package.MountAsync();
@@ -83,7 +83,7 @@ namespace infinitearcade
 			return model;
 		}
 
-		[ClientCmd("query_sandworks_packages")]
+		[ConCmd.Client("query_sandworks_packages")]
 		public static async Task QuerySandworksPackagesCommand(Package.Type type, string search = "", int take = 64, Package.Order order = Package.Order.Newest)
 		{
 			var q = new Package.Query();
@@ -104,7 +104,7 @@ namespace infinitearcade
 			Log.Info(string.Join(", ", results));
 		}
 
-		[ServerCmd("spawn_carriable")]
+		[ConCmd.Server("spawn_carriable")]
 		public static void SpawnCarriableCommand(string path)
 		{
 			if (!ConsoleSystem.Caller.IsValid())
@@ -126,7 +126,7 @@ namespace infinitearcade
 			carriable.Rotation = Rotation.From(new Angles(0, owner.EyeRotation.Angles().yaw, 0));
 		}
 
-		[ServerCmd("spawn_player_ragdoll")]
+		[ConCmd.Server("spawn_player_ragdoll")]
 		public static void SpawnPlayerRagdollCommand(float force = 0, bool physical = false, string clientSearch = "")
 		{
 			Client cl = ConsoleSystem.Caller;
@@ -172,7 +172,7 @@ namespace infinitearcade
 			}
 		}
 
-		[ServerCmd("hurtme")]
+		[ConCmd.Server("hurtme")]
 		public static void HurtMeCommand(float amount)
 		{
 			Client cl = ConsoleSystem.Caller;
@@ -182,7 +182,7 @@ namespace infinitearcade
 			cl?.Pawn?.TakeDamage(DamageInfo.Generic(amount));
 		}
 
-		[ServerCmd("vr_reset_seated_pos")]
+		[ConCmd.Server("vr_reset_seated_pos")]
 		public static void VRResetSeatedCommand()
 		{
 			Client cl = ConsoleSystem.Caller;

@@ -22,7 +22,7 @@ namespace infinitearcade
 
 		public Transform VRSeatedOffset { private get; set; } = Transform.Zero;
 
-		public Clothing.Container ClothingContainer = new();
+		public ClothingContainer ClothingContainer = new();
 
 		private bool m_clothed = false;
 		private DamageInfo m_lastDamage;
@@ -147,7 +147,7 @@ namespace infinitearcade
 			{
 				Clothing.Add(model);
 
-				ModelPropData propInfo = model.Model.GetPropData();
+				ModelPropData propInfo = model.Model.GetData<ModelPropData>();
 				if (propInfo?.ParentBodygroupName != null)
 				{
 					SetBodyGroup(propInfo.ParentBodygroupName, propInfo.ParentBodygroupValue);
@@ -186,7 +186,7 @@ namespace infinitearcade
 
 		public override void Simulate(Client cl)
 		{
-			if (IsServer && LifeState == LifeState.Dead && (Input.Pressed(InputButton.Attack1) || Client.IsBot))
+			if (IsServer && LifeState == LifeState.Dead && (Input.Pressed(InputButton.PrimaryAttack) || Client.IsBot))
 			{
 				Respawn();
 			}

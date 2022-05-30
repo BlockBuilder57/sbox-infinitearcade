@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace infinitearcade
 {
-	[Library("weapon_pistol", Title = "Pistol", Spawnable = true)]
+	[Library("weapon_pistol", Title = "Pistol")]
 	public partial class Pistol : IAWeaponFirearm
 	{
 		public override void AttackPrimary()
@@ -23,12 +23,12 @@ namespace infinitearcade
 			{
 				PrimaryCapacity.TakeClip();
 
-				if (Owner is AnimEntity anim)
+				if (Owner is AnimatedEntity anim)
 					anim.SetAnimParameter("b_attack", true);
 
 				ViewModelEntity?.SetAnimParameter("fire", true);
 
-				PlaySound(m_firearmDef.PrimaryFireSound);
+				Sound.FromWorld(m_firearmDef.PrimaryFireSound, this.Position);
 				ShootBullet(PrimaryCapacity, Owner.EyePosition, Owner.EyeRotation.Forward);
 			}
 		}

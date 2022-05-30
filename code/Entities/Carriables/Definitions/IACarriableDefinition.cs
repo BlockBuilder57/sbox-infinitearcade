@@ -7,11 +7,11 @@ using System.Threading.Tasks;
 
 namespace infinitearcade
 {
-	[Library("carry"), AutoGenerate]
-	public partial class IACarriableDefinition : Asset
+	[GameResource("Carriable Definition", "carry", "The definition for a carriable object.")]
+	public partial class IACarriableDefinition : GameResource
 	{
-		[Hammer.Skip] public static IReadOnlyList<IACarriableDefinition> AllCarriables => _allCarriables;
-		[Hammer.Skip] internal static List<IACarriableDefinition> _allCarriables = new();
+		[HideInEditor] public static IReadOnlyList<IACarriableDefinition> AllCarriables => _allCarriables;
+		[HideInEditor] internal static List<IACarriableDefinition> _allCarriables = new();
 
 		public enum BaseTypes
 		{
@@ -54,14 +54,14 @@ namespace infinitearcade
 		public AnimGraphSetting[] AnimGraphSettings { get; set; } = new AnimGraphSetting[] { new() { Key = "holdtype", Value = "0", Type = AnimGraphTypes.Int } };
 		[ResourceType("vmdl")] public string ViewModelPath { get; set; }
 
-		[Hammer.Skip] public Model WorldModel { get; private set; }
-		[Hammer.Skip] public Model ViewModel { get; private set; }
+		[HideInEditor] public Model WorldModel { get; private set; }
+		[HideInEditor] public Model ViewModel { get; private set; }
 
 		public static IACarriable GetEntity(string path)
 		{
 			IACarriable entity = null;
 
-			IACarriableDefinition def = FromPath<IACarriableDefinition>(path);
+			IACarriableDefinition def = ResourceLibrary.Get<IACarriableDefinition>(path);
 
 			if (def == null)
 			{

@@ -80,7 +80,7 @@ namespace infinitearcade
 					string debugText = "";
 					const int pad = 6;
 
-					debugText += $"{"Entity",pad}: {tr.Entity} (managed {tr.Entity.GetType().FullName}, native {tr.Entity.EngineEntityName})";
+					debugText += $"{"Entity",pad}: {tr.Entity} (managed {tr.Entity.GetType().FullName})";
 					if (tr.Entity.Owner.IsValid() && tr.Entity.Owner != tr.Entity.Client)
 						debugText += $"\n{"Owner",pad}: {tr.Entity.Owner}";
 					if (tr.Entity.Client.IsValid())
@@ -93,15 +93,15 @@ namespace infinitearcade
 					if (tr.Entity.IsClientOnly)
 						debugText += $"\n{"Clientside",pad}: Clientside only";
 
-					DebugOverlay.Text(tr.EndPosition + Vector3.Up * 20, debugText, Color.White);
+					DebugOverlay.Text(debugText, tr.EndPosition + Vector3.Up * 20, Color.White);
 
 					var bbox_world = tr.Entity.WorldSpaceBounds;
-					DebugOverlay.Box(0, Vector3.Zero, Rotation.Identity, bbox_world.Mins, bbox_world.Maxs, Color.Red.WithAlpha(0.4f));
+					DebugOverlay.Box(Vector3.Zero, Rotation.Identity, bbox_world.Mins, bbox_world.Maxs, Color.Red.WithAlpha(0.4f));
 
 					if (tr.Entity is ModelEntity modelEnt)
 					{
 						var bbox_collision = modelEnt.CollisionBounds;
-						DebugOverlay.Box(0, tr.Entity.Position, tr.Entity.Rotation, bbox_collision.Mins * tr.Entity.LocalScale, bbox_collision.Maxs * tr.Entity.LocalScale, Color.Green.WithAlpha(0.4f));
+						DebugOverlay.Box(tr.Entity.Position, tr.Entity.Rotation, bbox_collision.Mins * tr.Entity.LocalScale, bbox_collision.Maxs * tr.Entity.LocalScale, Color.Green.WithAlpha(0.4f));
 
 						for (int i = 0; i < modelEnt.BoneCount; i++)
 						{
@@ -174,14 +174,14 @@ namespace infinitearcade
 					}
 				}
 
-				if (input.Pressed(InputButton.Attack1))
+				if (input.Pressed(InputButton.PrimaryAttack))
 				{
 					var tr = Trace.Ray(Position, Position + Rotation.Forward * 4096).HitLayer(CollisionLayer.All).UseHitboxes().Run();
 					//if (tr.Entity.IsValid())
 					//	tr.Entity.DebugFlags ^= EntityDebugFlags.Text;
 				}
 
-				if (input.Down(InputButton.Attack2))
+				if (input.Down(InputButton.SecondaryAttack))
 				{
 					if (Ortho)
 					{

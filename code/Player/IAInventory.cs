@@ -33,7 +33,7 @@ namespace infinitearcade
 			Owner = owner;
 		}
 
-		[ServerCmd("inv_clear")]
+		[ConCmd.Server("inv_clear")]
 		public static void ClearCommand()
 		{
 			Client cl = ConsoleSystem.Caller;

@@ -13,7 +13,6 @@ namespace infinitearcade.UI
 		public static InfiniteArcadeHud Current { get; set; }
 
 		private ArcadePlayer m_player;
-		private CrosshairCanvas m_crosshairCanvas;
 		private InventoryLayoutFlat m_invFlat;
 
 		private TimeSince TimeSinceInventoryUpdate;
@@ -29,11 +28,8 @@ namespace infinitearcade.UI
 			StyleSheet.Load("UI/InfiniteArcadeHud.scss");
 
 			// s&box base things
-			m_crosshairCanvas = AddChild<CrosshairCanvas>();
-			CrosshairCanvas.SetCrosshair(new StandardCrosshair());
 			AddChild<ChatBox>();
 			AddChild<VoiceList>();
-			AddChild<KillFeed>();
 
 			// custom stuff
 			AddChild<PlayerStatus>();
@@ -49,8 +45,6 @@ namespace infinitearcade.UI
 				m_player = Local.Pawn as ArcadePlayer;
 			if (!m_player.IsValid())
 				return;
-
-			m_crosshairCanvas?.SetClass("hidden", m_player.CameraMode is not FirstPersonCamera);
 
 			m_invFlat?.SetClass("active", TimeSinceInventoryUpdate < 2f);
 		}

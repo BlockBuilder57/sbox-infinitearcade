@@ -1,4 +1,5 @@
 ﻿using Sandbox;
+using SandboxEditor;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -8,7 +9,7 @@ using System.Threading.Tasks;
 namespace infinitearcade
 {
 	//[Hammer.EditorModel( "models/sbox_props/street_lamp/street_lamp_open.vmdl" )]
-	[Hammer.Model]
+	[HammerEntity]
 	[Library("prop_arcademachine", Description = "An arcade machine.")]
 	public partial class ArcadeMachine : ModelEntity, IUse
 	{

@@ -16,7 +16,7 @@ namespace infinitearcade
 		public AIBot() : this(null) { }
 		public AIBot(string name) : base(name) { }
 
-		[AdminCmd("bot", Help = "Spawns an AI bot.")]
+		[ConCmd.Admin("bot", Help = "Spawns an AI bot.")]
 		internal static void SpawnCustomBot(string name = null)
 		{
 			Host.AssertServer();

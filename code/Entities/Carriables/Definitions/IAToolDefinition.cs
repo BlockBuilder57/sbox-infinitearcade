@@ -7,11 +7,11 @@ using System.Threading.Tasks;
 
 namespace infinitearcade
 {
-	[Library("tool"), AutoGenerate]
+	[GameResource("Tool Definition", "tool", "The definition for a tool.")]
 	public partial class IAToolDefinition : IACarriableDefinition
 	{
-		[Hammer.Skip] public static IReadOnlyList<IAToolDefinition> AllTools => _allTools;
-		[Hammer.Skip] internal static List<IAToolDefinition> _allTools = new();
+		[HideInEditor] public static IReadOnlyList<IAToolDefinition> AllTools => _allTools;
+		[HideInEditor] internal static List<IAToolDefinition> _allTools = new();
 
 		public class InputSettings
 		{

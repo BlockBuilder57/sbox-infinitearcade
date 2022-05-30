@@ -7,7 +7,7 @@ using Sandbox;
 
 namespace infinitearcade
 {
-	[Library("tool_flashlight", Title = "Flashlight", Spawnable = true)]
+	[Library("tool_flashlight", Title = "Flashlight")]
 	public partial class Flashlight : IATool
 	{
 		private bool m_on = true;
@@ -45,7 +45,7 @@ namespace infinitearcade
 		{
 			base.Simulate(cl);
 
-			if (Input.Pressed(InputButton.Attack1))
+			if (Input.Pressed(InputButton.PrimaryAttack))
 			{
 				m_on = !m_on;
 

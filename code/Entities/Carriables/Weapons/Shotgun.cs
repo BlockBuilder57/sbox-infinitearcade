@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace infinitearcade
 {
-	[Library("weapon_shotgun", Title = "Shotgun", Spawnable = true)]
+	[Library("weapon_shotgun", Title = "Shotgun")]
 	public partial class Shotgun : IAWeaponFirearm
 	{
 		public bool ReloadAnimHasInitialShellLoad = true;
@@ -27,12 +27,12 @@ namespace infinitearcade
 			{
 				PrimaryCapacity.TakeClip();
 
-				if (Owner is AnimEntity anim)
+				if (Owner is AnimatedEntity anim)
 					anim.SetAnimParameter("b_attack", true);
 
 				ViewModelEntity?.SetAnimParameter("fire", true);
 
-				PlaySound(m_firearmDef.PrimaryFireSound);
+				Sound.FromWorld(m_firearmDef.PrimaryFireSound, this.Position);
 				ShootBullet(PrimaryCapacity, Owner.EyePosition, Owner.EyeRotation.Forward);
 			}
 		}
@@ -52,12 +52,12 @@ namespace infinitearcade
 			{
 				PrimaryCapacity.TakeClip(2);
 
-				if (Owner is AnimEntity anim)
+				if (Owner is AnimatedEntity anim)
 					anim.SetAnimParameter("b_attack", true);
 
 				ViewModelEntity?.SetAnimParameter("fire", true);
 
-				PlaySound(m_firearmDef.SecondaryFireSound);
+				Sound.FromWorld(m_firearmDef.SecondaryFireSound, this.Position);
 				ShootBullet(PrimaryCapacity, Owner.EyePosition, Owner.EyeRotation.Forward);
 				ShootBullet(PrimaryCapacity, Owner.EyePosition, Owner.EyeRotation.Forward);
 			}
