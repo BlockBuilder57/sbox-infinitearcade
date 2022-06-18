@@ -105,8 +105,7 @@ namespace infinitearcade
 			//if (IsCarryingType(entity.GetType()))
 			//	return false;
 
-			if (ent is IACarriable carriable && carriable.PickupTrigger != null && carriable.PickupTrigger.IsSleeping
-				&& carriable.TimeSinceDropped < 0.5f)
+			if (ent is IACarriable carriable && carriable.PickupTrigger != null && carriable.TimeSinceDropped < 0.5f)
 				return false;
 
 			// we're good :)

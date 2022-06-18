@@ -24,7 +24,7 @@ namespace infinitearcade
 		[Net, Predicted] public TimeSince TimeSinceDeployed { get; set; }
 		[Net] public TimeSince TimeSinceDropped { get; set; }
 
-		public SleepingPickupTrigger PickupTrigger { get; set; }
+		public PickupTrigger PickupTrigger { get; set; }
 
 		private bool m_definitionLoaded;
 
@@ -54,7 +54,7 @@ namespace infinitearcade
 			CollisionGroup = CollisionGroup.Weapon; // so players touch it as a trigger but not as a solid
 			SetInteractsAs(CollisionLayer.Debris); // so player movement doesn't walk into it
 
-			PickupTrigger = new SleepingPickupTrigger
+			PickupTrigger = new PickupTrigger
 			{
 				Parent = this,
 				Position = Position,
@@ -100,7 +100,6 @@ namespace infinitearcade
 			base.OnCarryDrop(dropper);
 
 			TimeSinceDropped = 0;
-			PickupTrigger?.SleepFor(1f);
 			OwnerPlayer = null;
 		}
 
