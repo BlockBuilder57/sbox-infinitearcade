@@ -10,13 +10,18 @@
     "/code/UI/*"
   ],
   "HasCode": true,
-  "CodePath": "code",
+  "CodePath": "/code/",
   "RootNamespace": "infinitearcade",
   "Metadata": {
     "MapList": [
       "facepunch.construct"
     ],
     "MinPlayers": 1,
-    "MaxPlayers": 64
+    "MaxPlayers": 64,
+    "GameNetworkType": 0,
+    "MapSelect": 0,
+    "RankType": 0,
+    "PerMapRanking": false,
+    "LeaderboardType": 0
   }
 }
