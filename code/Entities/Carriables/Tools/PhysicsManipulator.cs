@@ -3,11 +3,13 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using CubicKitsune;
 using Sandbox;
 
 namespace infinitearcade
 {
-	public partial class PhysicsManipulator : IATool
+	[Library("tool_physmanip", Title = "Physics Manipulator")]
+	public partial class PhysicsManipulator : CKTool
 	{
 		private PhysicsBody m_grabBody;
 		private FixedJoint m_grabJoint;
@@ -176,9 +178,8 @@ namespace infinitearcade
 				return;
 
 			var tr = Trace.Ray(eyePos, eyePos + eyeDir * PhysMaxDistance)
-						.UseHitboxes(true)
+						.UseHitboxes()
 						.Ignore(Owner, false)
-						.HitLayer(CollisionLayer.Debris)
 						.Run();
 
 			if (!tr.Hit || !tr.Entity.IsValid() || tr.Entity.IsWorld)

@@ -2,60 +2,44 @@
 {
 	data = 
 	{
-		identifier = "ia_firearm_pistol"
-		basetype = "3"
-		worldmodelpath = resource:"weapons/rust_pistol/rust_pistol.vmdl"
-		viewmodelpath = resource:"weapons/rust_pistol/v_rust_pistol.vmdl"
-		reloadtime = 1.35
-		animgraphsettings = 
+		PrimaryCapacitySettings = 
+		{
+			MaxClip = 8
+			MaxAmmo = 32
+		}
+		SecondaryCapacitySettings = 
+		{
+		}
+		PrimaryFunction = "FirePrimary"
+		SecondaryFunction = "ModeSelector"
+		ReloadFunction = "Reload"
+		ReloadTime = 1
+		PrimaryInputSettings = 
+		{
+			Rate = 0.1
+			AllowedModes = "Single, FullAuto"
+		}
+		SecondaryInputSettings = 
+		{
+			AllowedModes = "Single"
+		}
+		ReloadInputSettings = 
+		{
+			AllowedModes = "Single"
+		}
+		Identifier = "ia_firearm_pistol"
+		LibraryType = "firearm_pistol"
+		Bucket = "Primary"
+		SubBucket = 0
+		WorldModel = resource:"weapons/rust_pistol/rust_pistol.vmdl"
+		AnimGraphSettings = 
 		[
 			{
-				key = "holdtype"
-				value = "1"
-				type = "1"
-			},
-			{
-				key = "holdtype_handedness"
-				type = "1"
-				value = "0"
+				Key = "holdtype"
+				Value = "1"
+				Type = "Int"
 			},
 		]
-		bucket = "200"
-		subbucket = 0
-		primarycapacity = 
-		{
-			maxclip = 12
-			maxammo = 48
-			bulletsettings = 
-			{
-				pellets = 1
-				damage = 6.0
-				force = 0.06
-			}
-		}
-		secondarycapacity = 
-		{
-		}
-		primaryinput = 
-		{
-			allowedmodes = "5"
-			rate = 0.08
-			burstamount = 3
-		}
-		secondaryinput = 
-		{
-			allowedmodes = "1"
-			rate = 0.0
-		}
-		reloadinput = 
-		{
-			allowedmodes = "2"
-			rate = 0.0
-		}
-		primaryfunction = "1"
-		secondaryfunction = "3"
-		reloadfunction = "4"
-		primaryfiresound = "rust_pistol.shoot"
-		secondaryfiresound = ""
+		ViewModel = resource:"weapons/rust_pistol/v_rust_pistol.vmdl"
 	}
 }

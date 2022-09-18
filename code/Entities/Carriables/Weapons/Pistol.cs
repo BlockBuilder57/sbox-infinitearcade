@@ -1,4 +1,5 @@
-﻿using Sandbox;
+﻿using CubicKitsune;
+using Sandbox;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -7,8 +8,8 @@ using System.Threading.Tasks;
 
 namespace infinitearcade
 {
-	[Library("weapon_pistol", Title = "Pistol")]
-	public partial class Pistol : IAWeaponFirearm
+	[Library("firearm_pistol", Title = "Pistol")]
+	public partial class Pistol : CKWeaponFirearm
 	{
 		public override void AttackPrimary()
 		{
@@ -28,8 +29,9 @@ namespace infinitearcade
 
 				ViewModelEntity?.SetAnimParameter("fire", true);
 
-				Sound.FromWorld(m_firearmDef.PrimaryFireSound, this.Position);
-				ShootBullet(PrimaryCapacity, Owner.EyePosition, Owner.EyeRotation.Forward);
+				//if (SoundEvents.ContainsKey("primaryfire"))
+				//	Sound.FromWorld(SoundEvents["primaryfire"].ResourceName, Position);
+				ShootBullet(PrimaryCapacity.RoundDefinition, Owner.EyePosition, Owner.EyeRotation.Forward);
 			}
 		}
 	}

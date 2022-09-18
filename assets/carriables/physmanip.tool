@@ -2,28 +2,28 @@
 {
 	data = 
 	{
-		primaryinput = 
+		PrimaryInputSettings = 
 		{
 		}
-		secondaryinput = 
+		SecondaryInputSettings = 
 		{
 		}
-		reloadinput = 
+		ReloadInputSettings = 
 		{
 		}
-		basetype = "5"
-		identifier = "ia_tool_physmanip"
-		bucket = "400"
-		subbucket = -1
-		worldmodelpath = resource:"weapons/rust_pistol/rust_pistol.vmdl"
-		animgraphsettings = 
+		Identifier = "ia_tool_physmanip"
+		LibraryType = "tool_physmanip"
+		Bucket = "Tool"
+		SubBucket = 0
+		WorldModel = resource:"weapons/rust_pistol/rust_pistol.vmdl"
+		AnimGraphSettings = 
 		[
 			{
-				key = "holdtype"
-				value = "1"
-				type = "1"
+				Key = "holdtype"
+				Value = "1"
+				Type = "Int"
 			},
 		]
-		viewmodelpath = resource:"weapons/rust_pistol/v_rust_pistol.vmdl"
+		ViewModel = resource:"weapons/rust_pistol/v_rust_pistol.vmdl"
 	}
 }

@@ -1,4 +1,5 @@
-﻿using infinitearcade.UI;
+﻿using CubicKitsune;
+using infinitearcade.UI;
 using Sandbox;
 using Sandbox.UI;
 using System;
@@ -36,7 +37,7 @@ namespace infinitearcade
 				player.Simulate(cl);
 
 			if (!cl.IsBot)
-				IADebugging.Simulate(cl);
+				CKDebugging.Simulate(cl);
 		}
 
 		public override void FrameSimulate(Client cl)
@@ -49,7 +50,7 @@ namespace infinitearcade
 				player.FrameSimulate(cl);
 
 			if (!cl.IsBot)
-				IADebugging.FrameSimulate(cl);
+				CKDebugging.FrameSimulate(cl);
 		}
 
 		public override void MoveToSpawnpoint(Entity pawn)
@@ -107,17 +108,20 @@ namespace infinitearcade
 
 			if (player.Pawn is Player basePlayer)
 			{
-				if (basePlayer.DevController is NoclipController)
+				using (Prediction.Off())
 				{
-					Log.Info("Noclip Mode Off");
-					basePlayer.DevController = null;
-					basePlayer.EnableSolidCollisions = true;
-				}
-				else
-				{
-					Log.Info("Noclip Mode On");
-					basePlayer.DevController = new NoclipController();
-					basePlayer.EnableSolidCollisions = false;
+					if (basePlayer.DevController is NoclipController)
+					{
+						Log.Info("DevController off");
+						basePlayer.DevController = null;
+						basePlayer.EnableSolidCollisions = true;
+					}
+					else
+					{
+						Log.Info("DevController on");
+						basePlayer.DevController = new NoclipController();
+						basePlayer.EnableSolidCollisions = false;
+					}
 				}
 			}
 		}

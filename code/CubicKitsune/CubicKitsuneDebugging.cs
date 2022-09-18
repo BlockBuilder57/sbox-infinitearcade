@@ -4,11 +4,12 @@ using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using CubicKitsune;
 using Sandbox;
 
-namespace infinitearcade
+namespace CubicKitsune
 {
-	public static partial class IADebugging
+	public static partial class CKDebugging
 	{
 		// clientside-only convars
 		[ConVar.Client] public static bool debug_camera { get; set; } = false;
@@ -35,15 +36,15 @@ namespace infinitearcade
 
 		public struct QueuedText
 		{
-			public string Text = "";
-			public Vector2 ScreenPosition = Vector2.Zero;
-			public Color Color = Color.Yellow;
+			public string Text;
+			public Vector2 ScreenPosition;
+			public Color Color;
 			public TimeUntil TimeUntil
 			{ 
 				get { return m_timeUntil; }
 				set { m_timeUntil = value; Duration = Math.Abs(value); } 
 			}
-			public float Duration { private set; get; } = 0;
+			public float Duration { private set; get; }
 
 			private TimeUntil m_timeUntil;
 		}
@@ -90,11 +91,11 @@ namespace infinitearcade
 
 			LocalClient = cl;
 
-			if (cldata_debug_client > 0 && Client.All.FirstOrDefault(x => x.NetworkIdent == cldata_debug_client)?.Pawn is ArcadePlayer player)
+			if (cldata_debug_client > 0 && Client.All.FirstOrDefault(x => x.NetworkIdent == cldata_debug_client)?.Pawn is Player player)
 			{
 				To toClient = To.Single(player.Client);
 
-				if (cldata_debug_client_inventory && player.Inventory is IAInventory inv && Host.IsServer)
+				if (cldata_debug_client_inventory && player.Inventory is infinitearcade.IAInventory inv && Host.IsServer)
 				{
 					string debugText = $"{player.Client.Name}'s inventory: ";
 
@@ -102,10 +103,10 @@ namespace infinitearcade
 					{
 						for (int i = 0; i < inv.List?.Count; i++)
 						{
-							IACarriable ent = inv.List[i];
+							CKCarriable ent = inv.List[i];
 
 							if (ent.IsValid())
-								debugText += $"\n\t[{i}] {ent.Definition.Identifier} {ent.NetworkIdent} {ent.Definition.Bucket}:{(int)ent.Definition.Bucket}, {ent.Definition.SubBucket}";
+								debugText += $"\n\t[{i}] {ent} ({ent.Identifier}) {ent.Bucket}:{(int)ent.Bucket}, {ent.SubBucket}";
 							else
 								debugText += $"\n\t[{i}] (null)";
 						}
@@ -176,7 +177,7 @@ namespace infinitearcade
 				// if we have time left OR we're a one-frame text
 				if (text.TimeUntil >= 0 || text.Duration <= 0)
 				{
-					DebugOverlay.ScreenText(sanitizedText, text.ScreenPosition, curLine);
+					DebugOverlay.ScreenText(sanitizedText, text.ScreenPosition, curLine, text.Color);
 					curLine += sanitizedText.Count(x => x == '\n') + 1;
 
 					// remove one-frame texts

@@ -2,39 +2,24 @@
 {
 	data = 
 	{
-		identifier = "ia_tool_flashlight"
-		basetype = "4"
-		worldmodelpath = resource:"weapons/rust_pistol/rust_pistol.vmdl"
-		viewmodelpath = resource:"weapons/rust_flashlight/v_rust_flashlight.vmdl"
-		animgraphsettings = 
-		[
-			{
-				key = "holdtype"
-				value = "4"
-				type = "1"
-			},
-			{
-				key = "holdtype_handedness"
-				value = "1"
-				type = "1"
-			},
-			{
-				key = "holdtype_pose_hand"
-				value = "0.14"
-				type = "2"
-			},
-		]
-		bucket = "400"
-		subbucket = 0
-		primaryinput = 
+		PrimaryInputSettings = 
 		{
-			rate = 0.0
+			AllowedModes = "Single"
 		}
-		secondaryinput = 
+		SecondaryInputSettings = 
+		{
+			Rate = 0.1
+			AllowedModes = "FullAuto"
+		}
+		ReloadInputSettings = 
 		{
 		}
-		reloadinput = 
-		{
-		}
+		Identifier = "ia_tool_flashlight"
+		LibraryType = "tool_flashlight"
+		Bucket = "Tool"
+		SubBucket = 0
+		WorldModel = resource:"weapons/rust_pistol/rust_pistol.vmdl"
+		AnimGraphSettings = [  ]
+		ViewModel = resource:"weapons/rust_flashlight/v_rust_flashlight.vmdl"
 	}
 }

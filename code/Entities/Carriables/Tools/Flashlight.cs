@@ -3,12 +3,13 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using CubicKitsune;
 using Sandbox;
 
 namespace infinitearcade
 {
 	[Library("tool_flashlight", Title = "Flashlight")]
-	public partial class Flashlight : IATool
+	public partial class Flashlight : CKTool
 	{
 		private bool m_on = true;
 
@@ -41,22 +42,18 @@ namespace infinitearcade
 			m_spotlightLocal.Enabled = m_on;
 		}
 
-		public override void Simulate(Client cl)
+		public void ToggleFlashlight()
 		{
-			base.Simulate(cl);
+			m_on = !m_on;
 
-			if (Input.Pressed(InputButton.PrimaryAttack))
-			{
-				m_on = !m_on;
-
-				PlaySound(m_on ? "flashlight-on" : "flashlight-off");
-
-				if (m_spotlightWorld.IsValid())
-					m_spotlightWorld.Enabled = m_on;
-				if (m_spotlightLocal.IsValid())
-					m_spotlightLocal.Enabled = m_on;
-			}
+			if (m_spotlightWorld.IsValid())
+				m_spotlightWorld.Enabled = m_on;
+			if (m_spotlightLocal.IsValid())
+				m_spotlightLocal.Enabled = m_on;
 		}
+
+		public override void AttackPrimary() => ToggleFlashlight();
+		public override void AttackSecondary() => ToggleFlashlight();
 
 		private SpotLightEntity CreateSpotlight()
 		{
@@ -72,7 +69,7 @@ namespace infinitearcade
 				Color = Color.White,
 				InnerConeAngle = 20,
 				OuterConeAngle = 40,
-				FogStength = 1.0f,
+				FogStrength = 1.0f,
 				Owner = Owner,
 				LightCookie = Texture.Load("materials/effects/lightcookie.vtex")
 			};

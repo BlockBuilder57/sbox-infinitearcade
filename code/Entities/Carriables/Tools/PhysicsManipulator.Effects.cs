@@ -3,11 +3,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using CubicKitsune;
 using Sandbox;
 
 namespace infinitearcade
 {
-	public partial class PhysicsManipulator : IATool
+	public partial class PhysicsManipulator : CKTool
 	{
 		// effects: particles and the like
 		// remember, all this is clientside!!
@@ -38,7 +39,7 @@ namespace infinitearcade
 
 		public void UpdatePhysEffects()
 		{
-			if (Owner == null || OwnerPlayer.ActiveChild != this)
+			if (Owner == null || OwnerPlayer == null || OwnerPlayer.ActiveChild != this)
 			{
 				EndEffects();
 				return;

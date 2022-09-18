@@ -3,34 +3,31 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using CubicKitsune;
 using infinitearcade.UI;
 using Sandbox;
 
-namespace infinitearcade
+namespace CubicKitsune
 {
-	public partial class IACarriable : BaseCarriable
+	[Library("carriable_generic")]
+	public partial class CKCarriable : BaseCarriable, ICKCarriable
 	{
-		[Net] public IACarriableDefinition Definition { get; set; }
+		[Net] public string Identifier { get; set; } = "ia_carriable_new";
+		[Net] public ICKCarriable.BucketCategory Bucket { get; set; } = 0;
+		[Net] public int SubBucket { get; set; } = 0;
 
-		public enum BucketCategory
-		{
-			Default = 0,
-			Primary = 100,
-			Secondary = 200,
-			Melee = 300,
-			Tool = 400
-		}
+		[Net] public Model WorldModel { get; set; }
+		[Net] public ICKCarriable.AnimGraphSetting[] AnimGraphSettings { get; set; }
+		[Net] public Model ViewModel { get; set; }
 
 		[Net, Predicted] public TimeSince TimeSinceDeployed { get; set; }
 		[Net] public TimeSince TimeSinceDropped { get; set; }
 
-		public PickupTrigger PickupTrigger { get; set; }
-
-		private bool m_definitionLoaded;
+		public PickupTrigger PickupTrigger { get; set; } // server only?
 
 		[Net] protected Player OwnerPlayer { get; set; }
 
-		public virtual IACarriable SetupFromDefinition(IACarriableDefinition def)
+		public CKCarriable SetupFromInterface(ICKCarriable def)
 		{
 			if (def == null)
 			{
@@ -39,20 +36,25 @@ namespace infinitearcade
 				return null;
 			}
 
-			Definition = def;
-			m_definitionLoaded = true;
+			Identifier = def.Identifier;
+			Bucket = def.Bucket;
+			SubBucket = def.SubBucket;
+
+			WorldModel = def.WorldModel;
+			AnimGraphSettings = def.AnimGraphSettings;
+			ViewModel = def.ViewModel;
 
 			Model = def.WorldModel;
 
 			return this;
 		}
+		public virtual CKCarriable SetupFromDefinition(CKCarriableDefinition def) => SetupFromInterface(def);
 
 		public override void Spawn()
 		{
 			base.Spawn();
 
-			CollisionGroup = CollisionGroup.Weapon; // so players touch it as a trigger but not as a solid
-			SetInteractsAs(CollisionLayer.Debris); // so player movement doesn't walk into it
+			Tags.Add("weapon");
 
 			PickupTrigger = new PickupTrigger
 			{
@@ -63,19 +65,16 @@ namespace infinitearcade
 			};
 
 			PickupTrigger.PhysicsBody.AutoSleep = false;
+
+			if (Model != null && Model.IsError && WorldModel != null && !WorldModel.IsError)
+				Model = WorldModel;
 		}
 
-		[Event.Tick]
-		public virtual void OnTick()
+		public override string ToString()
 		{
-			if (Host.IsServer)
-			{
-				if (!m_definitionLoaded)
-					SetupFromDefinition(ResourceLibrary.Get<IACarriableDefinition>("carriables/default.carry"));
-
-				if (!m_definitionLoaded)
-					Delete();
-			}
+			if (string.IsNullOrEmpty(Identifier))
+				return base.ToString();
+			return $"{Identifier} {NetworkIdent}";
 		}
 
 		public override void ActiveStart(Entity ent)
@@ -119,9 +118,6 @@ namespace infinitearcade
 			if (Owner != null)
 				return false;
 
-			if (user is Player player && player.Inventory is IAInventory inventory)
-				return inventory.CanAdd(this);
-
 			return true;
 		}
 
@@ -134,23 +130,28 @@ namespace infinitearcade
 
 		public override void SimulateAnimator(PawnAnimator anim)
 		{
-			if (Definition != null && Definition.AnimGraphSettings != null && Definition.AnimGraphSettings.Length > 0)
+			CKDebugging.ScreenText($"AnimGraphSettings length: {AnimGraphSettings?.Length}");
+
+			if (AnimGraphSettings?.Length > 0)
 			{
-				foreach (IACarriableDefinition.AnimGraphSetting setting in Definition.AnimGraphSettings)
+				foreach (var setting in AnimGraphSettings)
 				{
-					//IADebugging.ScreenText($"processing {setting.Key}: {setting.Value}");
+					CKDebugging.ScreenText($"processing {setting.Key}: {setting.Value}");
+					if (setting.Key == null || setting.Value == null)
+						continue;
+
 					switch (setting.Type)
 					{
-						case IACarriableDefinition.AnimGraphTypes.Bool:
+						case ICKCarriable.AnimGraphTypes.Bool:
 							anim.SetAnimParameter(setting.Key, bool.Parse(setting.Value));
 							break;
-						case IACarriableDefinition.AnimGraphTypes.Int:
+						case ICKCarriable.AnimGraphTypes.Int:
 							anim.SetAnimParameter(setting.Key, int.Parse(setting.Value));
 							break;
-						case IACarriableDefinition.AnimGraphTypes.Float:
+						case ICKCarriable.AnimGraphTypes.Float:
 							anim.SetAnimParameter(setting.Key, float.Parse(setting.Value));
 							break;
-						case IACarriableDefinition.AnimGraphTypes.Vector3:
+						case ICKCarriable.AnimGraphTypes.Vector3:
 							anim.SetAnimParameter(setting.Key, Vector3.Parse(setting.Value));
 							break;
 					}
@@ -166,14 +167,11 @@ namespace infinitearcade
 		{
 			Host.AssertClient();
 
-			if (Definition == null)
-				return;
-
-			ViewModelEntity = new IAViewModel
+			ViewModelEntity = new CKViewModel
 			{
 				Position = Position,
 				Owner = Owner,
-				Model = Definition.ViewModel,
+				Model = ViewModel,
 				EnableViewmodelRendering = true
 			};
 		}

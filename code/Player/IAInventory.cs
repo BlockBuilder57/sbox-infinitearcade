@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using infinitearcade.UI;
+using CubicKitsune;
 
 namespace infinitearcade
 {
@@ -13,7 +14,7 @@ namespace infinitearcade
 		[ConVar.ClientData] public static bool ia_inventory_flat_deploy_toggle { get; set; } = true;
 
 		public ArcadePlayer Owner { get; init; }
-		public List<IACarriable> List { get; set; } = new List<IACarriable>();
+		public List<CKCarriable> List { get; set; } = new List<CKCarriable>();
 
 		public enum Buckets
 		{
@@ -105,7 +106,7 @@ namespace infinitearcade
 			//if (IsCarryingType(entity.GetType()))
 			//	return false;
 
-			if (ent is IACarriable carriable && carriable.PickupTrigger != null && carriable.TimeSinceDropped < 0.5f)
+			if (ent is CKCarriable carriable && carriable.PickupTrigger != null && carriable.TimeSinceDropped < 0.5f)
 				return false;
 
 			// we're good :)
@@ -130,7 +131,7 @@ namespace infinitearcade
 			if (List.Contains(child))
 				throw new System.Exception("Trying to add to inventory multiple times. This is gated by Entity:OnChildAdded and should never happen!");
 
-			if (child is IACarriable carriable)
+			if (child is CKCarriable carriable)
 				List?.Add(carriable);
 
 			ListReorder();
@@ -138,7 +139,7 @@ namespace infinitearcade
 
 		public virtual void OnChildRemoved(Entity child)
 		{
-			if (child is IACarriable carriable)
+			if (child is CKCarriable carriable)
 				List?.Remove(carriable);
 
 			ListReorder();
@@ -152,7 +153,7 @@ namespace infinitearcade
 			if (!Contains(ent))
 				return false;
 
-			if (ent is IAWeaponFirearm firearm && firearm.IsReloading)
+			if (ent is CKWeaponFirearm firearm && firearm.IsReloading)
 				return false;
 
 			ent.SetParent(null);
@@ -191,7 +192,7 @@ namespace infinitearcade
 		public virtual bool SetActiveSlot(int i, bool evenIfEmpty = false)
 		{
 			Entity prev = Owner.ActiveChild;
-			if (prev is IAWeaponFirearm firearm && firearm.IsReloading)
+			if (prev is CKWeaponFirearm firearm && firearm.IsReloading)
 			{
 				firearm.TimeSinceReload = 0;
 				firearm.IsReloading = false;
@@ -246,7 +247,7 @@ namespace infinitearcade
 		public void ListReorder()
 		{
 			if (BucketType != Buckets.FlatUnordered)
-				List = List.OrderBy(x => x.Definition?.Bucket).ThenBy(x => x.Definition?.SubBucket).ThenBy(x => x.NetworkIdent).ToList();
+				List = List.OrderBy(x => x.Bucket).ThenBy(x => x.SubBucket).ThenBy(x => x.NetworkIdent).ToList();
 
 			if (Host.IsClient && Local.Hud is InfiniteArcadeHud hud)
 				hud.InventoryFullUpdate(List.ToArray());

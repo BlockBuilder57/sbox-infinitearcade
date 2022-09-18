@@ -2,53 +2,44 @@
 {
 	data = 
 	{
-		identifier = "ia_firearm_smg"
-		basetype = "3"
-		worldmodelpath = resource:"weapons/rust_smg/rust_smg.vmdl"
-		viewmodelpath = resource:"weapons/rust_smg/v_rust_smg.vmdl"
-		reloadtime = 5.5
-		animgraphsettings = 
+		PrimaryCapacitySettings = 
+		{
+			MaxClip = 40
+			MaxAmmo = 120
+		}
+		SecondaryCapacitySettings = 
+		{
+		}
+		PrimaryFunction = "FirePrimary"
+		SecondaryFunction = "None"
+		ReloadFunction = "Reload"
+		ReloadTime = 5.5
+		PrimaryInputSettings = 
+		{
+			Rate = 0.25
+			BurstAmount = 3
+			AllowedModes = "FullAuto"
+		}
+		SecondaryInputSettings = 
+		{
+		}
+		ReloadInputSettings = 
+		{
+			AllowedModes = "Single"
+		}
+		Identifier = "ia_firearm_smg"
+		LibraryType = "firearm_pistol"
+		Bucket = "Secondary"
+		SubBucket = 0
+		WorldModel = resource:"weapons/rust_smg/rust_smg.vmdl"
+		AnimGraphSettings = 
 		[
 			{
-				key = "holdtype"
-				value = "2"
-				type = "1"
+				Key = "holdtype"
+				Value = "2"
+				Type = "Int"
 			},
 		]
-		bucket = "200"
-		subbucket = 0
-		primarycapacity = 
-		{
-			maxclip = 40
-			maxammo = 120
-			bulletsettings = 
-			{
-				pellets = 1
-				spread = 0.12
-				damage = 4.0
-				force = 0.08
-			}
-		}
-		secondarycapacity = 
-		{
-		}
-		primaryinput = 
-		{
-			rate = 0.08
-			allowedmodes = "2"
-		}
-		secondaryinput = 
-		{
-			allowedmodes = "1"
-		}
-		reloadinput = 
-		{
-			allowedmodes = "1"
-		}
-		primaryfunction = "1"
-		secondaryfunction = "0"
-		reloadfunction = "4"
-		primaryfiresound = "rust_smg.shoot"
-		secondaryfiresound = ""
+		ViewModel = resource:"weapons/rust_smg/v_rust_smg.vmdl"
 	}
 }

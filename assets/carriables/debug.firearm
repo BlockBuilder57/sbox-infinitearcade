@@ -2,56 +2,44 @@
 {
 	data = 
 	{
-		primarycapacity = 
+		PrimaryCapacitySettings = 
 		{
-			maxclip = 99999
-			maxammo = 0
-			bulletsettings = 
-			{
-				pellets = 1
-				spread = 0.1
-				damage = 8.0
-			}
+			MaxClip = 999
+			MaxAmmo = 99999
 		}
-		secondarycapacity = 
-		{
-			bulletsettings = 
-			{
-				force = 0.3
-			}
-		}
-		primaryfunction = "1"
-		secondaryfunction = "0"
-		reloadfunction = "0"
-		reloadtime = 0.5
-		primaryfiresound = "Diagnostic.src1_3d"
-		secondaryfiresound = ""
-		primaryinput = 
-		{
-			rate = 0.01
-			allowedmodes = "2"
-			burstamount = 5
-		}
-		secondaryinput = 
-		{
-			allowedmodes = "1"
-		}
-		reloadinput = 
+		SecondaryCapacitySettings = 
 		{
 		}
-		basetype = "3"
-		identifier = "ia_firearm_debug"
-		bucket = "100"
-		subbucket = -5757
-		worldmodelpath = resource:"models/dev/error.vmdl"
-		animgraphsettings = 
+		PrimaryFunction = "FirePrimary"
+		SecondaryFunction = "ModeSelector"
+		ReloadFunction = "Reload"
+		ReloadTime = 0.5
+		PrimaryInputSettings = 
+		{
+			Rate = 0.05
+			AllowedModes = "FullAuto"
+		}
+		SecondaryInputSettings = 
+		{
+			AllowedModes = "Single"
+		}
+		ReloadInputSettings = 
+		{
+			AllowedModes = "Single"
+		}
+		Identifier = "ia_firearm_debug"
+		LibraryType = "firearm_pistol"
+		Bucket = "Primary"
+		SubBucket = -5757
+		WorldModel = resource:"models/dev/error.vmdl"
+		AnimGraphSettings = 
 		[
 			{
-				key = "holdtype"
-				value = "1"
-				type = "1"
+				Key = "holdtype"
+				Value = "1"
+				Type = "Int"
 			},
 		]
-		viewmodelpath = resource:"models/dev/error.vmdl"
+		ViewModel = resource:"models/dev/error.vmdl"
 	}
 }

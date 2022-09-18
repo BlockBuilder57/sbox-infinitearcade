@@ -1,4 +1,5 @@
-﻿using Sandbox;
+﻿using CubicKitsune;
+using Sandbox;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -57,7 +58,7 @@ namespace infinitearcade
 
 		public override void GiveWeapons()
 		{
-			Inventory?.Add(IACarriableDefinition.GetEntity("assets/carriables/pistol.firearm"), true);
+			Inventory?.Add(CKCarriableDefinition.CreateFromDefinition("assets/carriables/pistol.firearm"), true);
 		}
 
 		public override void Clothe()

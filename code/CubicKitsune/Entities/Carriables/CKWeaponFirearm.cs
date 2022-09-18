@@ -4,55 +4,54 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using CubicKitsune;
 using Sandbox;
 
-namespace infinitearcade
+namespace CubicKitsune
 {
-	public partial class IAWeaponFirearm : IATool
+	[Library("firearm_generic")]
+	public partial class CKWeaponFirearm : CKTool, ICKWeaponFirearm
 	{
 		[ConVar.Replicated] public static bool debug_firearm { get; set; } = false;
 
-		public enum InputFunction
-		{
-			None,
-			FirePrimary,
-			FireSecondary, // projectiles?
-			ModeSelector,
-			Reload
-		}
-
 		[Net] public WeaponCapacity PrimaryCapacity { get; set; }
 		[Net] public WeaponCapacity SecondaryCapacity { get; set; }
+		public ICKWeaponFirearm.CapacitySettings PrimaryCapacitySettings { get; set; }
+		public ICKWeaponFirearm.CapacitySettings SecondaryCapacitySettings { get; set; }
 
-		[Net] public InputFunction PrimaryFunction { get; set; } = InputFunction.FirePrimary;
-		[Net] public InputFunction SecondaryFunction { get; set; } = InputFunction.ModeSelector;
-		[Net] public InputFunction ReloadFunction { get; set; } = InputFunction.Reload;
+		[Net] public ICKWeaponFirearm.InputFunction PrimaryFunction { get; set; }
+		[Net] public ICKWeaponFirearm.InputFunction SecondaryFunction { get; set; }
+		[Net] public ICKWeaponFirearm.InputFunction ReloadFunction { get; set; }
 
-		[Net] protected IAWeaponFirearmDefinition m_firearmDef { get; set; }
+		[Net] public float ReloadTime { get; set; }
 
 		[Net] public TimeSince TimeSinceReload { get; set; }
 		[Net] public bool IsReloading { get; set; }
 
-		public override IACarriable SetupFromDefinition(IACarriableDefinition def)
+		public CKWeaponFirearm SetupFromInterface(ICKCarriable carry, ICKTool tool, ICKWeaponFirearm firearm)
 		{
-			base.SetupFromDefinition(def);
-
-			if (def is IAWeaponFirearmDefinition firearmDef)
+			if (firearm == null)
 			{
-				if (firearmDef.PrimaryCapacity.MaxClip > 0)
-					PrimaryCapacity = new WeaponCapacity(firearmDef.PrimaryCapacity);
-				if (firearmDef.SecondaryCapacity.MaxClip > 0)
-					SecondaryCapacity = new WeaponCapacity(firearmDef.SecondaryCapacity);
-
-				PrimaryFunction = firearmDef.PrimaryFunction;
-				SecondaryFunction = firearmDef.SecondaryFunction;
-				ReloadFunction = firearmDef.ReloadFunction;
-
-				m_firearmDef = firearmDef;
+				Log.Error($"{this} trying to set up with a null firearm definition!");
+				Delete();
+				return null;
 			}
 
-			return this;
+			if (Host.IsServer)
+			{
+				PrimaryCapacity = new WeaponCapacity(firearm.PrimaryCapacitySettings);
+				//SecondaryCapacity = new WeaponCapacity(firearm.SecondaryCapacitySettings);
+
+				PrimaryFunction = firearm.PrimaryFunction;
+				SecondaryFunction = firearm.SecondaryFunction;
+				ReloadFunction = firearm.ReloadFunction;
+
+				ReloadTime = firearm.ReloadTime;
+			}
+
+			return (CKWeaponFirearm)SetupFromInterface(carry, tool);
 		}
+		public override CKCarriable SetupFromDefinition(CKCarriableDefinition def) => SetupFromInterface(def, def as ICKTool, def as ICKWeaponFirearm);
 
 		public override void Simulate(Client cl)
 		{
@@ -61,15 +60,15 @@ namespace infinitearcade
 
 			if (!IsReloading)
 				base.Simulate(cl);
-			else if (TimeSinceReload > m_firearmDef.ReloadTime * 1)
+			else if (TimeSinceReload > ReloadTime * 1)
 				OnReloadFinish();
 
 			if (debug_firearm && (Owner as Player).ActiveChild == this)
 			{
 				string debug = IsServer ? "~ srv ~\n" : "~ cli ~\n";
-				debug += $"Primary: func {PrimaryFunction} | {(PrimaryCapacity == null ? "(null)" : PrimaryCapacity)}, {(Primary.CurMode)}\n";
-				debug += $"Secondary: func {SecondaryFunction} | {(SecondaryCapacity == null ? "(null)" : SecondaryCapacity)}, {Secondary.CurMode}\n";
-				debug += $"Reload: func {ReloadFunction}\n";
+					debug += $"Primary: {PrimaryInput.CurMode} func {PrimaryFunction} | {(PrimaryCapacity == null ? "(null)" : PrimaryCapacity)}\n";
+					debug += $"Secondary: {SecondaryInput.CurMode} func {SecondaryFunction} | {(SecondaryCapacity == null ? "(null)" : SecondaryCapacity)}, \n";
+					debug += $"Reload: {ReloadInput.CurMode} func {ReloadFunction}\n";
 
 				// debug code does not have to be good, it just has to debug
 				Vector3 offset = IsServer ? Vector3.Down * (debug.Where(x => x == '\n').Count() + 2) * 2 : 0;
@@ -87,31 +86,28 @@ namespace infinitearcade
 			base.OnCarryDrop(dropper);
 		}
 
-		public void TryInput(InputFunction inputFunc, Action modeSelectorMethod)
+		public void TryInput(ICKWeaponFirearm.InputFunction inputFunc, InputHelper modeSelector)
 		{
-			if (modeSelectorMethod == null)
-				return;
-
 			switch (inputFunc)
 			{
-				case InputFunction.FirePrimary:
+				case ICKWeaponFirearm.InputFunction.FirePrimary:
 					AttackPrimary();
 					break;
-				case InputFunction.FireSecondary:
+				case ICKWeaponFirearm.InputFunction.FireSecondary:
 					AttackSecondary();
 					break;
-				case InputFunction.ModeSelector:
-					modeSelectorMethod.Invoke();
+				case ICKWeaponFirearm.InputFunction.ModeSelector:
+					modeSelector.NextFireMode();
 					break;
-				case InputFunction.Reload:
+				case ICKWeaponFirearm.InputFunction.Reload:
 					Reload();
 					break;
 			}
 		}
 
-		public override void TryAttackPrimary() => TryInput(PrimaryFunction, NextSecondaryFireMode);
-		public override void TryAttackSecondary() => TryInput(SecondaryFunction, NextPrimaryFireMode);
-		public override void TryReload() => TryInput(ReloadFunction, NextPrimaryFireMode);
+		public override void TryAttackPrimary() => TryInput(PrimaryFunction, SecondaryInput);
+		public override void TryAttackSecondary() => TryInput(SecondaryFunction, PrimaryInput);
+		public override void TryReload() => TryInput(ReloadFunction, SecondaryInput);
 
 		public override bool CanReload()
 		{
@@ -184,12 +180,12 @@ namespace infinitearcade
 			}
 		}
 
-		public virtual void ShootBullet(WeaponCapacity cap, Vector3 pos, Vector3 dir)
+		public virtual void ShootBullet(CKRoundDefinition round, Vector3 pos, Vector3 dir)
 		{
-			ShootBullet(cap.BulletSettings.Pellets, pos, dir,
-				cap.BulletSettings.Spread, cap.BulletSettings.Force,
-				cap.BulletSettings.Damage, cap.BulletSettings.BulletSize,
-				cap.BulletSettings.DividedAcrossPellets);
+			if (round != null)
+				ShootBullet(round.Pellets, pos, dir, round.Spread, round.Force, round.Damage, round.BulletSize, round.DividedAcrossPellets);
+			else
+				ShootBullet(8, pos, dir, 0.2f, 0.2f, 16, 2, true);
 		}
 
 		[ConCmd.Admin("firearm_setclip")]
@@ -197,7 +193,7 @@ namespace infinitearcade
 		{
 			if (ConsoleSystem.Caller?.Pawn is Player player && player.IsValid())
 			{
-				if (player.ActiveChild is IAWeaponFirearm firearm)
+				if (player.ActiveChild is CKWeaponFirearm firearm)
 					firearm.PrimaryCapacity.SetClip(clip);
 			}
 		}
@@ -207,7 +203,7 @@ namespace infinitearcade
 		{
 			if (ConsoleSystem.Caller?.Pawn is Player player && player.IsValid())
 			{
-				if (player.ActiveChild is IAWeaponFirearm firearm)
+				if (player.ActiveChild is CKWeaponFirearm firearm)
 					firearm.PrimaryCapacity.SetAmmo(ammo);
 			}
 		}
@@ -217,7 +213,7 @@ namespace infinitearcade
 		{
 			if (ConsoleSystem.Caller?.Pawn is Player player && player.IsValid())
 			{
-				if (player.ActiveChild is IAWeaponFirearm firearm)
+				if (player.ActiveChild is CKWeaponFirearm firearm)
 				{
 					if (firearm.PrimaryCapacity != null)
 					{
@@ -242,17 +238,7 @@ namespace infinitearcade
 		[Net] public int MaxClip { get; private set; }
 		[Net] public int MaxAmmo { get; private set; }
 
-		public struct BulletSetting
-		{
-			public int Pellets { get; set; } = 1;
-			public float Spread { get; set; } = 0.05f;
-			public float Force { get; set; } = 0.6f;
-			public float Damage { get; set; } = 5f;
-			public float BulletSize { get; set; } = 2f;
-			public bool DividedAcrossPellets { get; set; } = false;
-		}
-
-		[Net] public BulletSetting BulletSettings { get; set; }
+		[Net] public CKRoundDefinition RoundDefinition { get; set; }
 
 		[Net] public bool InfiniteClip { get; set; } = false;
 		[Net] public bool InfiniteAmmo { get; set; } = false;
@@ -263,23 +249,13 @@ namespace infinitearcade
 			Ammo = MaxAmmo = 24;
 		}
 
-		public WeaponCapacity(IAWeaponFirearmDefinition.CapacitySetting settings)
+		public WeaponCapacity(ICKWeaponFirearm.CapacitySettings settings)
 		{
 			Clip = MaxClip = settings.MaxClip;
 			Ammo = MaxAmmo = settings.MaxAmmo;
+			RoundDefinition = settings.RoundDefinition;
 
-			if (settings.BulletSettings != null)
-			{
-				BulletSettings = new BulletSetting
-				{
-					Pellets = settings.BulletSettings.Pellets,
-					Spread = settings.BulletSettings.Spread,
-					Force = settings.BulletSettings.Force,
-					Damage = settings.BulletSettings.Damage,
-					BulletSize = settings.BulletSettings.BulletSize,
-					DividedAcrossPellets = settings.BulletSettings.DividedAcrossPellets,
-				};
-			}
+			//Log.Info($"{NetworkIdent} being setup by: {settings}");
 		}
 
 		public void SetClip(int amount) => Clip = amount;

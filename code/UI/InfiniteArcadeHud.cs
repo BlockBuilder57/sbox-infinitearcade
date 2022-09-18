@@ -1,4 +1,5 @@
-﻿using Sandbox;
+﻿using CubicKitsune;
+using Sandbox;
 using Sandbox.UI;
 using System;
 using System.Collections.Generic;
@@ -62,14 +63,14 @@ namespace infinitearcade.UI
 				hud.InventoryFullUpdate(inv.List.ToArray());
 		}
 
-		public void InventoryFullUpdate(IACarriable[] inv)
+		public void InventoryFullUpdate(CKCarriable[] inv)
 		{
 			m_invFlat?.FullUpdate(inv);
 
 			TimeSinceInventoryUpdate = 0;
 		}
 
-		public void InventorySwitchActive(IACarriable newActive)
+		public void InventorySwitchActive(CKCarriable newActive)
 		{
 			m_invFlat?.SwitchActive(newActive);
 

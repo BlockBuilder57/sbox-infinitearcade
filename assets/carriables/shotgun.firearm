@@ -2,54 +2,44 @@
 {
 	data = 
 	{
-		reloadtime = 0.5
-		identifier = "ia_firearm_shotgun"
-		worldmodelpath = resource:"weapons/rust_pumpshotgun/rust_pumpshotgun.vmdl"
-		viewmodelpath = resource:"weapons/rust_pumpshotgun/v_rust_pumpshotgun.vmdl"
-		basetype = "2"
-		animgraphsettings = 
+		PrimaryCapacitySettings = 
+		{
+			MaxClip = 8
+			MaxAmmo = 24
+		}
+		SecondaryCapacitySettings = 
+		{
+		}
+		PrimaryFunction = "FirePrimary"
+		SecondaryFunction = "FireSecondary"
+		ReloadFunction = "Reload"
+		ReloadTime = 0.5
+		PrimaryInputSettings = 
+		{
+			Rate = 0.8
+			AllowedModes = "FullAuto"
+		}
+		SecondaryInputSettings = 
+		{
+			Rate = 2.5
+			AllowedModes = "FullAuto"
+		}
+		ReloadInputSettings = 
+		{
+		}
+		Identifier = "ia_firearm_shotgun"
+		LibraryType = "firearm_shotgun"
+		Bucket = "Primary"
+		SubBucket = 0
+		WorldModel = resource:"weapons/rust_pumpshotgun/rust_pumpshotgun.vmdl"
+		AnimGraphSettings = 
 		[
 			{
-				key = "holdtype"
-				value = "3"
-				type = "1"
+				Key = "holdtype"
+				Value = "3"
+				Type = "Int"
 			},
 		]
-		bucket = "100"
-		subbucket = 0
-		primarycapacity = 
-		{
-			maxclip = 6
-			maxammo = 24
-			bulletsettings = 
-			{
-				pellets = 8
-				dividedacrosspellets = true
-				damage = 24.0
-				spread = 0.25
-				force = 0.35
-			}
-		}
-		secondarycapacity = 
-		{
-		}
-		primaryinput = 
-		{
-			allowedmodes = "2"
-			rate = 0.85
-		}
-		secondaryinput = 
-		{
-			allowedmodes = "2"
-			rate = 1.25
-		}
-		reloadinput = 
-		{
-		}
-		primaryfunction = "1"
-		secondaryfunction = "2"
-		reloadfunction = "4"
-		primaryfiresound = "rust_pumpshotgun.shoot"
-		secondaryfiresound = "rust_pumpshotgun.shootdouble"
+		ViewModel = resource:"weapons/rust_pumpshotgun/v_rust_pumpshotgun.vmdl"
 	}
 }

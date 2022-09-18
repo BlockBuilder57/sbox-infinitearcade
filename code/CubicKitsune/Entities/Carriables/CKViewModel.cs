@@ -5,9 +5,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace infinitearcade
+namespace CubicKitsune
 {
-	public class IAViewModel : BaseViewModel
+	public class CKViewModel : BaseViewModel
 	{
 		public override void PostCameraSetup(ref CameraSetup camSetup)
 		{

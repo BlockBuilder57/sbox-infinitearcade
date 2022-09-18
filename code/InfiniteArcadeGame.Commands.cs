@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using CubicKitsune;
 using Sandbox;
 using Sandbox.UI;
 
@@ -112,8 +113,9 @@ namespace infinitearcade
 
 			var owner = ConsoleSystem.Caller.Pawn;
 
-			IACarriable carriable = IACarriableDefinition.GetEntity(path);
-			if (carriable == null)
+			CKCarriable entity = CKCarriableDefinition.CreateFromDefinition(path);
+
+			if (entity == null)
 				return;
 
 			var tr = Trace.Ray(owner.EyePosition, owner.EyePosition + owner.EyeRotation.Forward * 200)
@@ -122,8 +124,8 @@ namespace infinitearcade
 				.Size(2)
 				.Run();
 
-			carriable.Position = tr.EndPosition + Vector3.Up * 8;
-			carriable.Rotation = Rotation.From(new Angles(0, owner.EyeRotation.Angles().yaw, 0));
+			entity.Position = tr.EndPosition + Vector3.Up * 8;
+			entity.Rotation = Rotation.From(new Angles(0, owner.EyeRotation.Angles().yaw, 0));
 		}
 
 		[ConCmd.Server("spawn_player_ragdoll")]

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
+using CubicKitsune;
 using Sandbox;
 
 namespace infinitearcade
@@ -177,8 +178,8 @@ namespace infinitearcade
 				if (input.Pressed(InputButton.PrimaryAttack))
 				{
 					var tr = Trace.Ray(Position, Position + Rotation.Forward * 4096).HitLayer(CollisionLayer.All).UseHitboxes().Run();
-					//if (tr.Entity.IsValid())
-					//	tr.Entity.DebugFlags ^= EntityDebugFlags.Text;
+					if (tr.Entity.IsValid())
+						tr.Entity.DebugFlags ^= EntityDebugFlags.Skeleton;
 				}
 
 				if (input.Down(InputButton.SecondaryAttack))
@@ -217,7 +218,7 @@ namespace infinitearcade
 		void LerpSpeed(float amount)
 		{
 			LerpMode = amount;
-			IADebugging.ScreenText($"Set devcam lerp to {LerpMode}", 0.5f);
+			CKDebugging.ScreenText($"Set devcam lerp to {LerpMode}", 0.5f);
 		}
 
 		void FreeMove()

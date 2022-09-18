@@ -1,4 +1,5 @@
-﻿using Sandbox;
+﻿using CubicKitsune;
+using Sandbox;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -120,9 +121,9 @@ namespace infinitearcade
 
 			Angles fullCalc = (EyeRotation.Angles() + m_inputRotationDelta).WithRoll(0) + (BaseAngularVelocity * Time.Delta);
 
-			IADebugging.ScreenText(Input.Rotation.Angles().ToString());
-			IADebugging.ScreenText(m_inputRotationLast.ToString());
-			IADebugging.ScreenText(m_inputRotationDelta.ToString());
+			CKDebugging.ScreenText(Input.Rotation.Angles().ToString());
+			CKDebugging.ScreenText(m_inputRotationLast.ToString());
+			CKDebugging.ScreenText(m_inputRotationDelta.ToString());
 
 			EyeRotation = Rotation.From(fullCalc.WithRoll(0));*/
 
@@ -257,10 +258,10 @@ namespace infinitearcade
 			// Land Sound
 			// Swim Sounds
 
-			if (IADebugging.LocalClient != null)
+			if (CKDebugging.LocalClient != null)
 			{
-				var _debug_client = IADebugging.LocalClient.GetClientData<int>(nameof(IADebugging.debug_client), 0);
-				var _debug_client_pawncontroller = IADebugging.LocalClient.GetClientData<bool>(nameof(IADebugging.debug_client_playercontroller), false);
+				var _debug_client = CKDebugging.LocalClient.GetClientData<int>(nameof(CKDebugging.debug_client), 0);
+				var _debug_client_pawncontroller = CKDebugging.LocalClient.GetClientData<bool>(nameof(CKDebugging.debug_client_playercontroller), false);
 				if (Host.IsServer && Client.NetworkIdent == _debug_client && _debug_client_pawncontroller)
 				{
 					const int pad = 19;
@@ -293,7 +294,7 @@ namespace infinitearcade
 					if (GroundEntity == null && m_debugHopType != HopType.None)
 						debugText += $"\n{"Hopping Type",pad}: {m_debugHopName}";
 
-					IADebugging.ScreenText(IADebugging.ToLocal, debugText);
+					CKDebugging.ScreenText(CKDebugging.ToLocal, debugText);
 				}
 			}
 		}
@@ -738,8 +739,7 @@ namespace infinitearcade
 
 			var pm = Trace.Ray(start, end)
 						.Size(GetHull().Mins, GetHull().Maxs)
-						.HitLayer(CollisionLayer.All, false)
-						.HitLayer(CollisionLayer.LADDER, true)
+						.WithTag("ladder")
 						.Ignore(Pawn)
 						.Run();
 

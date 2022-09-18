@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using CubicKitsune;
 using Sandbox;
 using Sandbox.UI;
 using Sandbox.UI.Construct;
@@ -29,7 +30,7 @@ namespace infinitearcade.UI
 			ArcadePlayer player = Local.Pawn as ArcadePlayer;
 			if (player == null) return;
 
-			if (player.ActiveChild is IAWeaponFirearm firearm)
+			if (player.ActiveChild is CKWeaponFirearm firearm)
 			{
 				SetClass("hidden", false);
 

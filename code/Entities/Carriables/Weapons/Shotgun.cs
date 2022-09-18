@@ -1,4 +1,5 @@
-﻿using Sandbox;
+﻿using CubicKitsune;
+using Sandbox;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -7,8 +8,8 @@ using System.Threading.Tasks;
 
 namespace infinitearcade
 {
-	[Library("weapon_shotgun", Title = "Shotgun")]
-	public partial class Shotgun : IAWeaponFirearm
+	[Library("firearm_shotgun", Title = "Shotgun")]
+	public partial class Shotgun : CKWeaponFirearm
 	{
 		public bool ReloadAnimHasInitialShellLoad = true;
 
@@ -21,7 +22,7 @@ namespace infinitearcade
 				return;
 			}
 
-			Secondary.TimeSince = 0;
+			SecondaryInput.ResetTime();
 
 			if (PrimaryCapacity.CanTakeClip())
 			{
@@ -32,8 +33,9 @@ namespace infinitearcade
 
 				ViewModelEntity?.SetAnimParameter("fire", true);
 
-				Sound.FromWorld(m_firearmDef.PrimaryFireSound, this.Position);
-				ShootBullet(PrimaryCapacity, Owner.EyePosition, Owner.EyeRotation.Forward);
+				//if (SoundEvents.ContainsKey("primaryfire"))
+				//	Sound.FromWorld(SoundEvents["primaryfire"].ResourceName, Position);
+				ShootBullet(PrimaryCapacity.RoundDefinition, Owner.EyePosition, Owner.EyeRotation.Forward);
 			}
 		}
 
@@ -46,7 +48,7 @@ namespace infinitearcade
 				return;
 			}
 
-			Primary.TimeSince = 0;
+			PrimaryInput.ResetTime();
 
 			if (PrimaryCapacity.CanTakeClip(2))
 			{
@@ -57,9 +59,10 @@ namespace infinitearcade
 
 				ViewModelEntity?.SetAnimParameter("fire", true);
 
-				Sound.FromWorld(m_firearmDef.SecondaryFireSound, this.Position);
-				ShootBullet(PrimaryCapacity, Owner.EyePosition, Owner.EyeRotation.Forward);
-				ShootBullet(PrimaryCapacity, Owner.EyePosition, Owner.EyeRotation.Forward);
+				//if (SoundEvents.ContainsKey("secondaryfire"))
+				//	Sound.FromWorld(SoundEvents["secondaryfire"].ResourceName, Position);
+				ShootBullet(PrimaryCapacity.RoundDefinition, Owner.EyePosition, Owner.EyeRotation.Forward);
+				ShootBullet(PrimaryCapacity.RoundDefinition, Owner.EyePosition, Owner.EyeRotation.Forward);
 			}
 			else
 				AttackPrimary();
@@ -82,7 +85,7 @@ namespace infinitearcade
 			IsReloading = false;
 
 			// if reloading worked and we aren't attacking, try reloading
-			if (PrimaryCapacity.TryReload(1) && !CanPrimaryAttack() && !CanSecondaryAttack())
+			if (PrimaryCapacity.TryReload(1) && !CanAttack(InputButton.PrimaryAttack, PrimaryInput) && !CanAttack(InputButton.SecondaryAttack, SecondaryInput))
 			{
 				// we can reload, so keep going!
 				Reload();
@@ -90,8 +93,8 @@ namespace infinitearcade
 			else
 			{
 				// either we're out of ammo or the internal mag is full, so we're done
-				Primary.TimeSince = 0;
-				Secondary.TimeSince = 0;
+				PrimaryInput.ResetTime();
+				SecondaryInput.ResetTime();
 
 				FinishReloadEffects();
 			}

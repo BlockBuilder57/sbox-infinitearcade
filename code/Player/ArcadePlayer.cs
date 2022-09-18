@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using infinitearcade.UI;
+using CubicKitsune;
 
 namespace infinitearcade
 {
@@ -106,13 +107,14 @@ namespace infinitearcade
 			if (Client.IsBot)
 				return;
 
-			Inventory?.Add(IACarriableDefinition.GetEntity("assets/carriables/pistol.firearm"));
-			Inventory?.Add(IACarriableDefinition.GetEntity("assets/carriables/shotgun.firearm"));
-			Inventory?.Add(IACarriableDefinition.GetEntity("assets/carriables/smg.firearm"));
-			Inventory?.Add(IACarriableDefinition.GetEntity("assets/carriables/flashlight.tool"));
-			Inventory?.Add(IACarriableDefinition.GetEntity("assets/carriables/physmanip.tool"));
+			Inventory?.Add(CKCarriableDefinition.CreateFromDefinition("assets/carriables/pistol.firearm"));
+			Inventory?.Add(CKCarriableDefinition.CreateFromDefinition("assets/carriables/shotgun.firearm"));
+			Inventory?.Add(CKCarriableDefinition.CreateFromDefinition("assets/carriables/smg.firearm"));
 
-			Inventory?.Add(IACarriableDefinition.GetEntity("assets/carriables/debug.firearm"));
+			Inventory?.Add(CKCarriableDefinition.CreateFromDefinition("assets/carriables/flashlight.tool"));
+			Inventory?.Add(CKCarriableDefinition.CreateFromDefinition("assets/carriables/physmanip.tool"));
+
+			Inventory?.Add(CKCarriableDefinition.CreateFromDefinition("assets/carriables/debug.firearm"));
 		}
 
 		public readonly List<ModelEntity> Clothing = new();
@@ -372,13 +374,7 @@ namespace infinitearcade
 
 			if (IsClient) return;
 
-			if (other is SleepingPickupTrigger)
-			{
-				StartTouch(other.Parent);
-				return;
-			}
-
-			if (other is IACarriable)
+			if (other is CKCarriable)
 			{
 				Inventory?.Add(other, Inventory.Active == null);
 			}
@@ -467,12 +463,12 @@ namespace infinitearcade
 
 				debugText += $"\nFinal: {Health} {Armor:F0}x{ArmorMultiplier:F1} (Δ of {Health - debugPreHealth} {(Armor - debugPreArmor):F0}x{ArmorMultiplier:F1})";
 
-				if (IADebugging.LocalClient != null)
+				if (CKDebugging.LocalClient != null)
 				{
-					var _debug_client = IADebugging.LocalClient.GetClientData<int>(nameof(IADebugging.debug_client), 0);
-					var _debug_client_damage = IADebugging.LocalClient.GetClientData<bool>(nameof(IADebugging.debug_client_damage), false);
+					var _debug_client = CKDebugging.LocalClient.GetClientData<int>(nameof(CKDebugging.debug_client), 0);
+					var _debug_client_damage = CKDebugging.LocalClient.GetClientData<bool>(nameof(CKDebugging.debug_client_damage), false);
 					if (_debug_client_damage && Client.NetworkIdent == _debug_client)
-						IADebugging.ScreenText(IADebugging.ToLocal, debugText, debugTime);
+						CKDebugging.ScreenText(CKDebugging.ToLocal, debugText, debugTime);
 				}
 			}
 
@@ -558,17 +554,14 @@ namespace infinitearcade
 				Rotation = Rotation,
 				Scale = Scale,
 
-				MoveType = MoveType.Physics,
 				UsePhysicsCollision = true,
 				EnableAllCollisions = true,
 				EnableHitboxes = true,
+				PhysicsEnabled = true,
 				SurroundingBoundsMode = SurroundingBoundsType.Physics
 			};
 
-			ent.SetInteractsAs(CollisionLayer.Debris);
-			ent.SetInteractsWith(CollisionLayer.WORLD_GEOMETRY);
-			// PhysicsProp is purposefully excluded here, cause client-only ragdolls don't actually affect shared objects!
-			ent.SetInteractsExclude(CollisionLayer.Player | CollisionLayer.Debris | CollisionLayer.PhysicsProp);
+			ent.Tags.Add("solid");
 
 			ent.SetModel(GetModelName());
 

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using CubicKitsune;
 using Sandbox;
 using Sandbox.UI;
 using Sandbox.UI.Construct;
@@ -20,12 +21,12 @@ namespace infinitearcade.UI
 			StyleSheet.Load("/UI/InventoryLayoutFlat.scss");
 		}
 
-		public void FullUpdate(IACarriable[] inv)
+		public void FullUpdate(CKCarriable[] inv)
 		{
 			icons.ForEach(x => x.Delete());
 			icons.Clear();
 
-			foreach (IACarriable carriable in inv)
+			foreach (CKCarriable carriable in inv)
 			{
 				InventoryIcon icon = new(this, carriable);
 				if (carriable.Owner is Player player && player.ActiveChild == carriable)
@@ -38,7 +39,7 @@ namespace infinitearcade.UI
 			}
 		}
 
-		public void SwitchActive(IACarriable newActive)
+		public void SwitchActive(CKCarriable newActive)
 		{
 			if (m_curActive != null)
 				m_curActive.RemoveClass("active");

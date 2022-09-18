@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using CubicKitsune;
 using Sandbox;
 using Sandbox.UI;
 using Sandbox.UI.Construct;
@@ -11,18 +12,21 @@ namespace infinitearcade.UI
 {
 	public class InventoryIcon : Panel
 	{
-		public IACarriable Carriable;
+		public CKCarriable Carriable;
 		public Label Name;
 		public Image Icon;
 		public ScenePanel Scene;
 
-		public InventoryIcon(Panel parent, IACarriable carriable)
+		public InventoryIcon(Panel parent, CKCarriable carriable)
 		{
 			Parent = parent;
 			Carriable = carriable;
-			Name = Add.Label(carriable.Definition?.Identifier);
+			Name = Add.Label(carriable.Identifier);
 
 			StyleSheet.Load("UI/InventoryIcon.scss");
+
+			if (carriable.Model == null || carriable.Model.IsError)
+				return;
 
 			SceneWorld world = new();
 

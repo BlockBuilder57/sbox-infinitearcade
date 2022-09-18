@@ -2,12 +2,12 @@
 {
 	data = 
 	{
-		identifier = "ia_carriable_default"
-		basetype = "0"
-		worldmodelpath = resource:"models/sbox_props/burger_box/burger_box.vmdl"
-		viewmodelpath = resource:"models/dev/error.vmdl"
-		bucket = "0"
-		subbucket = 0
-		animgraphsettings = [  ]
+		Identifier = "ia_carriable_default"
+		Bucket = "Default"
+		SubBucket = 0
+		WorldModel = resource:"models/sbox_props/burger_box/burger_box.vmdl"
+		AnimGraphSettings = [  ]
+		ViewModel = resource:"models/dev/error.vmdl"
+		BaseType = "Carriable"
 	}
 }
