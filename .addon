@@ -18,10 +18,112 @@
     ],
     "MinPlayers": 1,
     "MaxPlayers": 64,
-    "GameNetworkType": 0,
-    "MapSelect": 0,
-    "RankType": 0,
+    "GameNetworkType": "Multiplayer",
+    "MapSelect": "Unrestricted",
+    "RankType": "None",
     "PerMapRanking": false,
-    "LeaderboardType": 0
+    "LeaderboardType": "None",
+    "Collision": {
+      "Defaults": {
+        "solid": "Collide",
+        "trigger": "Trigger",
+        "ladder": "Ignore",
+        "water": "Trigger",
+        "player": "Collide",
+        "weapon": "Trigger",
+        "corpse": "Collide"
+      },
+      "Pairs": [
+        {
+          "a": "solid",
+          "b": "solid",
+          "r": "Collide"
+        },
+        {
+          "a": "trigger",
+          "b": "playerclip",
+          "r": "Ignore"
+        },
+        {
+          "a": "trigger",
+          "b": "solid",
+          "r": "Trigger"
+        },
+        {
+          "a": "solid",
+          "b": "trigger",
+          "r": "Collide"
+        },
+        {
+          "a": "playerclip",
+          "b": "solid",
+          "r": "Collide"
+        },
+        {
+          "a": "solid",
+          "b": "player",
+          "r": "Ignore"
+        },
+        {
+          "a": "trigger",
+          "b": "player",
+          "r": "Trigger"
+        },
+        {
+          "a": "ladder",
+          "b": "player",
+          "r": "Trigger"
+        },
+        {
+          "a": "water",
+          "b": "player",
+          "r": "Trigger"
+        },
+        {
+          "a": "solid",
+          "b": "weapon",
+          "r": "Collide"
+        },
+        {
+          "a": "solid",
+          "b": "corpse"
+        },
+        {
+          "a": "player",
+          "b": "corpse",
+          "r": "Trigger"
+        },
+        {
+          "a": "trigger",
+          "b": "corpse",
+          "r": "Collide"
+        },
+        {
+          "a": "player",
+          "b": "weapon"
+        }
+      ]
+    },
+    "GameCategory": "None",
+    "Physics": {
+      "SubSteps": 4,
+      "TimeScale": 1,
+      "Gravity": "0,0,-800",
+      "AirDensity": 1.2,
+      "SleepingEnabled": true,
+      "SimulationMode": "Continuous",
+      "PositionIterations": 2,
+      "VelocityIterations": 8,
+      "SoftBodyIterations": 1,
+      "SoftBodySubsteps": 1
+    },
+    "Compiler": {
+      "RootNamespace": "infinitearcade",
+      "DefineConstants": "SANDBOX;ADDON;DEBUG",
+      "NoWarn": "1701;1702;1591;"
+    },
+    "ControlModes": {
+      "Keyboard": true
+    }
   }
 }

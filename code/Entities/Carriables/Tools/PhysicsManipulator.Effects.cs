@@ -16,8 +16,8 @@ namespace infinitearcade
 		Particles FxPhysBeam;
 		Particles FxPhysBeamEnd;
 
-		Particles FxGravPull;
-		Particles FxGravBeam;
+		//Particles FxGravPull;
+		//Particles FxGravBeam;
 
 		private bool m_fxStarted = false;
 
@@ -48,7 +48,7 @@ namespace infinitearcade
 			var tr = Trace.Ray(Owner.EyePosition, Owner.EyePosition + Owner.EyeRotation.Forward * PhysMaxDistance)
 						.UseHitboxes(true)
 						.Ignore(Owner, false)
-						.HitLayer(CollisionLayer.Debris)
+						.WithAnyTags("solid", "debris")
 						.Run();
 
 			if (FxPhysBeam == null)

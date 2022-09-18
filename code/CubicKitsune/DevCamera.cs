@@ -1,10 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
-using CubicKitsune;
 using Sandbox;
 
-namespace infinitearcade
+namespace CubicKitsune
 {
 	public class DevCamera : CameraMode
 	{
@@ -17,6 +16,9 @@ namespace infinitearcade
 		bool PivotEnabled;
 		Vector3 PivotPos;
 		float PivotDist;
+		Entity PivotEnt;
+		Vector3 PivotEntPosDiff;
+		Rotation PivotEntRotDiff;
 
 		float MoveSpeed;
 		float FovOverride = 0;
@@ -28,17 +30,17 @@ namespace infinitearcade
 
 		public override void Activated()
 		{
-			if (Local.Pawn is Player player && player.CameraMode != null)
+			if (Local.Pawn.Components.Get<CameraMode>() is CameraMode camera)
 			{
-				TargetPos = player.CameraMode.Position;
-				TargetRot = player.CameraMode.Rotation;
+				TargetPos = camera.Position;
+				TargetRot = camera.Rotation;
 
-				FovOverride = player.CameraMode.FieldOfView;
-				Ortho = player.CameraMode.Ortho;
-				OrthoSize = Math.Min(0.001f, player.CameraMode.OrthoSize);
+				FovOverride = camera.FieldOfView;
+				Ortho = camera.Ortho;
+				OrthoSize = Math.Min(0.001f, camera.OrthoSize);
 
-				ZNear = player.CameraMode.ZNear;
-				ZFar = player.CameraMode.ZFar;
+				ZNear = camera.ZNear;
+				ZFar = camera.ZFar;
 			}
 
 			Position = TargetPos;
@@ -63,7 +65,7 @@ namespace infinitearcade
 
 		public override void Update()
 		{
-			var tr = Trace.Ray(Position, Position + Rotation.Forward * 4096).HitLayer(CollisionLayer.All).UseHitboxes().Run();
+			var tr = Trace.Ray(Position, Position + Rotation.Forward * 4096).Run();
 			FieldOfView = FovOverride;
 
 			if (PivotEnabled)
@@ -76,47 +78,62 @@ namespace infinitearcade
 				var normalRot = Rotation.LookAt(tr.Normal);
 				DebugOverlay.Axis(tr.EndPosition, normalRot, 3.0f);
 
-				if (tr.Entity != null && !tr.Entity.IsWorld)
+				if (tr.Entity != null)
 				{
-					string debugText = "";
-					const int pad = 6;
-
-					debugText += $"{"Entity",pad}: {tr.Entity} (managed {tr.Entity.GetType().FullName})";
-					if (tr.Entity.Owner.IsValid() && tr.Entity.Owner != tr.Entity.Client)
-						debugText += $"\n{"Owner",pad}: {tr.Entity.Owner}";
-					if (tr.Entity.Client.IsValid())
-						debugText += $"\n{"Client",pad}: {tr.Entity.Client.Name} (ident {tr.Entity.Client.NetworkIdent}) {(tr.Entity.Client.IsBot ? "[BOT]" : "")}";
-					if (tr.Entity is ModelEntity model)
-						debugText += $"\n{"Model",pad}: {model.GetModelName()}";
-					if (!tr.Entity.ToString().EndsWith(tr.Entity.NetworkIdent.ToString()))
-						debugText += $"\n{"Index",pad}: {tr.Entity.NetworkIdent}";
-					debugText += $"\n{"Health",pad}: {tr.Entity.Health}";
-					if (tr.Entity.IsClientOnly)
-						debugText += $"\n{"Clientside",pad}: Clientside only";
-
-					DebugOverlay.Text(debugText, tr.EndPosition + Vector3.Up * 20, Color.White);
-
-					var bbox_world = tr.Entity.WorldSpaceBounds;
-					DebugOverlay.Box(Vector3.Zero, Rotation.Identity, bbox_world.Mins, bbox_world.Maxs, Color.Red.WithAlpha(0.4f));
-
-					if (tr.Entity is ModelEntity modelEnt)
+					if (tr.Entity.IsWorld)
 					{
-						var bbox_collision = modelEnt.CollisionBounds;
-						DebugOverlay.Box(tr.Entity.Position, tr.Entity.Rotation, bbox_collision.Mins * tr.Entity.LocalScale, bbox_collision.Maxs * tr.Entity.LocalScale, Color.Green.WithAlpha(0.4f));
+						string debugText = "";
+						const int pad = 8;
 
-						for (int i = 0; i < modelEnt.BoneCount; i++)
+						debugText += $"{"Hit Pos",pad}: {tr.HitPosition}";
+						debugText += $"\n{"Surface",pad}: {tr.Surface.ResourceName}";
+						debugText += $"\n{"Friction",pad}: {tr.Surface.Friction}";
+
+						DebugOverlay.Text(debugText, tr.EndPosition + Vector3.Up * 20, Color.White, 0, 128);
+					}
+					else
+					{
+						string debugText = "";
+						const int pad = 6;
+
+						debugText += $"{"Entity",pad}: {tr.Entity} (managed {tr.Entity.GetType().FullName})";
+						debugText += $"\n{"Tags",pad}: {string.Join(", ", tr.Tags)}";
+						if (tr.Entity.Owner.IsValid() && tr.Entity.Owner != tr.Entity.Client)
+							debugText += $"\n{"Owner",pad}: {tr.Entity.Owner}";
+						if (tr.Entity.Client.IsValid())
+							debugText += $"\n{"Client",pad}: {tr.Entity.Client.Name} (ident {tr.Entity.Client.NetworkIdent}) {(tr.Entity.Client.IsBot ? "[BOT]" : "")}";
+						if (tr.Entity is ModelEntity model)
+							debugText += $"\n{"Model",pad}: {model.GetModelName()}";
+						if (!tr.Entity.ToString().EndsWith(tr.Entity.NetworkIdent.ToString()))
+							debugText += $"\n{"Index",pad}: {tr.Entity.NetworkIdent}";
+						debugText += $"\n{"Health",pad}: {tr.Entity.Health}";
+						if (tr.Entity.IsClientOnly)
+							debugText += $"\n{"Clientside",pad}: Clientside only";
+
+						DebugOverlay.Text(debugText, tr.EndPosition + Vector3.Up * 20, Color.White);
+
+						var bbox_world = tr.Entity.WorldSpaceBounds;
+						DebugOverlay.Box(Vector3.Zero, Rotation.Identity, bbox_world.Mins, bbox_world.Maxs, Color.Red.WithAlpha(0.4f));
+
+						if (tr.Entity is ModelEntity modelEnt)
 						{
-							var tx = modelEnt.GetBoneTransform(i);
-							var name = modelEnt.GetBoneName(i);
-							var parent = modelEnt.GetBoneParent(i);
+							var bbox_collision = modelEnt.CollisionBounds;
+							DebugOverlay.Box(tr.Entity.Position, tr.Entity.Rotation, bbox_collision.Mins * tr.Entity.LocalScale, bbox_collision.Maxs * tr.Entity.LocalScale, Color.Green.WithAlpha(0.4f));
 
-							if (parent > -1)
+							for (int i = 0; i < modelEnt.BoneCount; i++)
 							{
-								var ptx = modelEnt.GetBoneTransform(parent);
-								DebugOverlay.Line(tx.Position, ptx.Position, Color.White.WithAlpha(0.2f), depthTest: false);
-							}
-						}
+								var tx = modelEnt.GetBoneTransform(i);
+								var name = modelEnt.GetBoneName(i);
+								var parent = modelEnt.GetBoneParent(i);
 
+								if (parent > -1)
+								{
+									var ptx = modelEnt.GetBoneTransform(parent);
+									DebugOverlay.Line(tx.Position, ptx.Position, Color.White.WithAlpha(0.2f), depthTest: false);
+								}
+							}
+
+						}
 					}
 				}
 			}
@@ -140,8 +157,6 @@ namespace infinitearcade
 				if (input.Down(InputButton.Run)) MoveSpeed = 5;
 				if (input.Down(InputButton.Duck)) MoveSpeed = 0.2f;
 
-				PivotEnabled = input.Down(InputButton.Walk);
-
 				if (input.Pressed(InputButton.Slot1)) LerpSpeed(0.0f);
 				if (input.Pressed(InputButton.Slot2)) LerpSpeed(0.01f);
 				if (input.Pressed(InputButton.Slot3)) LerpSpeed(0.5f);
@@ -149,13 +164,27 @@ namespace infinitearcade
 
 				if (input.Pressed(InputButton.Walk))
 				{
-					var tr = Trace.Ray(Position, Position + Rotation.Forward * Int32.MaxValue).HitLayer(CollisionLayer.All).UseHitboxes().Run();
+					var tr = Trace.Ray(Position, Position + Rotation.Forward * Int32.MaxValue).UseHitboxes().Run();
+					PivotEnabled = tr.Hit;
+
 					if (tr.Hit)
 					{
 						PivotPos = tr.EndPosition;
 						PivotDist = Vector3.DistanceBetween(tr.EndPosition, Position);
+						PivotEnt = tr.Entity;
+						if (PivotEnt.IsValid() && !PivotEnt.IsWorld)
+						{
+							PivotEntPosDiff = tr.EndPosition - PivotEnt.Position;
+							PivotEntRotDiff = Rotation.Difference(Rotation, PivotEnt.Rotation);
+						}
+					}
+					else
+					{
+						PivotEnt = null;
 					}
 				}
+				else if (!input.Down(InputButton.Walk))
+					PivotEnabled = false;
 
 				if (input.Down(InputButton.Jump))
 					MoveInput.z = 1;
@@ -177,7 +206,7 @@ namespace infinitearcade
 
 				if (input.Pressed(InputButton.PrimaryAttack))
 				{
-					var tr = Trace.Ray(Position, Position + Rotation.Forward * 4096).HitLayer(CollisionLayer.All).UseHitboxes().Run();
+					var tr = Trace.Ray(Position, Position + Rotation.Forward * 4096).Run();
 					if (tr.Entity.IsValid())
 						tr.Entity.DebugFlags ^= EntityDebugFlags.Skeleton;
 				}
@@ -245,19 +274,27 @@ namespace infinitearcade
 			PivotDist -= MoveInput.x * RealTime.Delta * 100 * (PivotDist / 50);
 			PivotDist = PivotDist.Clamp(1, 1000);
 
-			TargetRot = Rotation.From(LookAngles);
-			if (LerpMode > 0)
-				Rotation = Rotation.Slerp(Rotation, TargetRot, 10 * RealTime.Delta * (1 - LerpMode));
-			else
-				Rotation = TargetRot;
+			/*if (PivotEnt.IsValid() && !PivotEnt.IsWorld)
+			{
 
-			TargetPos = PivotPos + Rotation.Forward * -PivotDist;
-			Position = TargetPos;
+			}
+			else*/
+			{
+				TargetRot = Rotation.From(LookAngles);
+				if (LerpMode > 0)
+					Rotation = Rotation.Slerp(Rotation, TargetRot, 10 * RealTime.Delta * (1 - LerpMode));
+				else
+					Rotation = TargetRot;
+
+				TargetPos = PivotPos + Rotation.Forward * -PivotDist;
+				Position = TargetPos;
+			}
+
 
 			if (Overlays)
 			{
 				var scale = Vector3.One * (2 + MathF.Sin(RealTime.Now * 10) * 0.3f);
-				DebugOverlay.Box(PivotPos, scale * -1, scale, Color.Green);
+				DebugOverlay.Box(TargetPos, scale * -1, scale, Color.Green);
 			}
 		}
 	}

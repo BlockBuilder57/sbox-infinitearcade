@@ -132,11 +132,11 @@ namespace infinitearcade
 			if (!cl.HasPermission("devcam"))
 				return;
 
-			var camera = cl.Components.Get<DevCamera>(true);
+			var camera = cl.Components.Get<CubicKitsune.DevCamera>(true);
 
 			if (camera == null)
 			{
-				camera = new DevCamera();
+				camera = new CubicKitsune.DevCamera();
 				cl.Components.Add(camera);
 				return;
 			}

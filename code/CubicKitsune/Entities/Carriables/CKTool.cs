@@ -156,13 +156,23 @@ namespace CubicKitsune
 		/// </summary>
 		public virtual IEnumerable<TraceResult> TraceBullet(Vector3 start, Vector3 end, float radius = 2.0f)
 		{
+			List<string> withoutTags = new() { "trigger" };
 			bool InWater = Trace.TestPoint(start, "water");
+
+			if (InWater)
+			{
+				// dampen bullets SIGNIFICANTLY in water
+				Vector3 diff = end - start;
+				end = start + (diff.Normal * 64);
+
+				withoutTags.Add("water");
+			}
 
 			var tr = Trace.Ray(start, end)
 					.UseHitboxes()
-					.WithAnyTags("solid", "player")
 					.Ignore(Owner)
 					.Ignore(this)
+					.WithoutTags(withoutTags.ToArray())
 					.Size(radius)
 					.Run();
 

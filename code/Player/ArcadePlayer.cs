@@ -556,12 +556,11 @@ namespace infinitearcade
 
 				UsePhysicsCollision = true,
 				EnableAllCollisions = true,
-				EnableHitboxes = true,
 				PhysicsEnabled = true,
 				SurroundingBoundsMode = SurroundingBoundsType.Physics
 			};
 
-			ent.Tags.Add("solid");
+			ent.Tags.Add("corpse");
 
 			ent.SetModel(GetModelName());
 

@@ -153,10 +153,8 @@ namespace infinitearcade
 
 					ent.Position = tr.EndPosition;
 
-					ent.SetInteractsAs(CollisionLayer.All);
-					ent.SetInteractsExclude(CollisionLayer.Empty);
-					ent.SetInteractsWith(CollisionLayer.All);
-					ent.CollisionGroup = CollisionGroup.Always;
+					ent.Tags.Clear();
+					ent.Tags.Add("prop", "solid");
 				}
 				else
 				{

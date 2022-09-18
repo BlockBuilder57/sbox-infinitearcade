@@ -745,7 +745,7 @@ namespace infinitearcade
 
 			m_isTouchingLadder = false;
 
-			if (pm.Hit && !(pm.Entity is ModelEntity me && me.CollisionGroup == CollisionGroup.Always))
+			if (pm.Hit)
 			{
 				m_isTouchingLadder = true;
 				m_ladderNormal = pm.Normal;

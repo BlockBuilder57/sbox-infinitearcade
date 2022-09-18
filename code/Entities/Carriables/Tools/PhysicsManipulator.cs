@@ -178,7 +178,7 @@ namespace infinitearcade
 				return;
 
 			var tr = Trace.Ray(eyePos, eyePos + eyeDir * PhysMaxDistance)
-						.UseHitboxes()
+						.WithoutTags("trigger", "water")
 						.Ignore(Owner, false)
 						.Run();
 
@@ -322,9 +322,8 @@ namespace infinitearcade
 				return;
 
 			var tr = Trace.Ray(eyePos, eyePos + eyeDir * GravMaxDistance)
-						.UseHitboxes(true)
+						.WithoutTags("trigger", "water")
 						.Ignore(Owner, false)
-						.HitLayer(CollisionLayer.Debris)
 						.Size(16) // because nobody likes a sloppy gravity gun
 						.Run();
 
