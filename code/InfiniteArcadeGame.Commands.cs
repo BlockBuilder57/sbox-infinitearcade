@@ -140,7 +140,7 @@ namespace infinitearcade
 
 			if (cl?.Pawn is ArcadePlayer player)
 			{
-				ModelEntity ent = player.CreateDeathRagdoll();
+				Corpse ent = player.CreateDeathRagdoll();
 				if (!ent.IsValid())
 					return;
 

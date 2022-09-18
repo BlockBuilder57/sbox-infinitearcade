@@ -512,7 +512,7 @@ namespace infinitearcade
 		[ClientRpc]
 		private void BecomeRagdollOnClient(Vector3 velocity, DamageFlags damageFlags, Vector3 forcePos, Vector3 force, int bone)
 		{
-			ModelEntity ent = CreateDeathRagdoll();
+			Corpse ent = CreateDeathRagdoll();
 			if (!ent.IsValid())
 				return;
 
@@ -543,12 +543,12 @@ namespace infinitearcade
 			Corpse = ent;
 		}
 
-		public ModelEntity CreateDeathRagdoll()
+		public Corpse CreateDeathRagdoll()
 		{
 			if (string.IsNullOrEmpty(GetModelName()))
 				return null;
 
-			var ent = new ModelEntity
+			var ent = new Corpse
 			{
 				Position = Position,
 				Rotation = Rotation,
