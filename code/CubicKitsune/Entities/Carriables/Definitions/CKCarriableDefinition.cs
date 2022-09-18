@@ -19,9 +19,10 @@ namespace CubicKitsune
 		public ICKCarriable.BucketCategory Bucket { get; set; }
 		public int SubBucket { get; set; }
 
-		public Model WorldModel { get; set; }
-		public ICKCarriable.AnimGraphSetting[] AnimGraphSettings { get; set; }
 		public Model ViewModel { get; set; }
+		public Model WorldModel { get; set; }
+		public CitizenAnimationHelper.HoldTypes HoldType { get; set; }
+		public CitizenAnimationHelper.Hand Handedness { get; set; }
 
 		public static CKCarriable CreateFromDefinition(string path)
 		{

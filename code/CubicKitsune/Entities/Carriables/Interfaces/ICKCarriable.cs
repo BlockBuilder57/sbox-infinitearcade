@@ -18,28 +18,13 @@ namespace CubicKitsune
 			Tool = 400
 		}
 
-		public enum AnimGraphTypes
-		{
-			Bool,
-			Int,
-			Float,
-			Vector3
-		}
-
-		public struct AnimGraphSetting
-		{
-			public string Key { get; set; }
-			public string Value { get; set; }
-			public AnimGraphTypes Type { get; set; }
-		}
-
-
 		public string Identifier { get; set; }
 		public BucketCategory Bucket { get; set; }
 		public int SubBucket { get; set; }
 
-		public Model WorldModel { get; set; }
-		public AnimGraphSetting[] AnimGraphSettings { get; set; }
 		public Model ViewModel { get; set; }
+		public Model WorldModel { get; set; }
+		public CitizenAnimationHelper.HoldTypes HoldType { get; set; }
+		public CitizenAnimationHelper.Hand Handedness { get; set; }
 	}
 }

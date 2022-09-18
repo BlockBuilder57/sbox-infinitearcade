@@ -31,15 +31,9 @@
 		LibraryType = "firearm_shotgun"
 		Bucket = "Primary"
 		SubBucket = 0
-		WorldModel = resource:"weapons/rust_pumpshotgun/rust_pumpshotgun.vmdl"
-		AnimGraphSettings = 
-		[
-			{
-				Key = "holdtype"
-				Value = "3"
-				Type = "Int"
-			},
-		]
 		ViewModel = resource:"weapons/rust_pumpshotgun/v_rust_pumpshotgun.vmdl"
+		WorldModel = resource:"weapons/rust_pumpshotgun/rust_pumpshotgun.vmdl"
+		HoldType = "Shotgun"
+		Handedness = "Both"
 	}
 }

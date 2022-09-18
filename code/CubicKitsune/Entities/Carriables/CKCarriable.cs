@@ -16,9 +16,10 @@ namespace CubicKitsune
 		[Net] public ICKCarriable.BucketCategory Bucket { get; set; } = 0;
 		[Net] public int SubBucket { get; set; } = 0;
 
-		[Net] public Model WorldModel { get; set; }
-		[Net] public ICKCarriable.AnimGraphSetting[] AnimGraphSettings { get; set; }
 		[Net] public Model ViewModel { get; set; }
+		[Net] public Model WorldModel { get; set; }
+		[Net] public CitizenAnimationHelper.HoldTypes HoldType { get; set; }
+		[Net] public CitizenAnimationHelper.Hand Handedness { get; set; }
 
 		[Net, Predicted] public TimeSince TimeSinceDeployed { get; set; }
 		[Net] public TimeSince TimeSinceDropped { get; set; }
@@ -40,9 +41,10 @@ namespace CubicKitsune
 			Bucket = def.Bucket;
 			SubBucket = def.SubBucket;
 
-			WorldModel = def.WorldModel;
-			AnimGraphSettings = def.AnimGraphSettings;
 			ViewModel = def.ViewModel;
+			WorldModel = def.WorldModel;
+			HoldType = def.HoldType;
+			Handedness = def.Handedness;
 
 			Model = def.WorldModel;
 
@@ -130,37 +132,8 @@ namespace CubicKitsune
 
 		public override void SimulateAnimator(PawnAnimator anim)
 		{
-			CKDebugging.ScreenText($"AnimGraphSettings length: {AnimGraphSettings?.Length}");
-
-			if (AnimGraphSettings?.Length > 0)
-			{
-				foreach (var setting in AnimGraphSettings)
-				{
-					CKDebugging.ScreenText($"processing {setting.Key}: {setting.Value}");
-					if (setting.Key == null || setting.Value == null)
-						continue;
-
-					switch (setting.Type)
-					{
-						case ICKCarriable.AnimGraphTypes.Bool:
-							anim.SetAnimParameter(setting.Key, bool.Parse(setting.Value));
-							break;
-						case ICKCarriable.AnimGraphTypes.Int:
-							anim.SetAnimParameter(setting.Key, int.Parse(setting.Value));
-							break;
-						case ICKCarriable.AnimGraphTypes.Float:
-							anim.SetAnimParameter(setting.Key, float.Parse(setting.Value));
-							break;
-						case ICKCarriable.AnimGraphTypes.Vector3:
-							anim.SetAnimParameter(setting.Key, Vector3.Parse(setting.Value));
-							break;
-					}
-				}
-			}
-			else
-			{
-				base.SimulateAnimator(anim);
-			}
+			anim.SetAnimParameter("holdtype", (int)HoldType);
+			anim.SetAnimParameter("holdtype_handedness", (int)Handedness);
 		}
 
 		public override void CreateViewModel()

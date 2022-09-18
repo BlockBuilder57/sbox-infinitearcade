@@ -15,15 +15,9 @@
 		LibraryType = "tool_physmanip"
 		Bucket = "Tool"
 		SubBucket = 0
-		WorldModel = resource:"weapons/rust_pistol/rust_pistol.vmdl"
-		AnimGraphSettings = 
-		[
-			{
-				Key = "holdtype"
-				Value = "1"
-				Type = "Int"
-			},
-		]
 		ViewModel = resource:"weapons/rust_pistol/v_rust_pistol.vmdl"
+		WorldModel = resource:"weapons/rust_pistol/rust_pistol.vmdl"
+		HoldType = "Pistol"
+		Handedness = "Right"
 	}
 }

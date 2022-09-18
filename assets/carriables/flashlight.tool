@@ -18,8 +18,9 @@
 		LibraryType = "tool_flashlight"
 		Bucket = "Tool"
 		SubBucket = 0
-		WorldModel = resource:"weapons/rust_pistol/rust_pistol.vmdl"
-		AnimGraphSettings = [  ]
 		ViewModel = resource:"weapons/rust_flashlight/v_rust_flashlight.vmdl"
+		WorldModel = resource:"weapons/rust_pistol/rust_pistol.vmdl"
+		HoldType = "Pistol"
+		Handedness = "Right"
 	}
 }

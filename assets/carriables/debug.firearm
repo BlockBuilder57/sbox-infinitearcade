@@ -31,15 +31,9 @@
 		LibraryType = "firearm_pistol"
 		Bucket = "Primary"
 		SubBucket = -5757
-		WorldModel = resource:"models/dev/error.vmdl"
-		AnimGraphSettings = 
-		[
-			{
-				Key = "holdtype"
-				Value = "1"
-				Type = "Int"
-			},
-		]
 		ViewModel = resource:"models/dev/error.vmdl"
+		WorldModel = resource:"models/dev/error.vmdl"
+		HoldType = "Swing"
+		Handedness = "Both"
 	}
 }

@@ -30,7 +30,8 @@ namespace CubicKitsune
 		public int SubBucket { get; set; } = 0;
 
 		public Model WorldModel { get; set; }
-		public ICKCarriable.AnimGraphSetting[] AnimGraphSettings { get; set; }
 		public Model ViewModel { get; set; }
+		public CitizenAnimationHelper.HoldTypes HoldType { get; set; }
+		public CitizenAnimationHelper.Hand Handedness { get; set; }
 	}
 }

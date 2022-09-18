@@ -16,7 +16,7 @@
 		ReloadTime = 5.5
 		PrimaryInputSettings = 
 		{
-			Rate = 0.25
+			Rate = 0.05
 			BurstAmount = 3
 			AllowedModes = "FullAuto"
 		}
@@ -31,15 +31,9 @@
 		LibraryType = "firearm_pistol"
 		Bucket = "Secondary"
 		SubBucket = 0
-		WorldModel = resource:"weapons/rust_smg/rust_smg.vmdl"
-		AnimGraphSettings = 
-		[
-			{
-				Key = "holdtype"
-				Value = "2"
-				Type = "Int"
-			},
-		]
 		ViewModel = resource:"weapons/rust_smg/v_rust_smg.vmdl"
+		WorldModel = resource:"weapons/rust_smg/rust_smg.vmdl"
+		HoldType = "Rifle"
+		Handedness = "Both"
 	}
 }
