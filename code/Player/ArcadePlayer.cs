@@ -335,7 +335,7 @@ namespace infinitearcade
 
 		public override float FootstepVolume()
 		{
-			return Math.Clamp(base.FootstepVolume(), 0.1f, 2f);
+			return Math.Clamp(base.FootstepVolume(), 0.1f, 2f) * 5f;
 		}
 
 		TimeSince timeSinceLastFootstep = 0;

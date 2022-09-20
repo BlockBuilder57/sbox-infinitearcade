@@ -84,8 +84,8 @@ namespace infinitearcade
 			return model;
 		}
 
-		[ConCmd.Client("query_sandworks_packages")]
-		public static async Task QuerySandworksPackagesCommand(Package.Type type, string search = "", int take = 64, Package.Order order = Package.Order.Newest)
+		[ConCmd.Client("query_assetparty")]
+		public static async Task QueryAssetPartyCommand(Package.Type type, string search = "", int take = 64, Package.Order order = Package.Order.Newest)
 		{
 			var q = new Package.Query();
 			q.Type = type;
