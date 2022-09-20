@@ -61,7 +61,10 @@ namespace CubicKitsune
 			if (!IsReloading)
 				base.Simulate(cl);
 			else if (TimeSinceReload > ReloadTime * 1)
+			{
 				OnReloadFinish();
+				FinishReloadEffects();
+			}
 
 			if (debug_firearm && (Owner as Player).ActiveChild == this)
 			{
@@ -143,6 +146,12 @@ namespace CubicKitsune
 		{
 			ViewModelEntity?.SetAnimParameter("reload", true);
 			(Owner as AnimatedEntity)?.SetAnimParameter("b_reload", true);
+		}
+
+		[ClientRpc]
+		public virtual void FinishReloadEffects()
+		{
+			ViewModelEntity?.SetAnimParameter("reload_finished", true);
 		}
 
 		public virtual void FireHitscan(Vector3 pos, Vector3 dir, float spread, float force, float damage, float bulletSize)

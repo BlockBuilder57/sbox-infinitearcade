@@ -89,21 +89,14 @@ namespace infinitearcade
 			{
 				// we can reload, so keep going!
 				Reload();
+				return;
 			}
 			else
 			{
 				// either we're out of ammo or the internal mag is full, so we're done
 				PrimaryInput.ResetTime();
 				SecondaryInput.ResetTime();
-
-				FinishReloadEffects();
 			}
-		}
-
-		[ClientRpc]
-		public virtual void FinishReloadEffects()
-		{
-			ViewModelEntity?.SetAnimParameter("reload_finished", true);
 		}
 	}
 }

@@ -6,7 +6,7 @@
 		{
 			MaxClip = 40
 			MaxAmmo = 120
-			ProjectileAsset = resource:"assets/carriables/projectiles/default.proj"
+			ProjectileAsset = resource:"assets/carriables/projectiles/smg_round.proj"
 		}
 		SecondaryCapacitySettings = 
 		{
