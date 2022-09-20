@@ -1,0 +1,19 @@
+<!-- kv3 encoding:text:version{e21c7f3c-8a33-41c5-9977-a76d3a32aa0d} format:generic:version{7412167c-06e9-4698-aff2-e63eb59037e7} -->
+{
+	data = 
+	{
+		Identifier = "proj_shotgun_round"
+		TypeLibraryName = ""
+		WorldModel = null
+		Size = 1.5
+		Spread = 0.4
+		Damage = 24
+		Force = 1
+		Pellets = 8
+		DividedAcrossPellets = true
+		CanBounce = false
+		BounceParams = 
+		{
+		}
+	}
+}

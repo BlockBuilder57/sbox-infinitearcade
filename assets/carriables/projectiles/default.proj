@@ -1,0 +1,19 @@
+<!-- kv3 encoding:text:version{e21c7f3c-8a33-41c5-9977-a76d3a32aa0d} format:generic:version{7412167c-06e9-4698-aff2-e63eb59037e7} -->
+{
+	data = 
+	{
+		Identifier = "proj_default"
+		TypeLibraryName = ""
+		WorldModel = null
+		Size = 2
+		Spread = 0.2
+		Damage = 8
+		Force = 0.6
+		Pellets = 7
+		DividedAcrossPellets = false
+		CanBounce = false
+		BounceParams = 
+		{
+		}
+	}
+}

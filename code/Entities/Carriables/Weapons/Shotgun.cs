@@ -35,7 +35,7 @@ namespace infinitearcade
 
 				//if (SoundEvents.ContainsKey("primaryfire"))
 				//	Sound.FromWorld(SoundEvents["primaryfire"].ResourceName, Position);
-				ShootBullet(PrimaryCapacity.RoundDefinition, Owner.EyePosition, Owner.EyeRotation.Forward);
+				ShootProjectile(PrimaryCapacity.Projectile, Owner.EyePosition, Owner.EyeRotation.Forward);
 			}
 		}
 
@@ -61,8 +61,8 @@ namespace infinitearcade
 
 				//if (SoundEvents.ContainsKey("secondaryfire"))
 				//	Sound.FromWorld(SoundEvents["secondaryfire"].ResourceName, Position);
-				ShootBullet(PrimaryCapacity.RoundDefinition, Owner.EyePosition, Owner.EyeRotation.Forward);
-				ShootBullet(PrimaryCapacity.RoundDefinition, Owner.EyePosition, Owner.EyeRotation.Forward);
+				ShootProjectile(PrimaryCapacity.Projectile, Owner.EyePosition, Owner.EyeRotation.Forward);
+				ShootProjectile(PrimaryCapacity.Projectile, Owner.EyePosition, Owner.EyeRotation.Forward);
 			}
 			else
 				AttackPrimary();

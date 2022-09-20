@@ -6,9 +6,11 @@
 		{
 			MaxClip = 40
 			MaxAmmo = 120
+			ProjectileAsset = resource:"assets/carriables/projectiles/default.proj"
 		}
 		SecondaryCapacitySettings = 
 		{
+			ProjectileAsset = ""
 		}
 		PrimaryFunction = "FirePrimary"
 		SecondaryFunction = "None"

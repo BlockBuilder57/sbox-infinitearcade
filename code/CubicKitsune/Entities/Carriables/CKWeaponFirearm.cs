@@ -145,7 +145,7 @@ namespace CubicKitsune
 			(Owner as AnimatedEntity)?.SetAnimParameter("b_reload", true);
 		}
 
-		public virtual void ShootBullet(Vector3 pos, Vector3 dir, float spread, float force, float damage, float bulletSize)
+		public virtual void FireHitscan(Vector3 pos, Vector3 dir, float spread, float force, float damage, float bulletSize)
 		{
 			var forward = dir;
 			forward += (Vector3.Random + Vector3.Random + Vector3.Random + Vector3.Random) * spread * 0.25f;
@@ -169,23 +169,28 @@ namespace CubicKitsune
 			}
 		}
 
-		public virtual void ShootBullet(int numPellets, Vector3 pos, Vector3 dir, float spread, float force, float damage, float bulletSize, bool perPellet = false)
+		public virtual void FireHitscan(int numPellets, Vector3 pos, Vector3 dir, float spread, float force, float damage, float bulletSize, bool perPellet = false)
 		{
 			for (int i = 0; i < numPellets; i++)
 			{
 				if (perPellet)
-					ShootBullet(pos, dir, spread, force / numPellets, damage / numPellets, bulletSize);
+					FireHitscan(pos, dir, spread, force / numPellets, damage / numPellets, bulletSize);
 				else
-					ShootBullet(pos, dir, spread, force, damage, bulletSize);
+					FireHitscan(pos, dir, spread, force, damage, bulletSize);
 			}
 		}
 
-		public virtual void ShootBullet(CKRoundDefinition round, Vector3 pos, Vector3 dir)
+		public virtual void ShootProjectile(ICKProjectile proj, Vector3 pos, Vector3 dir)
 		{
-			if (round != null)
-				ShootBullet(round.Pellets, pos, dir, round.Spread, round.Force, round.Damage, round.BulletSize, round.DividedAcrossPellets);
+			if (proj == null)
+				throw new Exception("Projectile was null");
+
+			if (string.IsNullOrEmpty(proj.TypeLibraryName))
+				FireHitscan(proj.Pellets, pos, dir, proj.Spread, proj.Force, proj.Damage, proj.Size, proj.DividedAcrossPellets);
 			else
-				ShootBullet(8, pos, dir, 0.2f, 0.2f, 16, 2, true);
+			{
+				// do other projectile things :)
+			}
 		}
 
 		[ConCmd.Admin("firearm_setclip")]
@@ -238,7 +243,7 @@ namespace CubicKitsune
 		[Net] public int MaxClip { get; private set; }
 		[Net] public int MaxAmmo { get; private set; }
 
-		[Net] public CKRoundDefinition RoundDefinition { get; set; }
+		[Net] public CKProjectileDefinition Projectile { get; set; }
 
 		[Net] public bool InfiniteClip { get; set; } = false;
 		[Net] public bool InfiniteAmmo { get; set; } = false;
@@ -253,7 +258,7 @@ namespace CubicKitsune
 		{
 			Clip = MaxClip = settings.MaxClip;
 			Ammo = MaxAmmo = settings.MaxAmmo;
-			RoundDefinition = settings.RoundDefinition;
+			Projectile = ResourceLibrary.Get<CKProjectileDefinition>(settings.ProjectileAsset);
 
 			//Log.Info($"{NetworkIdent} being setup by: {settings}");
 		}

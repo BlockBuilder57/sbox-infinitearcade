@@ -13,7 +13,7 @@ namespace CubicKitsune
 		{
 			public int MaxClip { get; set; }
 			public int MaxAmmo { get; set; }
-			public CKRoundDefinition RoundDefinition { get; set; }
+			public string ProjectileAsset { get; set; }
 		}
 
 		public enum InputFunction
