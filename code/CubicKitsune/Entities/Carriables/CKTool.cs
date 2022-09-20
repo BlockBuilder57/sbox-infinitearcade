@@ -151,21 +151,26 @@ namespace CubicKitsune
 		}
 
 		/// <summary>
-		/// Does a trace from start to end, does bullet impact effects. Coded as an IEnumerable so you can return multiple
+		/// Does a trace from start to end. Coded as an IEnumerable so you can return multiple
 		/// hits, like if you're going through layers or ricocet'ing or something.
 		/// </summary>
-		public virtual IEnumerable<TraceResult> TraceBullet(Vector3 start, Vector3 end, float radius = 2.0f)
+		public virtual IEnumerable<TraceResult> TraceHitscan(Vector3 start, Vector3 end, float radius = 2.0f, bool testWater = true, int maxBounces = 0, float maxGlanceAngle = 8f)
 		{
 			List<string> withoutTags = new() { "trigger" };
-			bool InWater = Trace.TestPoint(start, "water");
+			int hits = 0;
 
-			if (InWater)
+			if (testWater)
 			{
-				// dampen bullets SIGNIFICANTLY in water
-				Vector3 diff = end - start;
-				end = start + (diff.Normal * 64);
+				bool InWater = Trace.TestPoint(start, "water");
 
-				withoutTags.Add("water");
+				if (InWater)
+				{
+					// dampen bullets SIGNIFICANTLY in water
+					Vector3 diff = end - start;
+					end = start + (diff.Normal * 64);
+
+					withoutTags.Add("water");
+				}
 			}
 
 			var tr = Trace.Ray(start, end)
@@ -177,6 +182,39 @@ namespace CubicKitsune
 					.Run();
 
 			yield return tr;
+
+			float vecLength = Vector3.DistanceBetween(start, end);
+
+			
+
+			while (tr.Hit && tr.Entity.IsWorld)
+			{
+				hits++;
+
+				float angle = Vector3.GetAngle(tr.Normal, tr.Direction);
+				Vector3 newDir = Vector3.Reflect(tr.Direction, tr.Normal);
+
+				/*if (Host.IsServer)
+				{
+					DebugOverlay.Line(tr.StartPosition, tr.EndPosition, Color.Yellow, 2f);
+					DebugOverlay.Text($"hit {hits} occured (ang {angle-90f})", tr.EndPosition, 2f);
+				}*/
+
+				if ((angle - 90f) < maxGlanceAngle && hits < maxBounces)
+				{
+					tr = Trace.Ray(tr.EndPosition, tr.EndPosition + newDir * vecLength)
+						.UseHitboxes()
+						.Ignore(Owner)
+						.Ignore(this)
+						.WithoutTags(withoutTags.ToArray())
+						.Size(radius)
+						.Run();
+
+					yield return tr;
+				}
+				else
+					break;
+			}
 
 			// Another trace, bullet going through thin material, penetrating water surface?
 		}

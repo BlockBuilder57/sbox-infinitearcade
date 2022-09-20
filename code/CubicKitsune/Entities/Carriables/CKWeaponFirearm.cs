@@ -154,16 +154,18 @@ namespace CubicKitsune
 			ViewModelEntity?.SetAnimParameter("reload_finished", true);
 		}
 
-		public virtual void FireHitscan(Vector3 pos, Vector3 dir, float spread, float force, float damage, float bulletSize)
+		public virtual void FireHitscan(Vector3 pos, Vector3 dir, float spread, float force, float damage, float bulletSize, int maxBounces, float maxGlanceAngle)
 		{
 			var forward = dir;
 			forward += (Vector3.Random + Vector3.Random + Vector3.Random + Vector3.Random) * spread * 0.25f;
 			forward = forward.Normal;
 
-			foreach (var tr in TraceBullet(pos, pos + forward * short.MaxValue, bulletSize))
+			foreach (var tr in TraceHitscan(pos, pos + forward * short.MaxValue, bulletSize, true, maxBounces, maxGlanceAngle))
 			{
 				if (!IsServer || !tr.Entity.IsValid())
 					continue;
+
+				//DebugOverlay.Line(tr.StartPosition, tr.EndPosition, Color.Yellow, 2f);
 
 				// prediction is turned off here to prevent bullet traces from being desynced
 				using (Prediction.Off())
@@ -178,14 +180,14 @@ namespace CubicKitsune
 			}
 		}
 
-		public virtual void FireHitscan(int numPellets, Vector3 pos, Vector3 dir, float spread, float force, float damage, float bulletSize, bool perPellet = false)
+		public virtual void FireHitscan(int numPellets, Vector3 pos, Vector3 dir, float spread, float force, float damage, float bulletSize, int maxBounces = 0, float maxGlanceAngle = 8f, bool perPellet = false)
 		{
 			for (int i = 0; i < numPellets; i++)
 			{
 				if (perPellet)
-					FireHitscan(pos, dir, spread, force / numPellets, damage / numPellets, bulletSize);
+					FireHitscan(pos, dir, spread, force / numPellets, damage / numPellets, bulletSize, maxBounces, maxGlanceAngle);
 				else
-					FireHitscan(pos, dir, spread, force, damage, bulletSize);
+					FireHitscan(pos, dir, spread, force, damage, bulletSize, maxBounces, maxGlanceAngle);
 			}
 		}
 
@@ -195,7 +197,7 @@ namespace CubicKitsune
 				throw new Exception("Projectile was null");
 
 			if (string.IsNullOrEmpty(proj.TypeLibraryName))
-				FireHitscan(proj.Pellets, pos, dir, proj.Spread, proj.Force, proj.Damage, proj.Size, proj.DividedAcrossPellets);
+				FireHitscan(proj.Pellets, pos, dir, proj.Spread, proj.Force, proj.Damage, proj.Size, proj.BounceParams.MaxBounces, proj.BounceParams.MaxGlanceAngle, proj.DividedAcrossPellets);
 			else
 			{
 				// do other projectile things :)

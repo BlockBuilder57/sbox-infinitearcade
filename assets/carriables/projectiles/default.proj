@@ -6,14 +6,15 @@
 		TypeLibraryName = ""
 		WorldModel = null
 		Size = 2
-		Spread = 0.2
+		Spread = 0
 		Damage = 8
 		Force = 0.6
-		Pellets = 7
+		Pellets = 1
 		DividedAcrossPellets = false
-		CanBounce = false
 		BounceParams = 
 		{
+			MaxBounces = 3
+			MaxGlanceAngle = 30
 		}
 	}
 }

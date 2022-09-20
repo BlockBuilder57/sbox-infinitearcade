@@ -28,7 +28,6 @@ namespace CubicKitsune
 			public int VelocityMultiplier { get; set; }
 		}
 
-		public bool CanBounce { get; set; }
 		public BounceParameters BounceParams { get; set; }
 	}
 }

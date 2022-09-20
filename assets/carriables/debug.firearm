@@ -19,7 +19,7 @@
 		PrimaryInputSettings = 
 		{
 			Rate = 0.05
-			AllowedModes = "FullAuto"
+			AllowedModes = "Single, FullAuto"
 		}
 		SecondaryInputSettings = 
 		{

@@ -27,7 +27,6 @@ namespace CubicKitsune
 		public int Pellets { get; set; }
 		public bool DividedAcrossPellets { get; set; }
 
-		public bool CanBounce { get; set; }
 		public ICKProjectile.BounceParameters BounceParams { get; set; }
 
 		protected override void PostLoad()
