@@ -21,7 +21,8 @@ namespace infinitearcade.UI
 		{
 			Parent = parent;
 			Carriable = carriable;
-			Name = Add.Label(carriable.Identifier);
+			// yay localization
+			Name = Add.Label('#' + carriable.Identifier);
 
 			StyleSheet.Load("UI/InventoryIcon.scss");
 

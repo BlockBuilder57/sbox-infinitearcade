@@ -1,0 +1,11 @@
+{
+	//"ia_carriable_default" : "Default Carriable",
+	"ia_firearm_debug" : "Debug Gun",
+	
+	"ia_firearm_pistol" : "Pistol",
+	"ia_firearm_shotgun" : "Shotgun",
+	"ia_firearm_smg" : "SMG",
+	
+	"ia_tool_flashlight" : "Flashlight",
+	"ia_tool_physmanip" : "Physics Manipulator"
+}
