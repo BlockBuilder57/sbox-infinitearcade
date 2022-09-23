@@ -95,11 +95,14 @@
         },
         {
           "a": "trigger",
-          "b": "corpse",
-          "r": "Collide"
+          "b": "corpse"
         },
         {
           "a": "player",
+          "b": "weapon"
+        },
+        {
+          "a": "trigger",
           "b": "weapon"
         }
       ]

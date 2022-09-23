@@ -34,5 +34,27 @@ namespace infinitearcade
 				ShootProjectile(PrimaryCapacity.Projectile, Owner.EyePosition, Owner.EyeRotation.Forward);
 			}
 		}
+
+		public override void AttackSecondary()
+		{
+			if (SecondaryCapacity.Clip <= 0)
+			{
+				PlaySound("weapon_empty_click");
+				//Reload();
+				return;
+			}
+
+			if (SecondaryCapacity.CanTakeClip())
+			{
+				SecondaryCapacity.TakeClip();
+
+				if (Owner is AnimatedEntity anim)
+					anim.SetAnimParameter("b_attack", true);
+
+				ViewModelEntity?.SetAnimParameter("fire", true);
+
+				ShootProjectile(SecondaryCapacity.Projectile, Owner.EyePosition, Owner.EyeRotation.Forward);
+			}
+		}
 	}
 }

@@ -1,0 +1,18 @@
+<!-- kv3 encoding:text:version{e21c7f3c-8a33-41c5-9977-a76d3a32aa0d} format:generic:version{7412167c-06e9-4698-aff2-e63eb59037e7} -->
+{
+	data = 
+	{
+		Identifier = "proj_40mm_grenade"
+		TypeLibraryName = "projectile_base"
+		WorldModel = resource:"models/weapons/40mmgrenade_projectile.vmdl"
+		Size = 0
+		Spread = 0
+		Damage = 0
+		Force = 2000
+		Pellets = 1
+		DividedAcrossPellets = false
+		BounceParams = 
+		{
+		}
+	}
+}

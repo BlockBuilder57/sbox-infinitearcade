@@ -39,8 +39,10 @@ namespace CubicKitsune
 
 			if (Host.IsServer)
 			{
-				PrimaryCapacity = new WeaponCapacity(firearm.PrimaryCapacitySettings);
-				//SecondaryCapacity = new WeaponCapacity(firearm.SecondaryCapacitySettings);
+				if (!string.IsNullOrEmpty(firearm.PrimaryCapacitySettings.ProjectileAsset))
+					PrimaryCapacity = new WeaponCapacity(firearm.PrimaryCapacitySettings);
+				if (!string.IsNullOrEmpty(firearm.SecondaryCapacitySettings.ProjectileAsset))
+					SecondaryCapacity = new WeaponCapacity(firearm.SecondaryCapacitySettings);
 
 				PrimaryFunction = firearm.PrimaryFunction;
 				SecondaryFunction = firearm.SecondaryFunction;
@@ -200,27 +202,44 @@ namespace CubicKitsune
 				FireHitscan(proj.Pellets, pos, dir, proj.Spread, proj.Force, proj.Damage, proj.Size, proj.BounceParams.MaxBounces, proj.BounceParams.MaxGlanceAngle, proj.DividedAcrossPellets);
 			else
 			{
-				// do other projectile things :)
+				if (Host.IsServer)
+				{
+					for (int i = 0; i < proj.Pellets; i++)
+					{
+						// fire a projectile
+						CKProjectile ent = TypeLibrary.Create<CKProjectile>(proj.TypeLibraryName);
+
+						if (!ent.IsValid())
+							throw new Exception("Projectile library name didn't make an entity");
+
+						ent.Owner = Owner;
+
+						ent.Position = pos + (dir * 16f); // bump it out a little
+						ent.Model = proj.WorldModel;
+						ent.Rotation = Rotation.From(dir.Normal.EulerAngles);
+						ent.Velocity = Owner.Velocity + (dir * proj.Force);
+					}
+				}
 			}
 		}
 
 		[ConCmd.Admin("firearm_setclip")]
-		public static void SetClipCommand(int clip)
+		public static void SetClipCommand(int clip, bool secondary = false)
 		{
-			if (ConsoleSystem.Caller?.Pawn is Player player && player.IsValid())
+			if (ConsoleSystem.Caller?.Pawn is Player player && player.IsValid() && player.ActiveChild is CKWeaponFirearm firearm)
 			{
-				if (player.ActiveChild is CKWeaponFirearm firearm)
-					firearm.PrimaryCapacity.SetClip(clip);
+				WeaponCapacity cap = secondary ? firearm.SecondaryCapacity : firearm.PrimaryCapacity;
+				cap.SetClip(clip);
 			}
 		}
 
 		[ConCmd.Admin("firearm_setammo")]
-		public static void SetAmmoCommand(int ammo)
+		public static void SetAmmoCommand(int ammo, bool secondary = false)
 		{
-			if (ConsoleSystem.Caller?.Pawn is Player player && player.IsValid())
+			if (ConsoleSystem.Caller?.Pawn is Player player && player.IsValid() && player.ActiveChild is CKWeaponFirearm firearm)
 			{
-				if (player.ActiveChild is CKWeaponFirearm firearm)
-					firearm.PrimaryCapacity.SetAmmo(ammo);
+				WeaponCapacity cap = secondary ? firearm.SecondaryCapacity : firearm.PrimaryCapacity;
+				cap.SetAmmo(ammo);
 			}
 		}
 
@@ -234,13 +253,21 @@ namespace CubicKitsune
 					if (firearm.PrimaryCapacity != null)
 					{
 						int missingPrimary = firearm.PrimaryCapacity.MaxClip - firearm.PrimaryCapacity.Clip;
-						firearm.PrimaryCapacity.SetAmmo(firearm.PrimaryCapacity.MaxAmmo + missingPrimary);
+
+						if (firearm.PrimaryCapacity.MaxAmmo > 0)
+							firearm.PrimaryCapacity.SetAmmo(firearm.PrimaryCapacity.MaxAmmo + missingPrimary);
+						else
+							firearm.PrimaryCapacity.SetClip(firearm.PrimaryCapacity.MaxClip);
 					}
 					
 					if (firearm.SecondaryCapacity != null)
 					{
 						int missingSecondary = firearm.SecondaryCapacity.MaxClip - firearm.SecondaryCapacity.Clip;
-						firearm.SecondaryCapacity.SetAmmo(firearm.SecondaryCapacity.MaxAmmo + missingSecondary);
+						
+						if (firearm.SecondaryCapacity.MaxAmmo > 0)
+							firearm.SecondaryCapacity.SetAmmo(firearm.SecondaryCapacity.MaxAmmo + missingSecondary);
+						else
+							firearm.SecondaryCapacity.SetClip(firearm.SecondaryCapacity.MaxClip);
 					}
 				}
 			}

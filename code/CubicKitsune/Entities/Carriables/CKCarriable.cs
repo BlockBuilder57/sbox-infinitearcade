@@ -94,6 +94,7 @@ namespace CubicKitsune
 			base.OnCarryStart(carrier);
 
 			OwnerPlayer = carrier as Player;
+			PickupTrigger.EnableAllCollisions = false;
 		}
 
 		public override void OnCarryDrop(Entity dropper)
@@ -102,6 +103,7 @@ namespace CubicKitsune
 
 			TimeSinceDropped = 0;
 			OwnerPlayer = null;
+			PickupTrigger.EnableAllCollisions = true;
 		}
 
 		public bool OnUse(Entity user)

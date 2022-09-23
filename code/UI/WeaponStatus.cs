@@ -13,12 +13,14 @@ namespace infinitearcade.UI
 	public class WeaponStatus : Panel
 	{
 		private WeaponAmmoDisplay m_primaryDisplay;
+		private WeaponAmmoDisplay m_secondaryDisplay;
 
 		public WeaponStatus()
 		{
 			StyleSheet.Load("/ui/WeaponStatus.scss");
 
 			m_primaryDisplay = AddChild<WeaponAmmoDisplay>();
+			m_secondaryDisplay = AddChild<WeaponAmmoDisplay>();
 		}
 
 		public override void Tick()
@@ -34,8 +36,8 @@ namespace infinitearcade.UI
 			{
 				SetClass("hidden", false);
 
-				if (firearm.PrimaryCapacity != null)
-					m_primaryDisplay.Update(firearm.PrimaryCapacity.Clip, firearm.PrimaryCapacity.Ammo);
+				m_primaryDisplay.Update(firearm.PrimaryCapacity);
+				m_secondaryDisplay.Update(firearm.SecondaryCapacity);
 			}
 
 		}
@@ -50,15 +52,24 @@ namespace infinitearcade.UI
 			{
 				Clip = Add.Label("0", "clip");
 				Ammo = Add.Label("0", "ammo");
-				Icon = Add.Image(null);
+				//Icon = Add.Image(null);
 			}
 
-			public void Update(int clip, int ammo)
+			public void Update(WeaponCapacity cap)
 			{
+				SetClass("hidden", cap == null);
+				if (cap == null) return;
+
 				if (Clip != null)
-					Clip.Text = clip.ToString();
+				{
+					Clip.SetClass("hidden", cap.MaxClip <= 0);
+					Clip.Text = cap.Clip.ToString();
+				}
 				if (Ammo != null)
-					Ammo.Text = ammo.ToString();
+				{
+					Ammo.SetClass("hidden", cap.MaxAmmo <= 0);
+					Ammo.Text = cap.Ammo.ToString();
+				}
 			}
 		}
 	}

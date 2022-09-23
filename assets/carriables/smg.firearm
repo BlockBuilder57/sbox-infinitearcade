@@ -10,10 +10,11 @@
 		}
 		SecondaryCapacitySettings = 
 		{
-			ProjectileAsset = ""
+			MaxClip = 6
+			ProjectileAsset = resource:"assets/carriables/projectiles/40mmgrenade.proj"
 		}
 		PrimaryFunction = "FirePrimary"
-		SecondaryFunction = "None"
+		SecondaryFunction = "FireSecondary"
 		ReloadFunction = "Reload"
 		ReloadTime = 5.5
 		PrimaryInputSettings = 
@@ -24,6 +25,8 @@
 		}
 		SecondaryInputSettings = 
 		{
+			Rate = 0.5
+			AllowedModes = "Single"
 		}
 		ReloadInputSettings = 
 		{
