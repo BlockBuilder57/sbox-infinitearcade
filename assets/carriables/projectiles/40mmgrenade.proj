@@ -5,12 +5,17 @@
 		Identifier = "proj_40mm_grenade"
 		TypeLibraryName = "projectile_base"
 		WorldModel = resource:"models/weapons/40mmgrenade_projectile.vmdl"
-		Size = 0
-		Spread = 0
-		Damage = 0
-		Force = 2000
-		Pellets = 1
-		DividedAcrossPellets = false
+		Stats = 
+		{
+			Size = 1
+			Health = 1
+			ForceLinear = "2400,0,0"
+			ForceLinearRandom = "0,100,100"
+			ForceAngular = "300,0,0"
+		}
+		Damage = -1
+		Count = 1
+		StatsDividedAcrossCount = false
 		BounceParams = 
 		{
 		}

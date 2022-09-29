@@ -5,13 +5,15 @@
 		Identifier = "proj_shotgun_round"
 		TypeLibraryName = ""
 		WorldModel = null
-		Size = 1.5
-		Spread = 0.4
+		Stats = 
+		{
+			Size = 0.5
+			ForceLinear = "18,0,0"
+			ForceLinearRandom = "0,2,2"
+		}
 		Damage = 24
-		Force = 1
-		Pellets = 8
-		DividedAcrossPellets = true
-		CanBounce = false
+		Count = 8
+		StatsDividedAcrossCount = true
 		BounceParams = 
 		{
 		}

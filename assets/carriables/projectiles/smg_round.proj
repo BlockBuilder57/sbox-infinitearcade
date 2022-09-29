@@ -5,12 +5,15 @@
 		Identifier = "proj_smg_round"
 		TypeLibraryName = ""
 		WorldModel = null
-		Size = 1.5
-		Spread = 0.1
-		Damage = 9
-		Force = 0.1
-		Pellets = 1
-		DividedAcrossPellets = false
+		Stats = 
+		{
+			Size = 1
+			ForceLinear = "7,0,0"
+			ForceLinearRandom = "0,0.7,0.7"
+		}
+		Damage = 7
+		Count = 1
+		StatsDividedAcrossCount = false
 		BounceParams = 
 		{
 			MaxBounces = 3

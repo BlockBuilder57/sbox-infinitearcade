@@ -156,11 +156,9 @@ namespace CubicKitsune
 			ViewModelEntity?.SetAnimParameter("reload_finished", true);
 		}
 
-		public virtual void FireHitscan(Vector3 pos, Vector3 dir, float spread, float force, float damage, float bulletSize, int maxBounces, float maxGlanceAngle)
+		public virtual void FireHitscanBullet(Vector3 pos, Vector3 dir, float physForce, float damage, float bulletSize, int maxBounces, float maxGlanceAngle)
 		{
-			var forward = dir;
-			forward += (Vector3.Random + Vector3.Random + Vector3.Random + Vector3.Random) * spread * 0.25f;
-			forward = forward.Normal;
+			var forward = dir.Normal;
 
 			foreach (var tr in TraceHitscan(pos, pos + forward * short.MaxValue, bulletSize, true, maxBounces, maxGlanceAngle))
 			{
@@ -174,22 +172,11 @@ namespace CubicKitsune
 				{
 					tr.Surface.DoBulletImpact(tr);
 
-					var damageInfo = DamageInfo.FromBullet(tr.EndPosition, forward * 100 * force * Scale, damage * Scale)
+					var damageInfo = DamageInfo.FromBullet(tr.EndPosition, forward * physForce * Scale, damage * Scale)
 						.UsingTraceResult(tr).WithAttacker(Owner).WithWeapon(this);
 
 					tr.Entity.TakeDamage(damageInfo);
 				}
-			}
-		}
-
-		public virtual void FireHitscan(int numPellets, Vector3 pos, Vector3 dir, float spread, float force, float damage, float bulletSize, int maxBounces = 0, float maxGlanceAngle = 8f, bool perPellet = false)
-		{
-			for (int i = 0; i < numPellets; i++)
-			{
-				if (perPellet)
-					FireHitscan(pos, dir, spread, force / numPellets, damage / numPellets, bulletSize, maxBounces, maxGlanceAngle);
-				else
-					FireHitscan(pos, dir, spread, force, damage, bulletSize, maxBounces, maxGlanceAngle);
 			}
 		}
 
@@ -198,27 +185,54 @@ namespace CubicKitsune
 			if (proj == null)
 				throw new Exception("Projectile was null");
 
+			if (!Host.IsServer)
+				return;
+
+			ICKProjectile.SpawnStats stats = proj.Stats;
+			proj.Count = Math.Max(1, proj.Count);
+
 			if (string.IsNullOrEmpty(proj.TypeLibraryName))
-				FireHitscan(proj.Pellets, pos, dir, proj.Spread, proj.Force, proj.Damage, proj.Size, proj.BounceParams.MaxBounces, proj.BounceParams.MaxGlanceAngle, proj.DividedAcrossPellets);
+			{
+				// fire bullet(s)
+
+				for (int i = 0; i < proj.Count; i++)
+				{
+					Vector3 forceLinear = stats.ForceLinear + (stats.ForceLinearRandom * Vector3.Random);
+					// rotate to dir
+					Vector3 forceLinearDir = (Rotation.From(dir.Normal.EulerAngles) * forceLinear);
+
+					float physForce = forceLinear.x;
+					float damage = proj.Damage / proj.Count;
+
+					FireHitscanBullet(pos, forceLinearDir, physForce, damage, stats.Size, proj.BounceParams.MaxBounces, proj.BounceParams.MaxGlanceAngle);
+				}
+			}
 			else
 			{
-				if (Host.IsServer)
+				// fire projectile(s)
+
+				for (int i = 0; i < proj.Count; i++)
 				{
-					for (int i = 0; i < proj.Pellets; i++)
-					{
-						// fire a projectile
-						CKProjectile ent = TypeLibrary.Create<CKProjectile>(proj.TypeLibraryName);
 
-						if (!ent.IsValid())
-							throw new Exception("Projectile library name didn't make an entity");
+					CKProjectile ent = TypeLibrary.Create<CKProjectile>(proj.TypeLibraryName);
 
-						ent.Owner = Owner;
+					if (!ent.IsValid())
+						throw new Exception("Projectile library name didn't make a projectile entity");
 
-						ent.Position = pos + (dir * 16f); // bump it out a little
-						ent.Model = proj.WorldModel;
-						ent.Rotation = Rotation.From(dir.Normal.EulerAngles);
-						ent.Velocity = Owner.Velocity + (dir * proj.Force);
-					}
+					Vector3 forceLinearDir = Rotation.From(dir.Normal.EulerAngles) * (stats.ForceLinear + (stats.ForceLinearRandom * Vector3.Random));
+					Angles forceAngular = stats.ForceAngular + (Angles.AngleVector(stats.ForceAngularRandom) * Vector3.Random);
+
+					ent.Owner = Owner;
+					ent.Model = proj.WorldModel;
+					ent.Health = stats.Health;
+					ent.Lifetime = stats.Lifetime;
+					ent.Damage = proj.Damage;
+
+					ent.Position = pos + dir; // bump it out a little
+					ent.Rotation = Rotation.From(dir.Normal.EulerAngles);
+
+					ent.Velocity = Owner.Velocity + forceLinearDir;
+					ent.ApplyLocalAngularImpulse(new Vector3(forceAngular.pitch, forceAngular.yaw, forceAngular.roll));
 				}
 			}
 		}

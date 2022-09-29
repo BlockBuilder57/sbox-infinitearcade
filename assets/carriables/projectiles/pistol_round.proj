@@ -5,15 +5,19 @@
 		Identifier = "proj_pistol_round"
 		TypeLibraryName = ""
 		WorldModel = null
-		Size = 1.5
-		Spread = 0.2
-		Damage = 9
-		Force = 0.1
-		Pellets = 1
-		DividedAcrossPellets = false
-		CanBounce = false
+		Stats = 
+		{
+			Size = 1
+			ForceLinear = "7,0,0"
+			ForceLinearRandom = "0,0.2,0.2"
+		}
+		Damage = 8
+		Count = 1
+		StatsDividedAcrossCount = false
 		BounceParams = 
 		{
+			MaxBounces = 2
+			MaxGlanceAngle = 5
 		}
 	}
 }

@@ -8,9 +8,12 @@ using Sandbox;
 namespace CubicKitsune
 {
 	[Library("projectile_base", Title = "Base Projectile")]
-	public class CKProjectile : Prop
+	public partial class CKProjectile : Prop
 	{
-		private TimeSince m_sinceSpawn;
+		[Net] public float Damage { get; set; } = -1;
+		[Net] public float Lifetime { get; set; } = -1;
+
+		[Net] private TimeSince m_sinceSpawn { get; set; }
 
 		public CKProjectile()
 		{
@@ -18,6 +21,44 @@ namespace CubicKitsune
 
 			Tags.Clear();
 			Tags.Add("weapon");
+		}
+
+		[Event.Tick]
+		public virtual void OnTick()
+		{
+			if (Lifetime > 0 && m_sinceSpawn > Lifetime)
+				OnLifetimeRunout();
+		}
+
+		public virtual void OnLifetimeRunout()
+		{
+			Delete();
+		}
+
+		// THIS REQUIRES EDITING PROP.CS (for now!)
+		protected override void DoExplosion()
+		{
+			if (Model == null || Model.IsError)
+				return;
+
+			if (!Model.TryGetData(out ModelExplosionBehavior explosionBehavior))
+				return;
+
+			// Damage and push away all other entities
+			var srcPos = Position;
+			if (PhysicsBody.IsValid()) srcPos = PhysicsBody.MassCenter;
+			if (explosionBehavior.Radius > 0.0f)
+			{
+				new ExplosionEntity
+				{
+					Position = srcPos,
+					Radius = explosionBehavior.Radius,
+					Damage = Damage == -1 ? explosionBehavior.Damage : Damage,
+					ForceScale = explosionBehavior.Force,
+					ParticleOverride = explosionBehavior.Effect,
+					SoundOverride = explosionBehavior.Sound
+				}.Explode(this);
+			}
 		}
 	}
 }

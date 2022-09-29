@@ -18,14 +18,12 @@ namespace CubicKitsune
 		[Description("Library name of the projectile to spawn. Leave blank for hitscan.")]
 		public string TypeLibraryName { get; set; }
 		public Model WorldModel { get; set; }
-		public float Size { get; set; }
 
-		public float Spread { get; set; }
-		public float Damage { get; set; }
-		public float Force { get; set; }
-		
-		public int Pellets { get; set; }
-		public bool DividedAcrossPellets { get; set; }
+		public ICKProjectile.SpawnStats Stats { get; set; }
+		public float Damage { get; set; } = -1;
+
+		public int Count { get; set; }
+		public bool StatsDividedAcrossCount { get; set; }
 
 		public ICKProjectile.BounceParameters BounceParams { get; set; }
 
