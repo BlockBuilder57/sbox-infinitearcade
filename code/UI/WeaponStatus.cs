@@ -46,7 +46,7 @@ namespace infinitearcade.UI
 		{
 			public Label Clip;
 			public Label Ammo;
-			public Image Icon;
+			//public Image Icon;
 
 			public WeaponAmmoDisplay()
 			{

@@ -156,11 +156,11 @@ namespace CubicKitsune
 			ViewModelEntity?.SetAnimParameter("reload_finished", true);
 		}
 
-		public virtual void FireHitscanBullet(Vector3 pos, Vector3 dir, float physForce, float damage, float bulletSize, int maxBounces, float maxGlanceAngle)
+		public virtual void FireHitscanBullet(Vector3 pos, Vector3 dir, float physForce, float damage, float bulletSize, ICKProjectile.BounceParameters bounceParams)
 		{
 			var forward = dir.Normal;
 
-			foreach (var tr in TraceHitscan(pos, pos + forward * short.MaxValue, bulletSize, true, maxBounces, maxGlanceAngle))
+			foreach (var tr in TraceHitscan(pos, pos + forward * short.MaxValue, bulletSize, true, bounceParams))
 			{
 				if (!IsServer || !tr.Entity.IsValid())
 					continue;
@@ -204,7 +204,7 @@ namespace CubicKitsune
 					float physForce = forceLinear.x;
 					float damage = proj.Damage / proj.Count;
 
-					FireHitscanBullet(pos, forceLinearDir, physForce, damage, stats.Size, proj.BounceParams.MaxBounces, proj.BounceParams.MaxGlanceAngle);
+					FireHitscanBullet(pos, forceLinearDir, physForce, damage, stats.Size, proj.BounceParams);
 				}
 			}
 			else
@@ -220,7 +220,7 @@ namespace CubicKitsune
 						throw new Exception("Projectile library name didn't make a projectile entity");
 
 					Vector3 forceLinearDir = Rotation.From(dir.Normal.EulerAngles) * (stats.ForceLinear + (stats.ForceLinearRandom * Vector3.Random));
-					Angles forceAngular = stats.ForceAngular + (Angles.AngleVector(stats.ForceAngularRandom) * Vector3.Random);
+					Angles forceAngular = stats.ForceAngular + (new Vector3(stats.ForceAngularRandom.pitch, stats.ForceAngularRandom.yaw, stats.ForceAngularRandom.roll) * Vector3.Random);
 
 					ent.Owner = Owner;
 					ent.Model = proj.WorldModel;

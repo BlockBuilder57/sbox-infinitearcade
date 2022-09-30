@@ -23,7 +23,7 @@ namespace CubicKitsune
 		public ICKTool.InputSettings SecondaryInputSettings { get; set; }
 		public ICKTool.InputSettings ReloadInputSettings { get; set; }
 
-		public IDictionary<string, SoundEvent> SoundEvents { get; set; }
+		public ICKTool.Sounds[] SoundEvents { get; set; }
 
 		public string Identifier { get; set; } = "RUNTIME_DEFINITION";
 		public ICKCarriable.BucketCategory Bucket { get; set; } = 0;

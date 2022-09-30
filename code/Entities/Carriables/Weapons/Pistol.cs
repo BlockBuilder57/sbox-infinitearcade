@@ -29,8 +29,8 @@ namespace infinitearcade
 
 				ViewModelEntity?.SetAnimParameter("fire", true);
 
-				//if (SoundEvents.ContainsKey("primaryfire"))
-				//	Sound.FromWorld(SoundEvents["primaryfire"].ResourceName, Position);
+				if (SoundEvents != null && SoundEvents.ContainsKey("primaryfire"))
+					Sound.FromWorld(SoundEvents["primaryfire"].ResourceName, Position);
 				ShootProjectile(PrimaryCapacity.Projectile, Owner.EyePosition, Owner.EyeRotation.Forward);
 			}
 		}
@@ -53,6 +53,8 @@ namespace infinitearcade
 
 				ViewModelEntity?.SetAnimParameter("fire", true);
 
+				if (SoundEvents != null && SoundEvents.ContainsKey("secondaryfire"))
+					Sound.FromWorld(SoundEvents["secondaryfire"].ResourceName, Position);
 				ShootProjectile(SecondaryCapacity.Projectile, Owner.EyePosition, Owner.EyeRotation.Forward);
 			}
 		}

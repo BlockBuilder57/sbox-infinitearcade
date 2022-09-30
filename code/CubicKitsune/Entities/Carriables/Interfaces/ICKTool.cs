@@ -26,6 +26,12 @@ namespace CubicKitsune
 			[BitFlags] public InputMode AllowedModes { get; set; }
 		}
 
+		public struct Sounds
+		{
+			public string Key { get; set; }
+			public SoundEvent Event { get; set; }
+		}
+
 		public InputSettings PrimaryInputSettings { get; set; }
 		public InputSettings SecondaryInputSettings { get; set; }
 		public InputSettings ReloadInputSettings { get; set; }

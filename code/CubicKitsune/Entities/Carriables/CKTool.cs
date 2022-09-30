@@ -12,6 +12,8 @@ namespace CubicKitsune
 	[Library("tool_generic")]
 	public partial class CKTool : CKCarriable, ICKTool, IUse
 	{
+		[ConVar.Replicated] public static bool debug_tool_traces { get; set; } = false;
+
 		[Net] public InputHelper PrimaryInput { get; set; }
 		[Net] public InputHelper SecondaryInput { get; set; }
 		[Net] public InputHelper ReloadInput { get; set; }
@@ -19,7 +21,7 @@ namespace CubicKitsune
 		public ICKTool.InputSettings SecondaryInputSettings { get; set; }
 		public ICKTool.InputSettings ReloadInputSettings { get; set; }
 
-		//[Net] public IDictionary<string, SoundEvent> SoundEvents { get; set; }
+		[Net] public IDictionary<string, SoundEvent> SoundEvents { get; set; };
 
 		public CKTool SetupFromInterface(ICKCarriable carry, ICKTool tool)
 		{
@@ -36,7 +38,13 @@ namespace CubicKitsune
 				SecondaryInput = new(tool.SecondaryInputSettings);
 				ReloadInput = new(tool.ReloadInputSettings);
 
-				//SoundEvents = tool.SoundEvents;
+				if (tool is CKToolDefinition tooldef && tooldef.Sounds != null)
+				{
+					SoundEvents = new Dictionary<string, SoundEvent>();
+
+					foreach (var sound in tooldef.Sounds)
+						SoundEvents.Add(sound.Key, sound.Event);
+				}
 			}
 
 			return (CKTool)SetupFromInterface(carry);
@@ -154,10 +162,10 @@ namespace CubicKitsune
 		/// Does a trace from start to end. Coded as an IEnumerable so you can return multiple
 		/// hits, like if you're going through layers or ricocet'ing or something.
 		/// </summary>
-		public virtual IEnumerable<TraceResult> TraceHitscan(Vector3 start, Vector3 end, float radius = 2.0f, bool testWater = true, int maxBounces = 0, float maxGlanceAngle = 8f)
+		public virtual IEnumerable<TraceResult> TraceHitscan(Vector3 start, Vector3 end, float radius = 2.0f, bool testWater = true, ICKProjectile.BounceParameters bounceParams = default)
 		{
 			List<string> withoutTags = new() { "trigger" };
-			int hits = 0;
+			int bounces = 0;
 
 			if (testWater)
 			{
@@ -183,24 +191,21 @@ namespace CubicKitsune
 
 			yield return tr;
 
-			float vecLength = Vector3.DistanceBetween(start, end);
+			if (debug_tool_traces && Host.IsServer)
+			{
+				DebugOverlay.Line(tr.StartPosition, tr.EndPosition, Color.Yellow.WithAlpha(0.2f), 2f);
+				DebugOverlay.Axis(tr.StartPosition, Rotation.From(tr.Direction.EulerAngles), 10, 2f);
+			}
 
-			
+			float vecLength = Vector3.DistanceBetween(start, end);
 
 			while (tr.Hit && tr.Entity.IsWorld)
 			{
-				hits++;
-
 				float angle = Vector3.GetAngle(tr.Normal, tr.Direction);
 				Vector3 newDir = Vector3.Reflect(tr.Direction, tr.Normal);
+				vecLength *= bounceParams.VelocityMultiplier;
 
-				/*if (Host.IsServer)
-				{
-					DebugOverlay.Line(tr.StartPosition, tr.EndPosition, Color.Yellow, 2f);
-					DebugOverlay.Text($"hit {hits} occured (ang {angle-90f})", tr.EndPosition, 2f);
-				}*/
-
-				if ((angle - 90f) < maxGlanceAngle && hits < maxBounces)
+				if ((angle - 90f) < bounceParams.MaxGlanceAngle && bounces < bounceParams.MaxBounces)
 				{
 					tr = Trace.Ray(tr.EndPosition, tr.EndPosition + newDir * vecLength)
 						.UseHitboxes()
@@ -211,6 +216,15 @@ namespace CubicKitsune
 						.Run();
 
 					yield return tr;
+
+					bounces++;
+
+					if (debug_tool_traces && tr.Hit && Host.IsServer)
+					{
+						DebugOverlay.Line(tr.StartPosition, tr.EndPosition, Color.Red.WithAlpha(0.2f), 2f);
+						DebugOverlay.Axis(tr.StartPosition, Rotation.From(tr.Normal.EulerAngles), 10, 2f);
+						DebugOverlay.Text($"bounce #{bounces} (ang {angle - 90f})", tr.StartPosition, Color.Red.WithAlpha(0.2f), 2f);
+					}
 				}
 				else
 					break;
@@ -225,7 +239,7 @@ namespace CubicKitsune
 		[Net] public float Rate { get; private set; } = 1.0f;
 		[Net] public int BurstAmount { get; private set; } = 3;
 		[Net] [BitFlags] public ICKTool.InputMode AllowedModes { get; private set; }
-		[Net] public TimeSince TimeSince { get; private set; }
+		[Net] public TimeSince TimeSince { get; set; }
 		[Net] public ICKTool.InputMode CurMode { get; private set; } = ICKTool.InputMode.None;
 		[Net] public int FiredBursts { get; set; }
 

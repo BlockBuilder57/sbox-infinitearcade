@@ -22,7 +22,7 @@ namespace infinitearcade
 				return;
 			}
 
-			SecondaryInput.ResetTime();
+			SecondaryInput.TimeSince = PrimaryInput.TimeSince;
 
 			if (PrimaryCapacity.CanTakeClip())
 			{
@@ -33,8 +33,8 @@ namespace infinitearcade
 
 				ViewModelEntity?.SetAnimParameter("fire", true);
 
-				//if (SoundEvents.ContainsKey("primaryfire"))
-				//	Sound.FromWorld(SoundEvents["primaryfire"].ResourceName, Position);
+				if (SoundEvents != null && SoundEvents.ContainsKey("primaryfire"))
+					Sound.FromWorld(SoundEvents["primaryfire"].ResourceName, Position);
 				ShootProjectile(PrimaryCapacity.Projectile, Owner.EyePosition, Owner.EyeRotation.Forward);
 			}
 		}
@@ -57,10 +57,10 @@ namespace infinitearcade
 				if (Owner is AnimatedEntity anim)
 					anim.SetAnimParameter("b_attack", true);
 
-				ViewModelEntity?.SetAnimParameter("fire", true);
+				ViewModelEntity?.SetAnimParameter("fire_double", true);
 
-				//if (SoundEvents.ContainsKey("secondaryfire"))
-				//	Sound.FromWorld(SoundEvents["secondaryfire"].ResourceName, Position);
+				if (SoundEvents != null && SoundEvents.ContainsKey("secondaryfire"))
+					Sound.FromWorld(SoundEvents["secondaryfire"].ResourceName, Position);
 				ShootProjectile(PrimaryCapacity.Projectile, Owner.EyePosition, Owner.EyeRotation.Forward);
 				ShootProjectile(PrimaryCapacity.Projectile, Owner.EyePosition, Owner.EyeRotation.Forward);
 			}

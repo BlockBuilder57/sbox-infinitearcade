@@ -16,6 +16,9 @@
 		StatsDividedAcrossCount = true
 		BounceParams = 
 		{
+			MaxBounces = 1
+			MaxGlanceAngle = 5
+			VelocityMultiplier = 1
 		}
 	}
 }

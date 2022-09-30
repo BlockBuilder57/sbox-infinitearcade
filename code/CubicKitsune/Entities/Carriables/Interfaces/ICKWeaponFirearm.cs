@@ -13,6 +13,8 @@ namespace CubicKitsune
 		{
 			public int MaxClip { get; set; }
 			public int MaxAmmo { get; set; }
+
+			[ResourceType("proj")]
 			public string ProjectileAsset { get; set; }
 		}
 

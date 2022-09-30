@@ -2,23 +2,22 @@
 {
 	data = 
 	{
-		Identifier = "proj_smg_round"
-		TypeLibraryName = ""
-		WorldModel = null
+		Identifier = "proj_demo_pill"
+		TypeLibraryName = "projectile_simple"
+		WorldModel = resource:"models/weapons/40mmgrenade.vmdl"
 		Stats = 
 		{
 			Size = 1
-			ForceLinear = "7,0,0"
-			ForceLinearRandom = "0,0.7,0.7"
+			Health = -1
+			Lifetime = 3
+			ForceLinear = "800,0,0"
+			ForceAngularRandom = "999,999,999"
 		}
-		Damage = 7
+		Damage = 45
 		Count = 1
 		StatsDividedAcrossCount = false
 		BounceParams = 
 		{
-			MaxBounces = 3
-			MaxGlanceAngle = 8
-			VelocityMultiplier = 1
 		}
 	}
 }

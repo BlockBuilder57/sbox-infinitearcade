@@ -29,6 +29,18 @@
 		ReloadInputSettings = 
 		{
 		}
+		SoundEvents = null
+		Sounds = 
+		[
+			{
+				Key = "primaryfire"
+				Event = resource:"weapons/rust_pumpshotgun/sounds/rust_pumpshotgun.shoot.sound"
+			},
+			{
+				Key = "secondaryfire"
+				Event = resource:"weapons/rust_pumpshotgun/sounds/rust_pumpshotgun.shootdouble.sound"
+			},
+		]
 		Identifier = "ia_firearm_shotgun"
 		LibraryType = "firearm_shotgun"
 		Bucket = "Primary"

@@ -32,7 +32,8 @@ namespace CubicKitsune
 
 		public virtual void OnLifetimeRunout()
 		{
-			Delete();
+			if (Host.IsServer)
+				Delete();
 		}
 
 		// THIS REQUIRES EDITING PROP.CS (for now!)
@@ -41,13 +42,11 @@ namespace CubicKitsune
 			if (Model == null || Model.IsError)
 				return;
 
-			if (!Model.TryGetData(out ModelExplosionBehavior explosionBehavior))
-				return;
-
 			// Damage and push away all other entities
 			var srcPos = Position;
 			if (PhysicsBody.IsValid()) srcPos = PhysicsBody.MassCenter;
-			if (explosionBehavior.Radius > 0.0f)
+
+			if (Model.TryGetData(out ModelExplosionBehavior explosionBehavior) && explosionBehavior.Radius > 0.0f)
 			{
 				new ExplosionEntity
 				{
@@ -57,6 +56,16 @@ namespace CubicKitsune
 					ForceScale = explosionBehavior.Force,
 					ParticleOverride = explosionBehavior.Effect,
 					SoundOverride = explosionBehavior.Sound
+				}.Explode(this);
+			}
+			else
+			{
+				new ExplosionEntity
+				{
+					Position = srcPos,
+					Radius = 128,
+					Damage = Damage,
+					ForceScale = 40
 				}.Explode(this);
 			}
 		}

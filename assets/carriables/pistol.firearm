@@ -29,6 +29,14 @@
 		{
 			AllowedModes = "Single"
 		}
+		SoundEvents = null
+		Sounds = 
+		[
+			{
+				Key = "primaryfire"
+				Event = resource:"weapons/rust_pistol/sound/rust_pistol.shoot.sound"
+			},
+		]
 		Identifier = "ia_firearm_pistol"
 		LibraryType = "firearm_pistol"
 		Bucket = "Primary"

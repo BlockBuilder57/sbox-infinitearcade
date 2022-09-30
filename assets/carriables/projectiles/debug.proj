@@ -16,6 +16,7 @@
 		{
 			MaxBounces = 99
 			MaxGlanceAngle = 60
+			VelocityMultiplier = 1
 		}
 	}
 }

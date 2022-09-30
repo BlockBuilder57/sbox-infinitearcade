@@ -6,29 +6,39 @@
 		{
 			MaxClip = 999
 			MaxAmmo = 99999
-			ProjectileAsset = resource:"assets/carriables/projectiles/default.proj"
+			ProjectileAsset = resource:"assets/carriables/projectiles/debug.proj"
 		}
 		SecondaryCapacitySettings = 
 		{
-			ProjectileAsset = ""
+			MaxClip = 999
+			ProjectileAsset = resource:"assets/carriables/projectiles/demo_pill.proj"
 		}
 		PrimaryFunction = "FirePrimary"
-		SecondaryFunction = "ModeSelector"
+		SecondaryFunction = "FireSecondary"
 		ReloadFunction = "Reload"
 		ReloadTime = 0.5
 		PrimaryInputSettings = 
 		{
 			Rate = 0.05
-			AllowedModes = "Single, FullAuto"
+			AllowedModes = "FullAuto"
 		}
 		SecondaryInputSettings = 
 		{
-			AllowedModes = "Single"
+			Rate = 0.1
+			AllowedModes = "FullAuto"
 		}
 		ReloadInputSettings = 
 		{
 			AllowedModes = "Single"
 		}
+		SoundEvents = null
+		Sounds = 
+		[
+			{
+				Key = "primaryfire"
+				Event = resource:"sounds/debug_ding.sound"
+			},
+		]
 		Identifier = "ia_firearm_debug"
 		LibraryType = "firearm_pistol"
 		Bucket = "Primary"

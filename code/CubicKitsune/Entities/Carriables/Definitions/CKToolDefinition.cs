@@ -18,7 +18,8 @@ namespace CubicKitsune
 		public ICKTool.InputSettings SecondaryInputSettings { get; set; }
 		public ICKTool.InputSettings ReloadInputSettings { get; set; }
 
-		//public IDictionary<string, SoundEvent> SoundEvents { get; set; }
+		[HideInEditor] public IDictionary<string, SoundEvent> SoundEvents { get; set; }
+		public ICKTool.Sounds[] Sounds { get; set; }
 
 		protected override void PostLoad()
 		{
