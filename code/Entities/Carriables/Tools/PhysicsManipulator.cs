@@ -63,6 +63,7 @@ namespace infinitearcade
 		[Net] public ManipulationMode Mode { get; set; }
 
 		public bool Holding => HeldEntity.IsValid();
+		[Net] public Entity PrevHeldEntity { get; private set; }
 		[Net] public Entity HeldEntity { get; private set; }
 		[Net] public Vector3 HeldBodyLocalPos { get; private set; }
 		[Net] public int HeldGroupIndex { get; private set; }
@@ -207,6 +208,7 @@ namespace infinitearcade
 			//EndHold();
 
 			m_holding = true;
+			PrevHeldEntity = HeldEntity;
 			HeldEntity = tr.Entity;
 
 			m_heldBody = body;
@@ -291,6 +293,7 @@ namespace infinitearcade
 			Mode = ManipulationMode.None;
 
 			m_holding = false;
+			PrevHeldEntity = HeldEntity;
 			HeldEntity = null;
 
 			m_grabJoint?.Remove();
@@ -346,6 +349,7 @@ namespace infinitearcade
 				Mode = ManipulationMode.Grav;
 
 				m_holding = true;
+				PrevHeldEntity = HeldEntity;
 				HeldEntity = tr.Entity;
 
 				m_heldBody = body;

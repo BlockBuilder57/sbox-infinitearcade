@@ -21,7 +21,7 @@ namespace CubicKitsune
 		public ICKTool.InputSettings SecondaryInputSettings { get; set; }
 		public ICKTool.InputSettings ReloadInputSettings { get; set; }
 
-		[Net] public IDictionary<string, SoundEvent> SoundEvents { get; set; };
+		[Net] public IDictionary<string, SoundEvent> SoundEvents { get; set; }
 
 		public CKTool SetupFromInterface(ICKCarriable carry, ICKTool tool)
 		{

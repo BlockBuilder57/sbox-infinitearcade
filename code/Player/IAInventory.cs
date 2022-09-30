@@ -207,7 +207,7 @@ namespace infinitearcade
 				{
 					ent = null;
 
-					if (Host.IsClient && Local.Hud is InfiniteArcadeHud hud)
+					if (Host.IsClient && Owner == Local.Pawn && Local.Hud is InfiniteArcadeHud hud)
 						hud.InventorySwitchActive(null);
 				}
 				else
@@ -249,7 +249,7 @@ namespace infinitearcade
 			if (BucketType != Buckets.FlatUnordered)
 				List = List.OrderBy(x => x.Bucket).ThenBy(x => x.SubBucket).ThenBy(x => x.NetworkIdent).ToList();
 
-			if (Host.IsClient && Local.Hud is InfiniteArcadeHud hud)
+			if (Host.IsClient && Owner == Local.Pawn && Local.Hud is InfiniteArcadeHud hud)
 				hud.InventoryFullUpdate(List.ToArray());
 		}
 	}

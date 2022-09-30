@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using CubicKitsune;
 using Sandbox;
+using Sandbox.Component;
 
 namespace infinitearcade
 {
@@ -39,7 +40,7 @@ namespace infinitearcade
 
 		public void UpdatePhysEffects()
 		{
-			if (Owner == null || OwnerPlayer == null || OwnerPlayer.ActiveChild != this)
+			if (Owner == null || Owner != Local.Pawn || OwnerPlayer == null || OwnerPlayer.ActiveChild != this)
 			{
 				EndEffects();
 				return;
@@ -63,6 +64,15 @@ namespace infinitearcade
 
 			if (HeldEntity.IsValid() && !HeldEntity.IsWorld)
 			{
+				if (HeldEntity is ModelEntity modelEnt)
+				{
+					Glow glow = modelEnt.Components.GetOrCreate<Glow>();
+					glow.Enabled = true;
+					glow.Color = new Color(5, 5, 5, 1);
+					glow.Width = 200f;
+					glow.ObscuredColor = Color.Transparent;
+				}
+
 				if (HeldEntity.PhysicsGroup?.BodyCount > 0 && HeldGroupIndex >= 0)
 				{
 					var body = HeldEntity.PhysicsGroup.GetBody(HeldGroupIndex);
@@ -100,6 +110,9 @@ namespace infinitearcade
 
 			FxPhysBeamEnd?.Destroy(true);
 			FxPhysBeamEnd = null;
+
+			if (PrevHeldEntity != null && PrevHeldEntity.Components.Get<Glow>() != null)
+				PrevHeldEntity.Components.Get<Glow>().Enabled = false;
 
 			m_fxStarted = false;
 		}
