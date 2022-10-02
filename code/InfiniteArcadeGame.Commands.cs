@@ -182,6 +182,53 @@ namespace infinitearcade
 			cl?.Pawn?.TakeDamage(DamageInfo.Generic(amount));
 		}
 
+		private static void GodModeSwitcher(ArcadePlayer player, ArcadePlayer.GodModes mode)
+		{
+			if (player.GodMode == mode)
+				player.GodMode = ArcadePlayer.GodModes.Mortal;
+			else
+				player.GodMode = mode;
+		}
+
+		[ConCmd.Server("god")]
+		public static void GodModeGodCommand(string search = "!self")
+		{
+			Client cl = ConsoleSystem.Caller;
+			if (!cl.IsValid() || !cl.HasPermission("debug"))
+				return;
+
+			Client cl2 = cl.TryGetClient(search);
+
+			if (cl2.IsValid() && cl2.Pawn is ArcadePlayer player)
+				GodModeSwitcher(player, ArcadePlayer.GodModes.God);
+		}
+
+		[ConCmd.Server("buddha")]
+		public static void GodModeBuddhaCommand(string search = "!self")
+		{
+			Client cl = ConsoleSystem.Caller;
+			if (!cl.IsValid() || !cl.HasPermission("debug"))
+				return;
+
+			Client cl2 = cl.TryGetClient(search);
+
+			if (cl2.IsValid() && cl2.Pawn is ArcadePlayer player)
+				GodModeSwitcher(player, ArcadePlayer.GodModes.Buddha);
+		}
+
+		[ConCmd.Server("targetdummy")]
+		public static void GodModeTargetDummyCommand(string search = "!self")
+		{
+			Client cl = ConsoleSystem.Caller;
+			if (!cl.IsValid() || !cl.HasPermission("debug"))
+				return;
+
+			Client cl2 = cl.TryGetClient(search);
+
+			if (cl2.IsValid() && cl2.Pawn is ArcadePlayer player)
+				GodModeSwitcher(player, ArcadePlayer.GodModes.TargetDummy);
+		}
+
 		[ConCmd.Server("vr_reset_seated_pos")]
 		public static void VRResetSeatedCommand()
 		{

@@ -18,14 +18,23 @@ namespace infinitearcade
 		[Net] public float MaxArmor { get; set; }
 		[Net] public float ArmorMultiplier { get; set; }
 
+		public enum GodModes
+		{
+			Mortal,
+			God,
+			Buddha,
+			TargetDummy
+		}
+		[Net] public GodModes GodMode { get; set; }
+
 		[Net] public ArcadeMachine UsingMachine { get; set; }
 		protected BasePlayerController m_machineController;
 
 		public Transform VRSeatedOffset { private get; set; } = Transform.Zero;
 
 		public ClothingContainer ClothingContainer = new();
-
 		private bool m_clothed = false;
+
 		private DamageInfo m_lastDamage;
 
 		private readonly int m_slotOffset = (int)Math.Log2((int)InputButton.Slot1);
@@ -393,7 +402,13 @@ namespace infinitearcade
 
 		public override void TakeDamage(DamageInfo info)
 		{
+			if (!Host.IsServer)
+				return;
+
 			if (LifeState == LifeState.Dead)
+				return;
+
+			if (info.Damage > 0 && (GodMode == GodModes.God || (GodMode == GodModes.Buddha && Health == 1)))
 				return;
 
 			this.ProceduralHitReaction(info);
@@ -405,72 +420,80 @@ namespace infinitearcade
 			if (ArmorMultiplier == 0)
 				ArmorMultiplier = 1f;
 
+			float tempArmorMult = ArmorMultiplier;
+			float tempArmor = Armor;
+			float tempHealth = Health;
+
 			const float debugTime = 2f;
-			float debugPreHealth = Health;
-			float debugPreArmor = Armor;
 			string debugText = $"Incoming damage: {info.Damage}";
+			float debugPreHealth = tempHealth;
+			float debugPreArmor = tempArmor;
 
-			if (IsServer)
+			if (info.Flags.HasFlag(DamageFlags.Blast))
+				ApplyAbsoluteImpulse(info.Force * 0.2f);
+
+			bool hadArmor = false;
+
+			debugText += $"\n\tWe have {(tempArmor <= 0 || info.Damage < 0 ? "no" : "some")} armor ({tempArmor} * {tempArmorMult} == {tempArmor * tempArmorMult} functional)";
+
+			// we have no armor, so let's not run the armor calculations
+			if (tempArmor <= 0 || info.Damage < 0)
+				tempArmorMult = 1.0f;
+			else
 			{
-				bool hadArmor = false;
+				hadArmor = true;
 
-				debugText += $"\n\tWe have {(Armor <= 0 || info.Damage < 0 ? "no" : "some")} armor ({Armor} * {ArmorMultiplier} == {Armor * ArmorMultiplier} functional)";
+				float trueArmor = tempArmor * tempArmorMult;
+				float min = Math.Min(info.Damage, trueArmor);
 
-				// we have no armor, so let's not run the armor calculations
-				if (Armor <= 0 || info.Damage < 0)
-					ArmorMultiplier = 1.0f;
-				else
+				debugText += $"\n\tmin = min({info.Damage}, {trueArmor})\ntrueArmor >= min ({trueArmor} >= {min}) is {trueArmor >= min}";
+
+				// if we either have enough armor to tank it, or the damage is so big it nukes our armor
+				if (trueArmor >= min)
 				{
-					hadArmor = true;
-
-					float trueArmor = Armor * ArmorMultiplier;
-					float min = Math.Min(info.Damage, trueArmor);
-
-					debugText += $"\n\tmin = min({info.Damage}, {trueArmor})\ntrueArmor >= min ({trueArmor} >= {min}) is {trueArmor >= min}";
-
-					// if we either have enough armor to tank it, or the damage is so big it nukes our armor
-					if (trueArmor >= min)
-					{
-						debugText += $"\n\t{(trueArmor > min ? "had enough to tank" : "will destroy armor")}, armor ({Armor}) -= {info.Damage / ArmorMultiplier}, now {Armor - info.Damage / ArmorMultiplier}";
-						// subtract the damage value, dampened by the armor multiplier
-						Armor -= info.Damage / ArmorMultiplier;
-					}
+					debugText += $"\n\t{(trueArmor > min ? "had enough to tank" : "will destroy armor")}, armor ({tempArmor}) -= {info.Damage / tempArmorMult}, now {tempArmor - info.Damage / tempArmorMult}";
+					// subtract the damage value, dampened by the armor multiplier
+					tempArmor -= info.Damage / tempArmorMult;
 				}
+			}
 
-				// take any negative armor values as health
-				if (Armor < 0)
-				{
-					// make sure the damage left is not modified by the armor multiplier as our armor is supposed to be gone
-					Armor *= ArmorMultiplier;
-					Health += Armor;
-					Armor = 0;
-				}
+			// take any negative armor values as health
+			if (tempArmor < 0)
+			{
+				// make sure the damage left is not modified by the armor multiplier as our armor is supposed to be gone
+				tempArmor *= tempArmorMult;
+				tempHealth += tempArmor;
+				tempArmor = 0;
+			}
 
-				// if we didn't have any armor
-				if (!hadArmor)
-				{
-					debugText += "\n\tTaking damage directly";
-					Health -= info.Damage;
-				}
+			// if we didn't have any armor
+			if (!hadArmor)
+			{
+				debugText += "\n\tTaking damage directly";
+				tempHealth -= info.Damage;
+			}
 
-				if (Health <= 0)
+			if (GodMode == GodModes.Buddha && tempHealth <= 0)
+				tempHealth = 1;
+
+			if (GodMode != GodModes.TargetDummy)
+			{
+				ArmorMultiplier = tempArmorMult;
+				Armor = tempArmor;
+				Health = tempHealth;
+
+				if (tempHealth <= 0)
 				{
 					//Health = 0;
 					// set this early
 					m_lastDamage = info;
 					OnKilled();
 				}
-
-				debugText += $"\nFinal: {Health} {Armor:F0}x{ArmorMultiplier:F1} (Δ of {Health - debugPreHealth} {(Armor - debugPreArmor):F0}x{ArmorMultiplier:F1})";
-
-				if (CKDebugging.LocalClient != null)
-				{
-					var _debug_client = CKDebugging.LocalClient.GetClientData<int>(nameof(CKDebugging.debug_client), 0);
-					var _debug_client_damage = CKDebugging.LocalClient.GetClientData<bool>(nameof(CKDebugging.debug_client_damage), false);
-					if (_debug_client_damage && Client.NetworkIdent == _debug_client)
-						CKDebugging.ScreenText(CKDebugging.ToLocal, debugText, debugTime);
-				}
 			}
+
+			debugText += $"\nFinal: {Health} {Armor:F0}x{ArmorMultiplier:F1} (Δ of {Health - debugPreHealth} {(Armor - debugPreArmor):F0}x{ArmorMultiplier:F1})";
+
+			DebugOverlay.Text(debugText.Replace("\t", "    "), Position.WithZ(Position.z + CollisionBounds.Maxs.z), CKDebugging.GetSideColor(), debugTime);
 
 			m_lastDamage = info;
 		}

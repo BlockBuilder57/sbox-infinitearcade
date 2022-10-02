@@ -22,8 +22,6 @@ namespace CubicKitsune
 		public static bool debug_client_inventory { get; set; } = false;
 		[ConVar.ClientData(Help = "Enable debugging a client's player controller?")]
 		public static bool debug_client_playercontroller { get; set; } = false;
-		[ConVar.ClientData(Help = "Enable debugging a client's incoming damage?")]
-		public static bool debug_client_damage { get; set; } = false;
 
 
 		public static Vector2 Offset = new Vector2(20, 20) + (Host.IsClient ? Vector2.Left * Screen.Width / 2 : 0);

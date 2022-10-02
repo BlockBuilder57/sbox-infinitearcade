@@ -94,9 +94,19 @@ namespace infinitearcade
 
 		public override void DoPlayerSuicide(Client cl)
 		{
-			if (cl.Pawn is ArcadePlayer player && player.LifeState == LifeState.Alive)
+			if (cl.Pawn is Player player && player.LifeState == LifeState.Alive)
 			{
-				float damage = player.Health + (player.Armor * player.ArmorMultiplier);
+				float damage = player.Health;
+				if (player is ArcadePlayer arcadeplayer)
+				{
+					if (arcadeplayer.GodMode != ArcadePlayer.GodModes.Mortal)
+					{
+						player.OnKilled();
+						return;
+					}
+
+					damage += arcadeplayer.Armor * arcadeplayer.ArmorMultiplier;
+				}
 				player.TakeDamage(DamageInfo.Generic(damage * 100f));
 			}
 		}
