@@ -292,6 +292,9 @@ namespace CubicKitsune
 
 	public partial class WeaponCapacity : BaseNetworkable
 	{
+		[ConVar.Server] public static bool infinite_clips { get; set; } = false;
+		[ConVar.Server] public static bool infinite_ammo { get; set; } = false;
+
 		[Net] public int Clip { get; private set; }
 		[Net] public int Ammo { get; private set; }
 		[Net] public int MaxClip { get; private set; }
@@ -320,13 +323,13 @@ namespace CubicKitsune
 		public void SetClip(int amount) => Clip = amount;
 		public void SetAmmo(int amount) => Ammo = amount;
 
-		public bool CanTakeClip(int amount = 1) { return InfiniteClip || Clip >= amount; }
-		public bool CanTakeAmmo(int amount = 1) { return InfiniteAmmo || Ammo >= amount; }
+		public bool CanTakeClip(int amount = 1) { return InfiniteClip || infinite_clips || Clip >= amount; }
+		public bool CanTakeAmmo(int amount = 1) { return InfiniteAmmo || infinite_ammo || Ammo >= amount; }
 
-		public int TakeClip(int amount = 1) { if (!InfiniteClip) { Clip -= amount; } return Clip; }
-		public int TakeAmmo(int amount = 1) { if (!InfiniteAmmo) { Ammo -= amount; } return Ammo; }
-		public int GiveClip(int amount = 1) { if (!InfiniteClip) { Clip += amount; } return Clip; }
-		public int GiveAmmo(int amount = 1) { if (!InfiniteAmmo) { Ammo += amount; } return Ammo; }
+		public int TakeClip(int amount = 1) { if (!(InfiniteClip || infinite_clips)) { Clip -= amount; } return Clip; }
+		public int TakeAmmo(int amount = 1) { if (!(InfiniteAmmo || infinite_ammo)) { Ammo -= amount; } return Ammo; }
+		public int GiveClip(int amount = 1) { Clip += amount; return Clip; }
+		public int GiveAmmo(int amount = 1) { Ammo += amount; return Ammo; }
 
 		public bool TryReload(int thisMany = -1)
 		{
