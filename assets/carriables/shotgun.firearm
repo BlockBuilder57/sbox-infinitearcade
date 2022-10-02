@@ -23,7 +23,7 @@
 		}
 		SecondaryInputSettings = 
 		{
-			Rate = 2.5
+			Rate = 2
 			AllowedModes = "FullAuto"
 		}
 		ReloadInputSettings = 

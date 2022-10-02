@@ -22,7 +22,7 @@ namespace infinitearcade
 				return;
 			}
 
-			SecondaryInput.TimeSince = PrimaryInput.TimeSince;
+			SecondaryInput.TimeSince = SecondaryInput.Rate - PrimaryInput.Rate;
 
 			if (PrimaryCapacity.CanTakeClip())
 			{
@@ -48,7 +48,7 @@ namespace infinitearcade
 				return;
 			}
 
-			PrimaryInput.ResetTime();
+			PrimaryInput.TimeSince -= SecondaryInput.Rate;
 
 			if (PrimaryCapacity.CanTakeClip(2))
 			{

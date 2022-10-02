@@ -30,7 +30,7 @@
         "ladder": "Ignore",
         "water": "Trigger",
         "player": "Collide",
-        "weapon": "Trigger",
+        "weapon": "Collide",
         "corpse": "Collide"
       },
       "Pairs": [

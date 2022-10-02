@@ -213,7 +213,6 @@ namespace CubicKitsune
 
 				for (int i = 0; i < proj.Count; i++)
 				{
-
 					CKProjectile ent = TypeLibrary.Create<CKProjectile>(proj.TypeLibraryName);
 
 					if (!ent.IsValid())
@@ -233,6 +232,9 @@ namespace CubicKitsune
 
 					ent.Velocity = Owner.Velocity + forceLinearDir;
 					ent.ApplyLocalAngularImpulse(new Vector3(forceAngular.pitch, forceAngular.yaw, forceAngular.roll));
+
+					// hacky projectile thing
+					PhysicsJoint.CreatePulley(ent.PhysicsGroup.GetBody(0), Owner.PhysicsGroup.GetBody(0), Vector3.Zero, Vector3.Zero, Vector3.Zero, Vector3.Zero);
 				}
 			}
 		}
