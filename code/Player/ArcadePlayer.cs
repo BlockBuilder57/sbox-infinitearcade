@@ -122,6 +122,7 @@ namespace infinitearcade
 
 			Inventory?.Add(CKCarriableDefinition.CreateFromDefinition("assets/carriables/flashlight.tool"));
 			Inventory?.Add(CKCarriableDefinition.CreateFromDefinition("assets/carriables/physmanip.tool"));
+			Inventory?.Add(CKCarriableDefinition.CreateFromDefinition("assets/carriables/medigun.tool"));
 
 			Inventory?.Add(CKCarriableDefinition.CreateFromDefinition("assets/carriables/debug.firearm"));
 		}
@@ -411,7 +412,8 @@ namespace infinitearcade
 			if (info.Damage > 0 && (GodMode == GodModes.God || (GodMode == GodModes.Buddha && Health == 1)))
 				return;
 
-			this.ProceduralHitReaction(info);
+			if (info.Damage > 0)
+				this.ProceduralHitReaction(info);
 
 			LastAttacker = info.Attacker;
 			LastAttackerWeapon = info.Weapon;
@@ -424,17 +426,17 @@ namespace infinitearcade
 			float tempArmor = Armor;
 			float tempHealth = Health;
 
-			const float debugTime = 2f;
-			string debugText = $"Incoming damage: {info.Damage}";
-			float debugPreHealth = tempHealth;
-			float debugPreArmor = tempArmor;
+			//const float debugTime = 2f;
+			//string debugText = $"Incoming damage: {info.Damage}";
+			//float debugPreHealth = tempHealth;
+			//float debugPreArmor = tempArmor;
 
 			if (info.Flags.HasFlag(DamageFlags.Blast))
 				ApplyAbsoluteImpulse(info.Force * 0.2f);
 
 			bool hadArmor = false;
 
-			debugText += $"\n\tWe have {(tempArmor <= 0 || info.Damage < 0 ? "no" : "some")} armor ({tempArmor} * {tempArmorMult} == {tempArmor * tempArmorMult} functional)";
+			//debugText += $"\n\tWe have {(tempArmor <= 0 || info.Damage < 0 ? "no" : "some")} armor ({tempArmor} * {tempArmorMult} == {tempArmor * tempArmorMult} functional)";
 
 			// we have no armor, so let's not run the armor calculations
 			if (tempArmor <= 0 || info.Damage < 0)
@@ -446,12 +448,12 @@ namespace infinitearcade
 				float trueArmor = tempArmor * tempArmorMult;
 				float min = Math.Min(info.Damage, trueArmor);
 
-				debugText += $"\n\tmin = min({info.Damage}, {trueArmor})\ntrueArmor >= min ({trueArmor} >= {min}) is {trueArmor >= min}";
+				//debugText += $"\n\tmin = min({info.Damage}, {trueArmor})\ntrueArmor >= min ({trueArmor} >= {min}) is {trueArmor >= min}";
 
 				// if we either have enough armor to tank it, or the damage is so big it nukes our armor
 				if (trueArmor >= min)
 				{
-					debugText += $"\n\t{(trueArmor > min ? "had enough to tank" : "will destroy armor")}, armor ({tempArmor}) -= {info.Damage / tempArmorMult}, now {tempArmor - info.Damage / tempArmorMult}";
+					//debugText += $"\n\t{(trueArmor > min ? "had enough to tank" : "will destroy armor")}, armor ({tempArmor}) -= {info.Damage / tempArmorMult}, now {tempArmor - info.Damage / tempArmorMult}";
 					// subtract the damage value, dampened by the armor multiplier
 					tempArmor -= info.Damage / tempArmorMult;
 				}
@@ -469,7 +471,7 @@ namespace infinitearcade
 			// if we didn't have any armor
 			if (!hadArmor)
 			{
-				debugText += "\n\tTaking damage directly";
+				//debugText += "\n\tTaking damage directly";
 				tempHealth -= info.Damage;
 			}
 
@@ -491,9 +493,9 @@ namespace infinitearcade
 				}
 			}
 
-			debugText += $"\nFinal: {Health} {Armor:F0}x{ArmorMultiplier:F1} (Δ of {Health - debugPreHealth} {(Armor - debugPreArmor):F0}x{ArmorMultiplier:F1})";
+			//debugText += $"\nFinal: {Health} {Armor:F0}x{ArmorMultiplier:F1} (Δ of {Health - debugPreHealth} {(Armor - debugPreArmor):F0}x{ArmorMultiplier:F1})";
 
-			DebugOverlay.Text(debugText.Replace("\t", "    "), Position.WithZ(Position.z + CollisionBounds.Maxs.z), CKDebugging.GetSideColor(), debugTime);
+			//DebugOverlay.Text(debugText.Replace("\t", "    "), Position.WithZ(Position.z + CollisionBounds.Maxs.z), CKDebugging.GetSideColor(), debugTime);
 
 			m_lastDamage = info;
 		}
