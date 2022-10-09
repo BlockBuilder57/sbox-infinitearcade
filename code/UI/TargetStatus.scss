@@ -1,0 +1,50 @@
+TargetStatus {
+
+	display: flex;
+	flex-direction: column;
+	min-width: 160px;
+	max-height: 160px;
+	overflow: hidden;
+	
+	Panel.infoHolder {
+	
+		display: flex;
+		flex-direction: row;
+		margin-bottom: 8px;
+	
+		Image.avatar
+		{
+			width: 48px;
+			height: 48px;
+			max-width: 48px;
+			max-height: 48px;
+		}
+		
+		Label.targetname {
+			margin-left: 8px;
+			margin-right: 8px;
+			font-size: 24px;
+			color: white;
+			white-space: nowrap;
+		}
+	}
+	
+	HealthDisplay {
+
+		.numberDisplay {
+			border-radius: 4px;
+			font-size: 25px;
+			padding: 0 0 0 4px;
+			margin-right: 8px;
+		}
+
+		.numberDisplay:first-child {
+			padding-right: 4px;
+		}
+
+		.armorMult {
+			font-size: 10px;
+		}
+	}
+
+}

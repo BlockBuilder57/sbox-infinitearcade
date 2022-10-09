@@ -35,6 +35,7 @@ namespace infinitearcade.UI
 			// custom stuff
 			AddChild<PlayerStatus>();
 			AddChild<WeaponStatus>();
+			AddChild<TargetStatus>();
 			m_invFlat = AddChild<InventoryLayoutFlat>();
 		}
 
@@ -56,7 +57,7 @@ namespace infinitearcade.UI
 			if (!Host.IsClient)
 				return;
 
-			InfiniteArcadeHud.Current?.Delete();
+			Current?.Delete();
 			InfiniteArcadeHud hud = new();
 
 			if (Local.Pawn is Player player && player.Inventory is IAInventory inv)

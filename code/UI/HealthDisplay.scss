@@ -1,0 +1,24 @@
+HealthDisplay {
+	
+	max-height: 56px;
+	overflow: hidden;
+
+	.numberDisplay {
+		background-color: rgba( black, 0.5 );
+		border-radius: 8px;
+		font-size: 50px;
+		color: white;
+		padding: 0 0 0 8px;
+		margin-right: 25px;
+		align-items: center;
+	}
+
+	.numberDisplay:first-child {
+		padding-right: 8px;
+	}
+
+	.armorMult {
+		font-size: 16px;
+		transform: rotate(-90deg);
+	}
+}
