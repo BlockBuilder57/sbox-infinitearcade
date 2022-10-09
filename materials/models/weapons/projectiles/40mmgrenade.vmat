@@ -9,12 +9,12 @@ Layer0
 	F_METALNESS_TEXTURE 1
 
 	//---- Ambient Occlusion ----
-	TextureAmbientOcclusion "materials/models/weapons/40mmGrenade_ao.png"
+	TextureAmbientOcclusion "materials/models/weapons/projectiles/40mmgrenade_ao.png"
 
 	//---- Color ----
 	g_flModelTintAmount "1.000"
 	g_vColorTint "[1.000000 1.000000 1.000000 0.000000]"
-	TextureColor "materials/models/weapons/40mmGrenade_color.png"
+	TextureColor "materials/models/weapons/projectiles/40mmgrenade_color.png"
 
 	//---- Fade ----
 	g_flFadeExponent "1.000"
@@ -27,13 +27,13 @@ Layer0
 	g_flDirectionalLightmapStrength "1.000"
 
 	//---- Metalness ----
-	TextureMetalness "materials/models/weapons/40mmGrenade_metal.png"
+	TextureMetalness "materials/models/weapons/projectiles/40mmgrenade_metal.png"
 
 	//---- Normal ----
-	TextureNormal "materials/models/weapons/40mmGrenade_normal.png"
+	TextureNormal "materials/models/weapons/projectiles/40mmgrenade_normal.png"
 
 	//---- Roughness ----
-	TextureRoughness "materials/models/weapons/40mmGrenade_rough.png"
+	TextureRoughness "materials/models/weapons/projectiles/40mmgrenade_rough.png"
 
 	//---- Texture Coordinates ----
 	g_nScaleTexCoordUByModelScaleAxis "0"

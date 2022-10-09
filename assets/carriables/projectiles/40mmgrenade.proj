@@ -4,7 +4,7 @@
 	{
 		Identifier = "proj_40mm_grenade"
 		TypeLibraryName = "projectile_simple"
-		WorldModel = resource:"models/weapons/40mmgrenade_projectile.vmdl"
+		WorldModel = resource:"models/weapons/projectiles/40mmgrenade_projectile.vmdl"
 		Stats = 
 		{
 			Size = 1

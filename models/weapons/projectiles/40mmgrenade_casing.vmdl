@@ -46,9 +46,9 @@
 						parent_bone = ""
 						surface_prop = "metal.sheet"
 						collision_tags = "solid"
-						radius = 2.0
-						point0 = [ 4.0, 0.0, 0.0 ]
-						point1 = [ -1.775, 0.0, 0.0 ]
+						radius = 0.8
+						point0 = [ 1.618527, 0.0, 0.0 ]
+						point1 = [ -0.701637, 0.0, 0.0 ]
 					},
 				]
 			},
@@ -58,10 +58,10 @@
 				[
 					{
 						_class = "RenderMeshFile"
-						filename = "models/weapons/40mmgrenade.fbx"
+						filename = "models/weapons/projectiles/40mmgrenade.fbx"
 						import_translation = [ 0.0, 0.0, 0.0 ]
 						import_rotation = [ 0.0, 0.0, 0.0 ]
-						import_scale = 1.0
+						import_scale = 0.3937
 						align_origin_x_type = "None"
 						align_origin_y_type = "None"
 						align_origin_z_type = "None"
