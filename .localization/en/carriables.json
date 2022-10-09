@@ -7,5 +7,6 @@
 	"ia_firearm_smg" : "SMG",
 	
 	"ia_tool_flashlight" : "Flashlight",
-	"ia_tool_physmanip" : "Physics Manipulator"
+	"ia_tool_physmanip" : "Physics Manipulator",
+	"ia_tool_medigun" : "Medigun"
 }

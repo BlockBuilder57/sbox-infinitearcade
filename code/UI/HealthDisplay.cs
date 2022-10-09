@@ -23,9 +23,9 @@ namespace infinitearcade.UI
 
 			ent = entity;
 
-			Health = Add.Label("100", "numberDisplay");
-			Armor = Add.Label("100", "numberDisplay hidden");
-			ArmorMult = Armor.Add.Label("x1.0", "armorMult");
+			Health = Add.Label("...", "numberDisplay");
+			Armor = Add.Label("...", "numberDisplay hidden");
+			ArmorMult = Armor.Add.Label("...", "armorMult");
 		}
 
 		public override void Tick()
@@ -43,6 +43,9 @@ namespace infinitearcade.UI
 			ArcadePlayer player = ent as ArcadePlayer;
 			if (player == null)
 				return;
+
+			if (player.GodMode != ArcadePlayer.GodModes.Mortal && Health != null)
+				Health.Text += " (∞)";
 
 			Armor?.SetClass("hidden", player.Armor <= 0);
 			if (Armor != null && !Armor.HasClass("hidden"))
