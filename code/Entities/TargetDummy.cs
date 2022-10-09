@@ -10,6 +10,9 @@ namespace infinitearcade
 {
 	[Library("prop_targetdummy")]
 	[Title("Target Dummy"), Icon("outlet"), Description("A target dummy, for damage testing.")]
+	[HammerEntity]
+	[RenderFields, VisGroup(VisGroup.Physics)]
+	[Model(Archetypes = ModelArchetype.physics_prop_model | ModelArchetype.breakable_prop_model)]
 	public partial class TargetDummy : Prop
 	{
 		[Property("respawn_at_home", "Respawn At Home", "When the target dummy is broken, should it respawn at the place it was initially spawned at?")]

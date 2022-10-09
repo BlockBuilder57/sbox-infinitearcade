@@ -8,9 +8,11 @@ using System.Threading.Tasks;
 
 namespace infinitearcade
 {
-	//[Hammer.EditorModel( "models/sbox_props/street_lamp/street_lamp_open.vmdl" )]
+	[Library("prop_arcademachine")]
+	[Title("Arcade Machine"), Icon("point_of_sale"), Description("An arcade machine.")]
 	[HammerEntity]
-	[Library("prop_arcademachine", Description = "An arcade machine.")]
+	[RenderFields, VisGroup(VisGroup.Physics)]
+	[Model(Archetypes = ModelArchetype.physics_prop_model | ModelArchetype.breakable_prop_model)]
 	public partial class ArcadeMachine : ModelEntity, IUse
 	{
 		[Net]
