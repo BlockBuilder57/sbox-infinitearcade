@@ -15,6 +15,7 @@ namespace infinitearcade.UI
 
 		private ArcadePlayer m_player;
 		private InventoryLayoutFlat m_invFlat;
+		private TargetStatus m_targetStatus;
 
 		private TimeSince TimeSinceInventoryUpdate;
 
@@ -35,7 +36,8 @@ namespace infinitearcade.UI
 			// custom stuff
 			AddChild<PlayerStatus>();
 			AddChild<WeaponStatus>();
-			AddChild<TargetStatus>();
+			m_targetStatus = AddChild<TargetStatus>();
+			m_targetStatus.AddClass("hidden");
 			m_invFlat = AddChild<InventoryLayoutFlat>();
 		}
 
@@ -76,6 +78,16 @@ namespace infinitearcade.UI
 			m_invFlat?.SwitchActive(newActive);
 
 			TimeSinceInventoryUpdate = 0;
+		}
+
+		public void EnableTargetStatus()
+		{
+			m_targetStatus.RemoveClass("hidden");
+		}
+
+		public void DisableTargetStatus()
+		{
+			m_targetStatus.AddClass("hidden");
 		}
 	}
 }

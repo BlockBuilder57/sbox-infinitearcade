@@ -36,9 +36,12 @@ namespace infinitearcade.UI
 		{
 			if (!Local.Pawn.IsValid())
 			{
-				SetClass("hidden", true);
+				SetClass("invalid", true);
 				return;
 			}
+
+			if (HasClass("hidden"))
+				return;
 
 			Vector3 eyePos = Local.Pawn.EyePosition;
 			Vector3 eyeDir = Local.Pawn.EyeRotation.Forward;
@@ -52,11 +55,16 @@ namespace infinitearcade.UI
 
 			if (valid)
 			{
-				if (tr.Entity is BrushEntity || tr.Entity is KeyframeEntity || tr.Entity is GlassShard)
+				// base entities
+				if (tr.Entity is BrushEntity || tr.Entity is KeyframeEntity || tr.Entity is AnimatedMapEntity || tr.Entity is IUse)
+					valid = false;
+
+				// specific entities
+				if (tr.Entity is GlassShard)
 					valid = false;
 			}
 
-			SetClass("hidden", !valid);
+			SetClass("invalid", !valid);
 
 			if (!valid)
 				return;
@@ -91,13 +99,13 @@ namespace infinitearcade.UI
 
 			if (ent is Player player)
 			{
-				Avatar?.SetClass("hidden", false);
+				Avatar?.SetClass("invalid", false);
 				Avatar?.SetTexture($"avatar:{player.Client.PlayerId}");
 				Name.Text = player.Client.Name;
 			}
 			else
 			{
-				Avatar?.SetClass("hidden", true);
+				Avatar?.SetClass("invalid", true);
 			}
 
 			target = ent;

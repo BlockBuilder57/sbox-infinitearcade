@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using CubicKitsune;
+using infinitearcade.UI;
 using Sandbox;
 
 namespace infinitearcade
@@ -40,6 +41,22 @@ namespace infinitearcade
 			}
 			else
 				EndHealing();
+		}
+
+		public override void ActiveStart(Entity ent)
+		{
+			base.ActiveStart(ent);
+
+			if (IsClient)
+				InfiniteArcadeHud.Current?.EnableTargetStatus();
+		}
+
+		public override void ActiveEnd(Entity ent, bool dropped)
+		{
+			base.ActiveEnd(ent, dropped);
+
+			if (IsClient)
+				InfiniteArcadeHud.Current?.DisableTargetStatus();
 		}
 
 		public void FindTarget(TraceResult tr)

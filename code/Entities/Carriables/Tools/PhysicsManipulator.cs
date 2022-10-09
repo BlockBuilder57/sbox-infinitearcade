@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using CubicKitsune;
+using infinitearcade.UI;
 using Sandbox;
 
 namespace infinitearcade
@@ -135,12 +136,18 @@ namespace infinitearcade
 		{
 			base.ActiveStart(ent);
 			EnableManipulator();
+
+			if (IsClient)
+				InfiniteArcadeHud.Current?.EnableTargetStatus();
 		}
 
 		public override void ActiveEnd(Entity ent, bool dropped)
 		{
 			base.ActiveEnd(ent, dropped);
 			DisableManipulator();
+
+			if (IsClient)
+				InfiniteArcadeHud.Current?.DisableTargetStatus();
 		}
 
 		protected override void OnDestroy()

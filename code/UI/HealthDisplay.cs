@@ -24,7 +24,7 @@ namespace infinitearcade.UI
 			ent = entity;
 
 			Health = Add.Label("100", "numberDisplay");
-			Armor = Add.Label("100", "numberDisplay");
+			Armor = Add.Label("100", "numberDisplay hidden");
 			ArmorMult = Armor.Add.Label("x1.0", "armorMult");
 		}
 
