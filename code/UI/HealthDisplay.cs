@@ -15,13 +15,13 @@ namespace infinitearcade.UI
 		public Label Armor;
 		public Label ArmorMult;
 
-		private Entity ent;
+		public Entity Ent { get; set; }
 
 		public HealthDisplay(Entity entity)
 		{
 			StyleSheet.Load("/ui/HealthDisplay.scss");
 
-			ent = entity;
+			Ent = entity;
 
 			Health = Add.Label("...", "numberDisplay");
 			Armor = Add.Label("...", "numberDisplay hidden");
@@ -32,15 +32,19 @@ namespace infinitearcade.UI
 		{
 			base.Tick();
 
-			if (!ent.IsValid())
+			if (!Ent.IsValid())
+			{
+				if (Health != null)
+					Health.Text = "...";
 				return;
+			}
 
 			if (Health != null)
-				Health.Text = ent.Health.CeilToInt().ToString();
+				Health.Text = Ent.Health.CeilToInt().ToString();
 
 			Armor?.SetClass("hidden", true);
 
-			ArcadePlayer player = ent as ArcadePlayer;
+			ArcadePlayer player = Ent as ArcadePlayer;
 			if (player == null)
 				return;
 

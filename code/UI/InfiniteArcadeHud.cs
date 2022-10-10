@@ -13,9 +13,12 @@ namespace infinitearcade.UI
 	{
 		public static InfiniteArcadeHud Current { get; set; }
 
-		private ArcadePlayer m_player;
-		private InventoryLayoutFlat m_invFlat;
+		public ArcadePlayer Player { get; private set; }
+
+		private PlayerStatus m_playerStatus;
+		private WeaponStatus m_weaponStatus;
 		private TargetStatus m_targetStatus;
+		private InventoryLayoutFlat m_invFlat;
 
 		private TimeSince TimeSinceInventoryUpdate;
 
@@ -33,9 +36,18 @@ namespace infinitearcade.UI
 			AddChild<ChatBox>();
 			AddChild<VoiceList>();
 
-			// custom stuff
-			AddChild<PlayerStatus>();
-			AddChild<WeaponStatus>();
+			OnNewPawn();
+		}
+
+		public void OnNewPawn()
+		{
+			m_playerStatus?.Delete();
+			m_weaponStatus?.Delete();
+			m_targetStatus?.Delete();
+			m_invFlat?.Delete();
+
+			m_playerStatus = AddChild<PlayerStatus>();
+			m_weaponStatus = AddChild<WeaponStatus>();
 			m_targetStatus = AddChild<TargetStatus>();
 			m_targetStatus.AddClass("hidden");
 			m_invFlat = AddChild<InventoryLayoutFlat>();
@@ -45,9 +57,9 @@ namespace infinitearcade.UI
 		{
 			base.Tick();
 
-			if (m_player == null)
-				m_player = Local.Pawn as ArcadePlayer;
-			if (!m_player.IsValid())
+			if (Player == null)
+				Player = Local.Pawn as ArcadePlayer;
+			if (!Player.IsValid())
 				return;
 
 			m_invFlat?.SetClass("active", TimeSinceInventoryUpdate < 2f);

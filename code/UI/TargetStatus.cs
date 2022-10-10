@@ -87,7 +87,6 @@ namespace infinitearcade.UI
 					Name.Text = modelPath[modelPath.Length-2];
 					break;
 			}
-				
 
 			Health?.Delete(true);
 

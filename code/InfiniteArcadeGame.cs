@@ -77,6 +77,9 @@ namespace infinitearcade
 			cl.Pawn = player;
 
 			player.Respawn();
+
+			if (cl == Local.Client && IsClient)
+				InfiniteArcadeHud.Current?.OnNewPawn();
 		}
 
 		public override void ClientDisconnect(Client cl, NetworkDisconnectionReason reason)
