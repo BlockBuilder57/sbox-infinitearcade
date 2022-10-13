@@ -56,7 +56,7 @@ namespace CubicKitsune
 		{
 			base.Spawn();
 
-			Tags.Add("weapon");
+			Tags.Add("carriable", "prop", "solid");
 
 			PickupTrigger = new PickupTrigger
 			{
