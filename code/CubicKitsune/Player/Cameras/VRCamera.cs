@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Sandbox;
 
-namespace infinitearcade
+namespace CubicKitsune
 {
 	public class VRCamera : CameraMode
 	{

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using CubicKitsune;
 using Sandbox;
 
 namespace infinitearcade
@@ -87,7 +88,7 @@ namespace infinitearcade
 				if (!target.IsValid() || !target.Pawn.IsValid())
 					continue;
 
-				if (target.Pawn is ArcadePlayer player)
+				if (target.Pawn is CKPlayer player)
 				{
 					player.Armor = amount;
 

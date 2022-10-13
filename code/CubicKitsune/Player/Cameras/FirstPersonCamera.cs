@@ -1,7 +1,7 @@
 ﻿using System;
 using Sandbox;
 
-namespace infinitearcade
+namespace CubicKitsune
 {
 	public partial class FirstPersonCamera : CameraMode
 	{

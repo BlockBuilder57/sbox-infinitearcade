@@ -93,7 +93,7 @@ namespace CubicKitsune
 			{
 				To toClient = To.Single(player.Client);
 
-				if (cldata_debug_client_inventory && player.Inventory is infinitearcade.IAInventory inv && Host.IsServer)
+				if (cldata_debug_client_inventory && player.Inventory is CKInventory inv && Host.IsServer)
 				{
 					string debugText = $"{player.Client.Name}'s inventory: ";
 

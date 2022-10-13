@@ -5,15 +5,14 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using infinitearcade.UI;
-using CubicKitsune;
 
-namespace infinitearcade
+namespace CubicKitsune
 {
-	public partial class IAInventory : BaseNetworkable, IBaseInventory
+	public partial class CKInventory : BaseNetworkable, IBaseInventory
 	{
-		[ConVar.ClientData] public static bool ia_inventory_flat_deploy_toggle { get; set; } = true;
+		[ConVar.ClientData] public static bool ck_inventory_flat_deploy_toggle { get; set; } = true;
 
-		public ArcadePlayer Owner { get; init; }
+		public CKPlayer Owner { get; init; }
 		public List<CKCarriable> List { get; set; } = new List<CKCarriable>();
 
 		public enum Buckets
@@ -29,7 +28,7 @@ namespace infinitearcade
 		public virtual bool Contains(Entity ent) => List.Contains(ent);
 		public bool IsCarryingType(Type t) => List.Any(x => x?.GetType() == t);
 
-		public IAInventory(ArcadePlayer owner)
+		public CKInventory(CKPlayer owner)
 		{
 			Owner = owner;
 		}
@@ -41,9 +40,9 @@ namespace infinitearcade
 			if (!cl.HasPermission("debug"))
 				return;
 
-			if (cl?.Pawn is ArcadePlayer player)
+			if (cl?.Pawn is CKPlayer player)
 			{
-				player.Inventory.DeleteContents();
+				player.Inventory?.DeleteContents();
 			}
 		}
 
@@ -203,7 +202,7 @@ namespace infinitearcade
 			if (Owner.ActiveChild == ent)
 			{
 				// press the slot number again to remove as active
-				if (evenIfEmpty && BucketType != Buckets.Bucketed && Owner.Client.GetClientData<bool>(nameof(ia_inventory_flat_deploy_toggle)))
+				if (evenIfEmpty && BucketType != Buckets.Bucketed && Owner.Client.GetClientData<bool>(nameof(ck_inventory_flat_deploy_toggle)))
 				{
 					ent = null;
 

@@ -1,12 +1,11 @@
-﻿using CubicKitsune;
-using Sandbox;
+﻿using Sandbox;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace infinitearcade
+namespace CubicKitsune
 {
 	[Library]
 	public partial class QPhysController : BasePlayerController
@@ -54,7 +53,7 @@ namespace infinitearcade
 		public Unstuck Unstuck;
 		public Angles BaseAngularVelocity { get; set; }
 
-		private ArcadePlayer m_player;
+		private CKPlayer m_player;
 
 		private string m_debugHopName;
 		private HopType m_debugHopType;
@@ -146,7 +145,7 @@ namespace infinitearcade
 		{
 			// can't do this in the ctor for some reason
 			if (!m_player.IsValid())
-				m_player = Pawn as ArcadePlayer;
+				m_player = Pawn as CKPlayer;
 			if (!m_player.IsValid())
 				return;
 

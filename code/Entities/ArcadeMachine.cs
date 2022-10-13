@@ -1,10 +1,12 @@
-﻿using Sandbox;
+﻿using infinitearcade.UI;
+using Sandbox;
 using SandboxEditor;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using CubicKitsune;
 
 namespace infinitearcade
 {
@@ -16,7 +18,7 @@ namespace infinitearcade
 	public partial class ArcadeMachine : ModelEntity, IUse
 	{
 		[Net]
-		public ArcadePlayer CreatedPlayer { get; set; }
+		public ArcadeMachinePlayer CreatedPlayer { get; set; }
 		[Net]
 		public ArcadePlayer CreatorPlayer { get; set; }
 
@@ -83,6 +85,9 @@ namespace infinitearcade
 
 		public bool IsUsable(Entity user)
 		{
+			if (user is not ArcadePlayer)
+				return false;
+			
 			return true;
 		}
 
@@ -101,7 +106,7 @@ namespace infinitearcade
 
 		public void EnterMachine(Entity creator)
 		{
-			if (!creator.IsValid())
+			if (!creator.IsValid() || creator is not ArcadePlayer player)
 				return;
 
 			if (IsServer)
@@ -109,13 +114,16 @@ namespace infinitearcade
 
 			if (!CurrentClient.IsValid())
 			{
-				CreatorPlayer = (ArcadePlayer)creator;
+				CreatorPlayer = player;
 				CreatorPlayer.UsingMachine = this;
 
-				CurrentClient = creator.Client;
+				CurrentClient = player.Client;
 				if (CurrentClient != null)
 					CurrentClient.Pawn = CreatedPlayer;
 			}
+
+			if (CreatedPlayer.Inventory is CKInventory inv)
+				InfiniteArcadeHud.Current?.InventoryFullUpdate(inv.List.ToArray());
 		}
 
 		public void ExitMachine()
@@ -131,6 +139,9 @@ namespace infinitearcade
 					CurrentClient = null;
 				}
 			}
+
+			if (CreatorPlayer.Inventory is CKInventory inv)
+				InfiniteArcadeHud.Current?.InventoryFullUpdate(inv.List.ToArray());
 		}
 
 		public void CreatePlayer()

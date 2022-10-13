@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace infinitearcade
+namespace CubicKitsune
 {
 	[Category("Corpses")]
 	public class Corpse : ModelEntity

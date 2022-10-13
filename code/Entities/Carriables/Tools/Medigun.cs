@@ -83,7 +83,7 @@ namespace infinitearcade
 
 						break;
 					}
-				case ArcadePlayer player:
+				case CKPlayer player:
 					{
 						HealMax = player.MaxHealth;
 						break;

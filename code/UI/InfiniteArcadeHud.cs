@@ -74,7 +74,7 @@ namespace infinitearcade.UI
 			Current?.Delete();
 			InfiniteArcadeHud hud = new();
 
-			if (Local.Pawn is Player player && player.Inventory is IAInventory inv)
+			if (Local.Pawn is Player player && player.Inventory is CKInventory inv)
 				hud.InventoryFullUpdate(inv.List.ToArray());
 		}
 

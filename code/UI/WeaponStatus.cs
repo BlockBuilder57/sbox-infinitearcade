@@ -29,7 +29,7 @@ namespace infinitearcade.UI
 
 			SetClass("hidden", true);
 
-			ArcadePlayer player = Local.Pawn as ArcadePlayer;
+			CKPlayer player = Local.Pawn as CKPlayer;
 			if (player == null) return;
 
 			if (player.ActiveChild is CKWeaponFirearm firearm)

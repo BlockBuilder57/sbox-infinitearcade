@@ -138,7 +138,7 @@ namespace infinitearcade
 			if (!string.IsNullOrWhiteSpace(clientSearch))
 				cl = cl.TryGetClient(clientSearch);
 
-			if (cl?.Pawn is ArcadePlayer player)
+			if (cl?.Pawn is CKPlayer player)
 			{
 				Corpse ent = player.CreateDeathRagdoll();
 				if (!ent.IsValid())
@@ -182,10 +182,10 @@ namespace infinitearcade
 			cl?.Pawn?.TakeDamage(DamageInfo.Generic(amount));
 		}
 
-		private static void GodModeSwitcher(ArcadePlayer player, ArcadePlayer.GodModes mode)
+		private static void GodModeSwitcher(CKPlayer player, CKPlayer.GodModes mode)
 		{
 			if (player.GodMode == mode)
-				player.GodMode = ArcadePlayer.GodModes.Mortal;
+				player.GodMode = CKPlayer.GodModes.Mortal;
 			else
 				player.GodMode = mode;
 		}
@@ -199,8 +199,8 @@ namespace infinitearcade
 
 			Client cl2 = cl.TryGetClient(search);
 
-			if (cl2.IsValid() && cl2.Pawn is ArcadePlayer player)
-				GodModeSwitcher(player, ArcadePlayer.GodModes.God);
+			if (cl2.IsValid() && cl2.Pawn is CKPlayer player)
+				GodModeSwitcher(player, CKPlayer.GodModes.God);
 		}
 
 		[ConCmd.Server("buddha")]
@@ -212,8 +212,8 @@ namespace infinitearcade
 
 			Client cl2 = cl.TryGetClient(search);
 
-			if (cl2.IsValid() && cl2.Pawn is ArcadePlayer player)
-				GodModeSwitcher(player, ArcadePlayer.GodModes.Buddha);
+			if (cl2.IsValid() && cl2.Pawn is CKPlayer player)
+				GodModeSwitcher(player, CKPlayer.GodModes.Buddha);
 		}
 
 		[ConCmd.Server("targetdummy")]
@@ -225,8 +225,8 @@ namespace infinitearcade
 
 			Client cl2 = cl.TryGetClient(search);
 
-			if (cl2.IsValid() && cl2.Pawn is ArcadePlayer player)
-				GodModeSwitcher(player, ArcadePlayer.GodModes.TargetDummy);
+			if (cl2.IsValid() && cl2.Pawn is CKPlayer player)
+				GodModeSwitcher(player, CKPlayer.GodModes.TargetDummy);
 		}
 
 		[ConCmd.Server("vr_reset_seated_pos")]
@@ -234,7 +234,7 @@ namespace infinitearcade
 		{
 			Client cl = ConsoleSystem.Caller;
 
-			if (cl?.Pawn is ArcadePlayer player)
+			if (cl?.Pawn is CKPlayer player)
 			{
 				player.ResetSeatedPos();
 			}

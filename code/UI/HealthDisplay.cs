@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using CubicKitsune;
 using Sandbox;
 using Sandbox.UI;
 using Sandbox.UI.Construct;
@@ -44,11 +45,11 @@ namespace infinitearcade.UI
 
 			Armor?.SetClass("hidden", true);
 
-			ArcadePlayer player = Ent as ArcadePlayer;
+			CKPlayer player = Ent as CKPlayer;
 			if (player == null)
 				return;
 
-			if (player.GodMode != ArcadePlayer.GodModes.Mortal && Health != null)
+			if (player.GodMode != CKPlayer.GodModes.Mortal && Health != null)
 				Health.Text += " (∞)";
 
 			Armor?.SetClass("hidden", player.Armor <= 0);

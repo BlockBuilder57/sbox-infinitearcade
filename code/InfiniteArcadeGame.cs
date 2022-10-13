@@ -33,7 +33,7 @@ namespace infinitearcade
 		{
 			Entity pawn = cl.Pawn;
 
-			if (pawn is ArcadePlayer player)
+			if (pawn is CKPlayer player)
 				player.Simulate(cl);
 
 			if (!cl.IsBot)
@@ -46,7 +46,7 @@ namespace infinitearcade
 
 			Entity pawn = cl.Pawn;
 
-			if (pawn is ArcadePlayer player)
+			if (pawn is CKPlayer player)
 				player.FrameSimulate(cl);
 
 			if (!cl.IsBot)
@@ -55,7 +55,7 @@ namespace infinitearcade
 
 		public override void MoveToSpawnpoint(Entity pawn)
 		{
-			if (pawn is ArcadePlayer player)
+			if (pawn is CKPlayer player)
 			{
 				Transform spawnTransform = player.GetSpawnpoint();
 
@@ -100,15 +100,15 @@ namespace infinitearcade
 			if (cl.Pawn is Player player && player.LifeState == LifeState.Alive)
 			{
 				float damage = player.Health;
-				if (player is ArcadePlayer arcadeplayer)
+				if (player is CKPlayer ckPlayer)
 				{
-					if (arcadeplayer.GodMode != ArcadePlayer.GodModes.Mortal)
+					if (ckPlayer.GodMode != CKPlayer.GodModes.Mortal)
 					{
 						player.OnKilled();
 						return;
 					}
 
-					damage += arcadeplayer.Armor * arcadeplayer.ArmorMultiplier;
+					damage += ckPlayer.Armor * ckPlayer.ArmorMultiplier;
 				}
 				player.TakeDamage(DamageInfo.Generic(damage * 100f));
 			}

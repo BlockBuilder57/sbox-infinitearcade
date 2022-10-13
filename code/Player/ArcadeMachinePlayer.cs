@@ -39,17 +39,9 @@ namespace infinitearcade
 			}
 		}
 
-		public override void Respawn()
-		{
-			base.Respawn();
-
-			
-		}
-
 		public override void InitStats()
 		{
-			Health = 100f;
-			MaxHealth = 100f;
+			Health = MaxHealth = 100f;
 
 			Armor = 25f;
 			MaxArmor = 100f;
