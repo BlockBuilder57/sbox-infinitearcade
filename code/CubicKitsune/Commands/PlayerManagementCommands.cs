@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using CubicKitsune;
 using Sandbox;
 
-namespace infinitearcade
+namespace CubicKitsune
 {
 	public class PlayerManagementCommands
 	{
@@ -79,7 +79,7 @@ namespace infinitearcade
 		}
 
 		[ConCmd.Admin("pawn_setarmor")]
-		public static void SetArmorCommand(float amount, float multiplier = 0, string search = "!self")
+		public static void SetArmorCommand(float amount, float power = 0, string search = "!self")
 		{
 			Client caller = ConsoleSystem.Caller;
 
@@ -92,8 +92,8 @@ namespace infinitearcade
 				{
 					player.Armor = amount;
 
-					if (multiplier != 0)
-						player.ArmorMultiplier = multiplier;
+					if (power != 0)
+						player.ArmorPower = power;
 				}
 			}
 		}
