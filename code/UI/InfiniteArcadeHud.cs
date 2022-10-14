@@ -13,7 +13,7 @@ namespace infinitearcade.UI
 	{
 		public static InfiniteArcadeHud Current { get; set; }
 
-		public ArcadePlayer Player { get; private set; }
+		public CKPlayer Player { get; private set; }
 
 		private PlayerStatus m_playerStatus;
 		private WeaponStatus m_weaponStatus;
@@ -58,7 +58,7 @@ namespace infinitearcade.UI
 			base.Tick();
 
 			if (Player == null)
-				Player = Local.Pawn as ArcadePlayer;
+				Player = Local.Pawn as CKPlayer;
 			if (!Player.IsValid())
 				return;
 

@@ -105,7 +105,7 @@ namespace infinitearcade
 
 			float delta = HealTarget.Health - HealTarget.Health.Approach(HealMax, MathX.Lerp(1f, MaxHealingSpeed, TimeSinceStartedHealing) * Time.Delta);
 
-			DamageInfo healing = DamageInfo.Generic(delta);
+			DamageInfo healing = DamageInfo.Generic(delta).WithAttacker(Owner, this);
 
 			HealTarget.TakeDamage(healing);
 		}

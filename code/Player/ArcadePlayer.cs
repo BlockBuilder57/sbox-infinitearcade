@@ -10,7 +10,7 @@ namespace infinitearcade
 	{
 		[Net] public ArcadeMachine UsingMachine { get; set; }
 		protected BasePlayerController m_machineController;
-
+		
 		public ArcadePlayer()
 		{
 			Inventory = new CKInventory(this);
@@ -41,8 +41,6 @@ namespace infinitearcade
 			Inventory?.Add(CKCarriableDefinition.CreateFromDefinition("assets/carriables/flashlight.tool"));
 			Inventory?.Add(CKCarriableDefinition.CreateFromDefinition("assets/carriables/physmanip.tool"));
 			Inventory?.Add(CKCarriableDefinition.CreateFromDefinition("assets/carriables/medigun.tool"));
-
-			Inventory?.Add(CKCarriableDefinition.CreateFromDefinition("assets/carriables/debug.firearm"));
 		}
 
 		public override void InitStats()
@@ -51,7 +49,7 @@ namespace infinitearcade
 
 			Armor = 0f;
 			MaxArmor = 50f;
-			ArmorMultiplier = 1.0f;
+			ArmorPower = 1.0f;
 		}
 
 		public override Transform GetSpawnpoint()

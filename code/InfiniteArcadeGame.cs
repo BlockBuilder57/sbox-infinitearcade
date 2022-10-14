@@ -73,7 +73,7 @@ namespace infinitearcade
 		{
 			base.ClientJoined(cl);
 
-			var player = new ArcadePlayer(cl);
+			var player = new DebugPlayer(cl);
 			cl.Pawn = player;
 
 			player.Respawn();
@@ -97,21 +97,21 @@ namespace infinitearcade
 
 		public override void DoPlayerSuicide(Client cl)
 		{
-			if (cl.Pawn is Player player && player.LifeState == LifeState.Alive)
+			if (!cl.Pawn.IsValid())
+				return;
+			
+			float damage = cl.Pawn.Health;
+			if (cl.Pawn is CKPlayer ckPlayer)
 			{
-				float damage = player.Health;
-				if (player is CKPlayer ckPlayer)
+				if (ckPlayer.GodMode != CKPlayer.GodModes.Mortal)
 				{
-					if (ckPlayer.GodMode != CKPlayer.GodModes.Mortal)
-					{
-						player.OnKilled();
-						return;
-					}
-
-					damage += ckPlayer.Armor * ckPlayer.ArmorMultiplier;
+					cl.Pawn.OnKilled();
+					return;
 				}
-				player.TakeDamage(DamageInfo.Generic(damage * 100f));
+
+				damage += ckPlayer.Armor * ckPlayer.ArmorPower;
 			}
+			cl.Pawn.TakeDamage(DamageInfo.Generic(damage * 100f));
 		}
 
 		public override void DoPlayerNoclip(Client player)

@@ -45,7 +45,7 @@ namespace infinitearcade
 
 			Armor = 25f;
 			MaxArmor = 100f;
-			ArmorMultiplier = 1f;
+			ArmorPower = 1f;
 		}
 
 		public override void GiveWeapons()

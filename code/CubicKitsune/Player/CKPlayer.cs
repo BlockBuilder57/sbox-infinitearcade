@@ -12,7 +12,7 @@ namespace CubicKitsune
 
 		[Net] public float Armor { get; set; }
 		[Net] public float MaxArmor { get; set; }
-		[Net] public float ArmorMultiplier { get; set; }
+		[Net] public float ArmorPower { get; set; }
 		
 		public enum GodModes
 		{
@@ -34,10 +34,10 @@ namespace CubicKitsune
 
 		public CKPlayer()
 		{
-			
+			Inventory = new CKInventory(this);
 		}
 		
-		public CKPlayer(Client cl)
+		public CKPlayer(Client cl) : this()
 		{
 			ClothingContainer.LoadFromClient(cl);
 		}
@@ -97,7 +97,7 @@ namespace CubicKitsune
 
 			Armor = 15f;
 			MaxArmor = 100f;
-			ArmorMultiplier = 1.0f;
+			ArmorPower = 0.8f;
 		}
 
 		public virtual void GiveWeapons()
@@ -369,12 +369,10 @@ namespace CubicKitsune
 		
 		public override void TakeDamage(DamageInfo info)
 		{
-			if (!Host.IsServer)
+			if (info.Damage == 0)
 				return;
-
-			if (LifeState == LifeState.Dead)
+			if (!Host.IsServer || LifeState != LifeState.Alive)
 				return;
-
 			if (info.Damage > 0 && (GodMode == GodModes.God || (GodMode == GodModes.Buddha && Health == 1)))
 				return;
 
@@ -385,84 +383,101 @@ namespace CubicKitsune
 			LastAttackerWeapon = info.Weapon;
 			info.Damage *= 1f / Scale;
 
-			if (ArmorMultiplier == 0)
-				ArmorMultiplier = 1f;
+			float scratchHealth = Health;
+			float scratchArmor = Armor;
+			float scratchArmorPower = ArmorPower;
 
-			float tempArmorMult = ArmorMultiplier;
-			float tempArmor = Armor;
-			float tempHealth = Health;
-
-			//const float debugTime = 2f;
-			//string debugText = $"Incoming damage: {info.Damage}";
-			//float debugPreHealth = tempHealth;
-			//float debugPreArmor = tempArmor;
-
+			//float debugTime = 4f;
+			//string debugText = $"Incoming damage: {info.Damage:F2}";
+			//float debugPreHealth = scratchHealth;
+			//float debugPreArmor = scratchArmor;
+			//float debugPreArmorPower = scratchArmorPower;
+			
 			if (info.Flags.HasFlag(DamageFlags.Blast))
 				ApplyAbsoluteImpulse(info.Force * 0.2f);
 
-			bool hadArmor = false;
-
-			//debugText += $"\n\tWe have {(tempArmor <= 0 || info.Damage < 0 ? "no" : "some")} armor ({tempArmor} * {tempArmorMult} == {tempArmor * tempArmorMult} functional)";
-
-			// we have no armor, so let's not run the armor calculations
-			if (tempArmor <= 0 || info.Damage < 0)
-				tempArmorMult = 1.0f;
-			else
+			if (info.Damage > 0)
 			{
-				hadArmor = true;
-
-				float trueArmor = tempArmor * tempArmorMult;
-				float min = Math.Min(info.Damage, trueArmor);
-
-				//debugText += $"\n\tmin = min({info.Damage}, {trueArmor})\ntrueArmor >= min ({trueArmor} >= {min}) is {trueArmor >= min}";
-
-				// if we either have enough armor to tank it, or the damage is so big it nukes our armor
-				if (trueArmor >= min)
+				// desired behavior:
+				//     no armor:
+				//         do nothing
+				//     armor < 1: (ex 0.6)
+				//         take 60% of damage to armor
+				//         apply remaining 40% of damage directly to health
+				//     armor > 1: (ex 1.5)
+				//         take (damage/1.5) to armor
+				//     
+				//     in all cases, apply negative suit as health
+				
+				// we have some armor, so let's run the armor calculations
+				if (scratchArmor > 0)
 				{
-					//debugText += $"\n\t{(trueArmor > min ? "had enough to tank" : "will destroy armor")}, armor ({tempArmor}) -= {info.Damage / tempArmorMult}, now {tempArmor - info.Damage / tempArmorMult}";
-					// subtract the damage value, dampened by the armor multiplier
-					tempArmor -= info.Damage / tempArmorMult;
+					//debugText += $"\n\tWe have some armor ({scratchArmor:F2}@{scratchArmorPower:F1})";
+					
+					float armorDamage = scratchArmorPower > 1 ? info.Damage / scratchArmorPower : info.Damage * scratchArmorPower;
+					scratchArmor -= armorDamage;
+
+					//debugText += $"\n\tArmor {(scratchArmor > 0 ? "had enough to tank" : "will be destroyed")}, now {scratchArmor:F2}";
+					
+					// don't overflow the damage into healing ever please thank you
+					// also if we have >1 power, be sure to remove the "true" armor from the damage
+					info.Damage = Math.Max(0, info.Damage - (scratchArmorPower > 1 ? info.Damage : armorDamage));
+					
+					//debugText += $"\n\tDamage reduced to {info.Damage:F2} by armor";
+				}
+				//else
+					//debugText += $"\n\tWe have no armor";
+
+				// take any negative armor values as health
+				if (scratchArmor < 0)
+				{
+					// apply it to the damageinfo
+					info.Damage -= scratchArmor;
+					//debugText += $"\n\t\t...but knocked to {info.Damage:F2} by it breaking";
+					scratchArmor = 0;
+					scratchArmorPower = 0;
+				}
+
+				// armor didn't protect us all the way
+				if (info.Damage > 0)
+				{
+					//debugText += $"\n\tTaking {info.Damage:F2} damage directly";
+					scratchHealth -= info.Damage;
 				}
 			}
-
-			// take any negative armor values as health
-			if (tempArmor < 0)
+			else
 			{
-				// make sure the damage left is not modified by the armor multiplier as our armor is supposed to be gone
-				tempArmor *= tempArmorMult;
-				tempHealth += tempArmor;
-				tempArmor = 0;
+				// taking healing!
+				scratchHealth -= info.Damage;
+				//debugText += "\n\tIt's healing";
+				
+				//if (info.Weapon is CKTool)
+					//debugTime = 0;
 			}
 
-			// if we didn't have any armor
-			if (!hadArmor)
-			{
-				//debugText += "\n\tTaking damage directly";
-				tempHealth -= info.Damage;
-			}
-
-			if (GodMode == GodModes.Buddha && tempHealth <= 0)
-				tempHealth = 1;
+			if (GodMode == GodModes.Buddha && scratchHealth <= 0)
+				scratchHealth = 1;
 
 			if (GodMode != GodModes.TargetDummy)
 			{
-				ArmorMultiplier = tempArmorMult;
-				Armor = tempArmor;
-				Health = tempHealth;
+				ArmorPower = scratchArmorPower;
+				Armor = scratchArmor;
+				Health = scratchHealth;
 
-				if (tempHealth <= 0)
+				if (scratchHealth <= 0)
 				{
-					//Health = 0;
+					//scratchHealth = 0;
 					// set this early
 					m_lastDamage = info;
 					OnKilled();
 				}
 			}
 
-			//debugText += $"\nFinal: {Health} {Armor:F0}x{ArmorMultiplier:F1} (Δ of {Health - debugPreHealth} {(Armor - debugPreArmor):F0}x{ArmorMultiplier:F1})";
+			//debugText += $"\nFinal: {Health:F2} {Armor:F2}@{ArmorPower:F1} (Δ of {(Health - debugPreHealth):F2} {(Armor - debugPreArmor):F2}@{(ArmorPower - debugPreArmorPower):F1})";
 
 			//DebugOverlay.Text(debugText.Replace("\t", "    "), Position.WithZ(Position.z + CollisionBounds.Maxs.z), CKDebugging.GetSideColor(), debugTime);
-
+			//CKDebugging.ScreenText(debugText, debugTime);
+			
 			m_lastDamage = info;
 		}
 

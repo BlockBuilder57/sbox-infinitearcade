@@ -57,7 +57,7 @@ namespace infinitearcade.UI
 			{
 				Armor.Text = player.Armor.CeilToInt().ToString();
 				if (ArmorMult != null)
-					ArmorMult.Text = $"x{player.ArmorMultiplier:F1}";
+					ArmorMult.Text = $"x{player.ArmorPower:F1}";
 			}
 		}
 	}

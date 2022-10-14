@@ -18,7 +18,7 @@ namespace infinitearcade.UI
 		{
 			StyleSheet.Load("/ui/PlayerStatus.scss");
 
-			pawnstatus = Add.Label("YOU'RE IN AN ARCADE MACHINE (press use to leave)", "pawnstatus");
+			pawnstatus = Add.Label("YOU'RE IN AN ARCADE MACHINE (press use to leave)", "pawnstatus, hidden");
 
 			m_healthDisplay = new HealthDisplay(Local.Pawn);
 			m_healthDisplay.Parent = this;
@@ -27,11 +27,11 @@ namespace infinitearcade.UI
 		public override void Tick()
 		{
 			base.Tick();
+			
+			m_healthDisplay.Ent = Local.Pawn;
 
 			ArcadePlayer player = Local.Pawn as ArcadePlayer;
 			if (player == null) return;
-
-			m_healthDisplay.Ent = player;
 
 			SetClass("hidden", player.LifeState == LifeState.Dead);
 			if (player.LifeState == LifeState.Dead)
