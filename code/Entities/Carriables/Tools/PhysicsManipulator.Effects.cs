@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using CubicKitsune;
@@ -14,13 +15,33 @@ namespace infinitearcade
 		// effects: particles and the like
 		// remember, all this is clientside!!
 
+		[ConVar.Client(null, Help = "Controls the color of the physics manipulator's grab", Saved = true)]
+		private static string ia_physmanip_color { get; set; } = "white";
+		[ConVar.Client(null, Help = "Controls the color of the physics manipulator's grab when behind an object", Saved = true)]
+		private static string ia_physmanip_color_obscured { get; set; } = "transparent";
+
+		private static Color m_physColor
+		{
+			get
+			{
+				Color rainbow = new ColorHsv((Time.Now * 100) % 360f, 1f, 1f);
+				return ia_physmanip_color == "rainbow" ? rainbow : Color.Parse(ia_physmanip_color).GetValueOrDefault();
+			}
+		}
+		private static Color m_physColorObscured
+		{
+			get
+			{
+				Color rainbow = new ColorHsv((Time.Now * 100) % 360f, 1f, 1f);
+				return ia_physmanip_color_obscured == "rainbow" ? rainbow : Color.Parse(ia_physmanip_color_obscured).GetValueOrDefault();
+			}
+		}
+
 		Particles FxPhysBeam;
 		Particles FxPhysBeamEnd;
 
 		//Particles FxGravPull;
 		//Particles FxGravBeam;
-
-		private bool m_fxStarted = false;
 
 		[Event.Frame]
 		public void OnFrame()
@@ -57,10 +78,7 @@ namespace infinitearcade
 			if (FxPhysBeamEnd == null)
 				FxPhysBeamEnd = Particles.Create("particles/physmanip_beamend.vpcf", tr.EndPosition);
 
-			m_fxStarted = true;
-
 			FxPhysBeam.SetEntityAttachment(0, EffectEntity, "muzzle");
-
 
 			if (HeldEntity.IsValid() && !HeldEntity.IsWorld)
 			{
@@ -68,9 +86,9 @@ namespace infinitearcade
 				{
 					Glow glow = modelEnt.Components.GetOrCreate<Glow>();
 					glow.Enabled = true;
-					glow.Color = new Color(5, 5, 5, 1);
-					glow.Width = 200f;
-					glow.ObscuredColor = Color.Transparent;
+					glow.Width = 0.3f;
+					glow.Color = m_physColor;
+					glow.ObscuredColor = m_physColorObscured;
 				}
 
 				if (HeldEntity.PhysicsGroup?.BodyCount > 0 && HeldGroupIndex >= 0)
@@ -99,22 +117,20 @@ namespace infinitearcade
 		{
 
 		}
-
+		
+		[ClientRpc]
 		public void EndEffects()
 		{
-			if (!m_fxStarted)
-				return;
-
 			FxPhysBeam?.Destroy(true);
 			FxPhysBeam = null;
 
 			FxPhysBeamEnd?.Destroy(true);
 			FxPhysBeamEnd = null;
-
-			if (PrevHeldEntity != null && PrevHeldEntity.Components.Get<Glow>() != null)
+			
+			if (HeldEntity?.Components.Get<Glow>() != null)
+				HeldEntity.Components.Get<Glow>().Enabled = false;
+			if (PrevHeldEntity?.Components.Get<Glow>() != null)
 				PrevHeldEntity.Components.Get<Glow>().Enabled = false;
-
-			m_fxStarted = false;
 		}
 	}
 }
