@@ -32,7 +32,8 @@
         "debris": "Unset",
         "player": "Unset",
         "glass": "Unset",
-        "prop": "Unset"
+        "prop": "Unset",
+        "corpse": "Unset"
       },
       "Pairs": [
         {
@@ -83,6 +84,11 @@
         {
           "a": "solid",
           "b": "prop"
+        },
+        {
+          "a": "corpse",
+          "b": "corpse",
+          "r": "Ignore"
         }
       ]
     },

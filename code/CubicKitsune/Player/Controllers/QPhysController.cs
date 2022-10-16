@@ -51,6 +51,8 @@ namespace CubicKitsune
 		public Angles m_inputRotationDelta;
 
 		public Unstuck Unstuck;
+		public readonly string[] CollideTags = new[] { "solid", "playerclip", "passbullets" };
+		
 		public Angles BaseAngularVelocity { get; set; }
 
 		private CKPlayer m_player;
@@ -359,7 +361,7 @@ namespace CubicKitsune
 
 		public virtual void StepMove()
 		{
-			MoveHelper mover = new(Position, Velocity);
+			MoveHelper mover = new(Position, Velocity, CollideTags);
 			mover.Trace = mover.Trace.Size(GetHull().Mins, GetHull().Maxs).Ignore(Pawn);
 			mover.MaxStandableAngle = GroundStandableAngle;
 
@@ -373,7 +375,7 @@ namespace CubicKitsune
 
 		public virtual void Move()
 		{
-			MoveHelper mover = new(Position, Velocity);
+			MoveHelper mover = new(Position, Velocity, CollideTags);
 			mover.Trace = mover.Trace.Size(GetHull().Mins, GetHull().Maxs).Ignore(Pawn);
 			mover.MaxStandableAngle = GroundStandableAngle;
 
@@ -847,6 +849,29 @@ namespace CubicKitsune
 			GroundEntity = null;
 			GroundNormal = Vector3.Up;
 			SurfaceFriction = 1.0f;
+		}
+		
+		/// <summary>
+		/// Traces the bbox and returns the trace result.
+		/// LiftFeet will move the start position up by this amount, while keeping the top of the bbox at the same 
+		/// position. This is good when tracing down because you won't be tracing through the ceiling above.
+		/// </summary>
+		public override TraceResult TraceBBox( Vector3 start, Vector3 end, Vector3 mins, Vector3 maxs, float liftFeet = 0.0f )
+		{
+			if ( liftFeet > 0 )
+			{
+				start += Vector3.Up * liftFeet;
+				maxs = maxs.WithZ( maxs.z - liftFeet );
+			}
+
+			var tr = Trace.Ray( start + TraceOffset, end + TraceOffset )
+				.Size( mins, maxs )
+				.WithAnyTags( CollideTags )
+				.Ignore( Pawn )
+				.Run();
+
+			tr.EndPosition -= TraceOffset;
+			return tr;
 		}
 
 		/// <summary>
