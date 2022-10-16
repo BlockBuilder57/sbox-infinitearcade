@@ -7,23 +7,23 @@ namespace CubicKitsune
 {
 	public class DevCamera : CameraMode
 	{
-		Angles LookAngles;
-		Vector3 MoveInput;
+		protected Angles LookAngles;
+		protected Vector3 MoveInput;
 
-		Vector3 TargetPos;
-		Rotation TargetRot;
+		protected Vector3 TargetPos;
+		protected Rotation TargetRot;
 
-		bool PivotEnabled;
-		Vector3 PivotPos;
-		float PivotDist;
-		Entity PivotEnt;
-		Vector3 PivotEntPosDiff;
-		Rotation PivotEntRotDiff;
+		protected bool PivotEnabled;
+		protected Vector3 PivotPos;
+		protected float PivotDist;
+		protected Entity PivotEnt;
+		protected Vector3 PivotEntPosDiff;
+		protected Rotation PivotEntRotDiff;
 
-		float MoveSpeed;
-		float FovOverride = 0;
+		protected float MoveSpeed;
+		protected float FovOverride = 0;
 
-		float LerpMode = 0.01f;
+		protected float LerpMode = 0f;
 
 		public static bool Overlays = true;
 		public static bool LockInput = false;
@@ -65,7 +65,7 @@ namespace CubicKitsune
 
 		public override void Update()
 		{
-			var tr = Trace.Ray(Position, Position + Rotation.Forward * 4096).Run();
+			var tr = Trace.Ray(Position, Position + Rotation.Forward * 4096).WithoutTags("trigger").Run();
 			FieldOfView = FovOverride;
 
 			if (PivotEnabled)
@@ -74,66 +74,74 @@ namespace CubicKitsune
 				FreeMove();
 
 			if (Overlays)
+				DrawDebugInfo(tr);
+		}
+
+		public virtual void DrawDebugInfo(TraceResult tr)
+		{
+			bool keepGoing = true;
+			if (tr.Entity is IDevCamInfo devCamInfo)
+				keepGoing = devCamInfo.DevCameraInfo(tr);
+			
+			var normalRot = Rotation.LookAt(tr.Normal);
+			DebugOverlay.Axis(tr.EndPosition, normalRot, 3.0f);
+			
+			if (tr.Entity.IsValid())
 			{
-				var normalRot = Rotation.LookAt(tr.Normal);
-				DebugOverlay.Axis(tr.EndPosition, normalRot, 3.0f);
-
-				if (tr.Entity != null)
+				if (tr.Entity.IsWorld)
 				{
-					if (tr.Entity.IsWorld)
+					string debugText = "";
+					const int pad = 8;
+
+					debugText += $"{"Hit Pos",pad}: {tr.HitPosition}";
+					debugText += $"\n{"Surface",pad}: {tr.Surface.ResourceName}";
+					debugText += $"\n{"Tags",pad}: {string.Join(", ", tr.Tags)}";
+					debugText += $"\n{"Friction",pad}: {tr.Surface.Friction}";
+
+					DebugOverlay.Text(debugText, tr.EndPosition + Vector3.Up * 20, Color.White, 0, 128);
+				}
+				else
+				{
+					string debugText = "";
+					const int pad = 6;
+
+					debugText += $"{"Entity",pad}: {tr.Entity} (managed {tr.Entity.GetType().FullName})";
+					debugText += $"\n{"Tags",pad}: {string.Join(", ", tr.Tags)}";
+					if (tr.Entity.Owner.IsValid() && tr.Entity.Owner != tr.Entity.Client)
+						debugText += $"\n{"Owner",pad}: {tr.Entity.Owner}";
+					if (tr.Entity.Client.IsValid())
+						debugText += $"\n{"Client",pad}: {tr.Entity.Client.Name} (ident {tr.Entity.Client.NetworkIdent}) {(tr.Entity.Client.IsBot ? "[BOT]" : "")}";
+					if (tr.Entity is ModelEntity model)
+						debugText += $"\n{"Model",pad}: {model.GetModelName()}";
+					if (!tr.Entity.ToString().EndsWith(tr.Entity.NetworkIdent.ToString()))
+						debugText += $"\n{"Index",pad}: {tr.Entity.NetworkIdent}";
+					debugText += $"\n{"Health",pad}: {tr.Entity.Health}";
+					if (tr.Entity.IsClientOnly)
+						debugText += $"\n{"Clientside",pad}: Clientside only";
+
+					DebugOverlay.Text(debugText, tr.EndPosition + Vector3.Up * 20, Color.White);
+
+					var bbox_world = tr.Entity.WorldSpaceBounds;
+					DebugOverlay.Box(Vector3.Zero, Rotation.Identity, bbox_world.Mins, bbox_world.Maxs, Color.Red.WithAlpha(0.4f));
+
+					if (tr.Entity is ModelEntity modelEnt)
 					{
-						string debugText = "";
-						const int pad = 8;
+						var bbox_collision = modelEnt.CollisionBounds;
+						DebugOverlay.Box(tr.Entity.Position, tr.Entity.Rotation, bbox_collision.Mins * tr.Entity.LocalScale, bbox_collision.Maxs * tr.Entity.LocalScale, Color.Green.WithAlpha(0.4f));
 
-						debugText += $"{"Hit Pos",pad}: {tr.HitPosition}";
-						debugText += $"\n{"Surface",pad}: {tr.Surface.ResourceName}";
-						debugText += $"\n{"Friction",pad}: {tr.Surface.Friction}";
-
-						DebugOverlay.Text(debugText, tr.EndPosition + Vector3.Up * 20, Color.White, 0, 128);
-					}
-					else
-					{
-						string debugText = "";
-						const int pad = 6;
-
-						debugText += $"{"Entity",pad}: {tr.Entity} (managed {tr.Entity.GetType().FullName})";
-						debugText += $"\n{"Tags",pad}: {string.Join(", ", tr.Tags)}";
-						if (tr.Entity.Owner.IsValid() && tr.Entity.Owner != tr.Entity.Client)
-							debugText += $"\n{"Owner",pad}: {tr.Entity.Owner}";
-						if (tr.Entity.Client.IsValid())
-							debugText += $"\n{"Client",pad}: {tr.Entity.Client.Name} (ident {tr.Entity.Client.NetworkIdent}) {(tr.Entity.Client.IsBot ? "[BOT]" : "")}";
-						if (tr.Entity is ModelEntity model)
-							debugText += $"\n{"Model",pad}: {model.GetModelName()}";
-						if (!tr.Entity.ToString().EndsWith(tr.Entity.NetworkIdent.ToString()))
-							debugText += $"\n{"Index",pad}: {tr.Entity.NetworkIdent}";
-						debugText += $"\n{"Health",pad}: {tr.Entity.Health}";
-						if (tr.Entity.IsClientOnly)
-							debugText += $"\n{"Clientside",pad}: Clientside only";
-
-						DebugOverlay.Text(debugText, tr.EndPosition + Vector3.Up * 20, Color.White);
-
-						var bbox_world = tr.Entity.WorldSpaceBounds;
-						DebugOverlay.Box(Vector3.Zero, Rotation.Identity, bbox_world.Mins, bbox_world.Maxs, Color.Red.WithAlpha(0.4f));
-
-						if (tr.Entity is ModelEntity modelEnt)
+						for (int i = 0; i < modelEnt.BoneCount; i++)
 						{
-							var bbox_collision = modelEnt.CollisionBounds;
-							DebugOverlay.Box(tr.Entity.Position, tr.Entity.Rotation, bbox_collision.Mins * tr.Entity.LocalScale, bbox_collision.Maxs * tr.Entity.LocalScale, Color.Green.WithAlpha(0.4f));
+							var tx = modelEnt.GetBoneTransform(i);
+							var name = modelEnt.GetBoneName(i);
+							var parent = modelEnt.GetBoneParent(i);
 
-							for (int i = 0; i < modelEnt.BoneCount; i++)
+							if (parent > -1)
 							{
-								var tx = modelEnt.GetBoneTransform(i);
-								var name = modelEnt.GetBoneName(i);
-								var parent = modelEnt.GetBoneParent(i);
-
-								if (parent > -1)
-								{
-									var ptx = modelEnt.GetBoneTransform(parent);
-									DebugOverlay.Line(tx.Position, ptx.Position, Color.White.WithAlpha(0.2f), depthTest: false);
-								}
+								var ptx = modelEnt.GetBoneTransform(parent);
+								DebugOverlay.Line(tx.Position, ptx.Position, Color.White.WithAlpha(0.2f), depthTest: false);
 							}
-
 						}
+
 					}
 				}
 			}
@@ -164,7 +172,7 @@ namespace CubicKitsune
 
 				if (input.Pressed(InputButton.Walk))
 				{
-					var tr = Trace.Ray(Position, Position + Rotation.Forward * Int32.MaxValue).UseHitboxes().Run();
+					var tr = Trace.Ray(Position, Position + Rotation.Forward * Int32.MaxValue).WithoutTags("trigger").UseHitboxes().Run();
 					PivotEnabled = tr.Hit;
 
 					if (tr.Hit)
@@ -206,7 +214,7 @@ namespace CubicKitsune
 
 				if (input.Pressed(InputButton.PrimaryAttack))
 				{
-					var tr = Trace.Ray(Position, Position + Rotation.Forward * 4096).Run();
+					var tr = Trace.Ray(Position, Position + Rotation.Forward * 4096).WithoutTags("trigger").Run();
 					if (tr.Entity.IsValid())
 						tr.Entity.DebugFlags ^= EntityDebugFlags.Skeleton;
 				}
