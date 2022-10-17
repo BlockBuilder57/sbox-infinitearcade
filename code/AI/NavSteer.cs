@@ -15,7 +15,7 @@ namespace infinitearcade
 		{
 			get
 			{
-				if (ToFollow.IsValid())
+				if (ToFollow.IsValid() && !ToFollow.IsWorld)
 					return ToFollow.Position;
 				else
 					return m_targetPos;

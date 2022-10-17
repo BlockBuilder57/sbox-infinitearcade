@@ -49,6 +49,9 @@ namespace infinitearcade
 			{
 				var output = Steer.Tick(m_player.Position);
 
+				if (!output.Finished)
+					builder.ViewAngles = output.Direction.EulerAngles;
+				
 				Vector3 test = output.Direction * builder.ViewAngles.ToRotation().Inverse;
 
 				if (!output.Finished)
@@ -76,14 +79,21 @@ namespace infinitearcade
 
 			Entity pawn = ConsoleSystem.Caller.Pawn;
 
-			var tr = Trace.Ray( pawn.EyePosition, pawn.EyePosition + pawn.EyeRotation.Forward * 4096 ).WorldOnly().Run();
+			var tr = Trace.Ray( pawn.EyePosition, pawn.EyePosition + pawn.EyeRotation.Forward * 4096 )
+				.WithoutTags("trigger")
+				.Ignore(pawn)
+				.Run();
+			
+			//DebugOverlay.Line(tr.StartPosition, tr.EndPosition, 2f);
 			
 			foreach (AIBot bot in All.Where(x => x is AIBot).Cast<AIBot>())
 			{
+				bot.Steer.ToFollow = tr.Entity;
 				bot.Steer.Target = tr.EndPosition;
+				bot.Steer.Driver.MakePath(bot.m_player.Position, bot.Steer.Target);
+				
+				bot.Steer.Driver.DebugDraw(2f);
 			}
-			
-			//DebugOverlay.Line(tr.EndPosition, tr.StartPosition, 2f);
 		}
 
 		public override void Tick()

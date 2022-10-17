@@ -90,7 +90,7 @@ namespace infinitearcade
 			foreach (NavPathSegment seg in OurPath.Segments)
 				Points.Add(seg.Position);
 
-			//DebugDraw(0f);
+			DebugDraw(0.2f);
 		}
 
 		public void DebugDraw(float time, float opacity = 1.0f)
