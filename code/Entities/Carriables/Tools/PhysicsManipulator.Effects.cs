@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Reflection;
 using System.Text;
@@ -15,27 +16,20 @@ namespace infinitearcade
 		// effects: particles and the like
 		// remember, all this is clientside!!
 
-		[ConVar.Client(null, Help = "Controls the color of the physics manipulator's grab", Saved = true)]
-		private static string ia_physmanip_color { get; set; } = "white";
-		[ConVar.Client(null, Help = "Controls the color of the physics manipulator's grab when behind an object", Saved = true)]
-		private static string ia_physmanip_color_obscured { get; set; } = "transparent";
+		[ConVar.Client(null, Help = "Controls the color of the physics manipulator's beam color", Saved = true)]
+		private static string ia_physmanip_beam_color { get; set; } = "white";
+		[ConVar.Client(null, Help = "Controls the color of the physics manipulator's beam color behind an object", Saved = true)]
+		private static string ia_physmanip_beam_color_obscured { get; set; } = "transparent";
+		[ConVar.Client(null, Help = "Controls the color of the physics manipulator's beam color behind an object", Min = 0, Saved = true)]
+		private static float ia_physmanip_beam_width { get; set; } = 0.3f;
 
-		private static Color m_physColor
-		{
-			get
-			{
-				Color rainbow = new ColorHsv((Time.Now * 100) % 360f, 1f, 1f);
-				return ia_physmanip_color == "rainbow" ? rainbow : Color.Parse(ia_physmanip_color).GetValueOrDefault();
-			}
-		}
-		private static Color m_physColorObscured
-		{
-			get
-			{
-				Color rainbow = new ColorHsv((Time.Now * 100) % 360f, 1f, 1f);
-				return ia_physmanip_color_obscured == "rainbow" ? rainbow : Color.Parse(ia_physmanip_color_obscured).GetValueOrDefault();
-			}
-		}
+		private static Color m_physColor =>
+			Color.Parse(ia_physmanip_beam_color.Replace("@", ((Time.Now * 100) % 360f)
+				.ToString(CultureInfo.InvariantCulture))).GetValueOrDefault();
+		
+		private static Color m_physColorObscured =>
+			Color.Parse(ia_physmanip_beam_color_obscured.Replace("@", ((Time.Now * 100) % 360f)
+				.ToString(CultureInfo.InvariantCulture))).GetValueOrDefault();
 
 		Particles FxPhysBeam;
 		Particles FxPhysBeamEnd;
@@ -86,7 +80,7 @@ namespace infinitearcade
 				{
 					Glow glow = modelEnt.Components.GetOrCreate<Glow>();
 					glow.Enabled = true;
-					glow.Width = 0.3f;
+					glow.Width = ia_physmanip_beam_width;
 					glow.Color = m_physColor;
 					glow.ObscuredColor = m_physColorObscured;
 				}
