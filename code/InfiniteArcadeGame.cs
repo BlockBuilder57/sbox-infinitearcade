@@ -73,7 +73,7 @@ namespace infinitearcade
 		{
 			base.ClientJoined(cl);
 
-			var player = new DebugPlayer(cl);
+			var player = new ArcadePlayer(cl);
 			cl.Pawn = player;
 
 			player.Respawn();
