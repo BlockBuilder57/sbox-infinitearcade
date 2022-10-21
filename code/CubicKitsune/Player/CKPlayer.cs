@@ -485,7 +485,7 @@ namespace CubicKitsune
 		{
 			base.OnKilled();
 
-			BecomeRagdollOnClient(Velocity, m_lastDamage.Flags, m_lastDamage.Position, m_lastDamage.Force, GetHitboxBone(m_lastDamage.HitboxIndex));
+			BecomeRagdollOnClient(Velocity, m_lastDamage.Flags, m_lastDamage.Position, m_lastDamage.Force, GetBoneIndex(m_lastDamage.Hitbox.GetName()));
 			ClothesSetVisiblity(false);
 			RemoveAllDecals();
 

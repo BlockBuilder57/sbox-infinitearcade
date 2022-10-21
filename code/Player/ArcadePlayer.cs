@@ -34,13 +34,13 @@ namespace infinitearcade
 			if (Client.IsBot)
 				return;
 
-			Inventory?.Add(CKCarriableDefinition.CreateFromDefinition("assets/carriables/pistol.firearm"));
-			Inventory?.Add(CKCarriableDefinition.CreateFromDefinition("assets/carriables/shotgun.firearm"));
-			Inventory?.Add(CKCarriableDefinition.CreateFromDefinition("assets/carriables/smg.firearm"));
+			Inventory?.Add(CKCarriableResource.CreateFromResource("assets/carriables/pistol.firearm"));
+			Inventory?.Add(CKCarriableResource.CreateFromResource("assets/carriables/shotgun.firearm"));
+			Inventory?.Add(CKCarriableResource.CreateFromResource("assets/carriables/smg.firearm"));
 
-			Inventory?.Add(CKCarriableDefinition.CreateFromDefinition("assets/carriables/flashlight.tool"));
-			Inventory?.Add(CKCarriableDefinition.CreateFromDefinition("assets/carriables/physmanip.tool"));
-			Inventory?.Add(CKCarriableDefinition.CreateFromDefinition("assets/carriables/medigun.tool"));
+			Inventory?.Add(CKCarriableResource.CreateFromResource("assets/carriables/flashlight.tool"));
+			Inventory?.Add(CKCarriableResource.CreateFromResource("assets/carriables/physmanip.tool"));
+			Inventory?.Add(CKCarriableResource.CreateFromResource("assets/carriables/medigun.tool"));
 		}
 
 		public override void InitStats()

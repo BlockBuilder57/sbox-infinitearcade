@@ -39,9 +39,9 @@ namespace CubicKitsune
 
 			if (Host.IsServer)
 			{
-				if (!string.IsNullOrEmpty(firearm.PrimaryCapacitySettings.ProjectileAsset))
+				if (!string.IsNullOrEmpty(firearm.PrimaryCapacitySettings.Projectile))
 					PrimaryCapacity = new WeaponCapacity(firearm.PrimaryCapacitySettings);
-				if (!string.IsNullOrEmpty(firearm.SecondaryCapacitySettings.ProjectileAsset))
+				if (!string.IsNullOrEmpty(firearm.SecondaryCapacitySettings.Projectile))
 					SecondaryCapacity = new WeaponCapacity(firearm.SecondaryCapacitySettings);
 
 				PrimaryFunction = firearm.PrimaryFunction;
@@ -53,7 +53,7 @@ namespace CubicKitsune
 
 			return (CKWeaponFirearm)SetupFromInterface(carry, tool);
 		}
-		public override CKCarriable SetupFromDefinition(CKCarriableDefinition def) => SetupFromInterface(def, def as ICKTool, def as ICKWeaponFirearm);
+		public override CKCarriable SetupFromResource(CKCarriableResource def) => SetupFromInterface(def, def as ICKTool, def as ICKWeaponFirearm);
 
 		public override void Simulate(Client cl)
 		{
@@ -300,7 +300,7 @@ namespace CubicKitsune
 		[Net] public int MaxClip { get; private set; }
 		[Net] public int MaxAmmo { get; private set; }
 
-		[Net] public CKProjectileDefinition Projectile { get; set; }
+		[Net] public CKProjectileResource Projectile { get; set; }
 
 		[Net] public bool InfiniteClip { get; set; } = false;
 		[Net] public bool InfiniteAmmo { get; set; } = false;
@@ -315,7 +315,7 @@ namespace CubicKitsune
 		{
 			Clip = MaxClip = settings.MaxClip;
 			Ammo = MaxAmmo = settings.MaxAmmo;
-			Projectile = ResourceLibrary.Get<CKProjectileDefinition>(settings.ProjectileAsset);
+			Projectile = ResourceLibrary.Get<CKProjectileResource>(settings.Projectile);
 
 			//Log.Info($"{NetworkIdent} being setup by: {settings}");
 		}

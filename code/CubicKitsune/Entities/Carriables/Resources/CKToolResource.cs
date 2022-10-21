@@ -8,11 +8,11 @@ using System.Threading.Tasks;
 
 namespace CubicKitsune
 {
-	[GameResource("Tool Definition", "tool", "The definition for a tool.", Icon = "build")]
-	public class CKToolDefinition : CKCarriableDefinition, ICKTool
+	[GameResource("Tool", "tool", "The definition for a tool.", Icon = "build")]
+	public class CKToolResource : CKCarriableResource, ICKTool
 	{
-		[HideInEditor] public static IReadOnlyList<CKToolDefinition> AllTools => _allTools;
-		[HideInEditor] internal static List<CKToolDefinition> _allTools = new();
+		[HideInEditor] public static IReadOnlyList<CKToolResource> AllTools => _allTools;
+		[HideInEditor] internal static List<CKToolResource> _allTools = new();
 
 		public ICKTool.InputSettings PrimaryInputSettings { get; set; }
 		public ICKTool.InputSettings SecondaryInputSettings { get; set; }

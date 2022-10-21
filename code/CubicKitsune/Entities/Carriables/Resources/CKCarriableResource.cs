@@ -8,11 +8,11 @@ using System.Threading.Tasks;
 
 namespace CubicKitsune
 {
-	[GameResource("Carriable Definition", "carry", "The definition for a carriable object.", Icon = "iron")]
-	public class CKCarriableDefinition : GameResource, ICKCarriable
+	[GameResource("Carriable", "carry", "The definition for a carriable object.", Icon = "iron")]
+	public class CKCarriableResource : GameResource, ICKCarriable
 	{
-		[HideInEditor] public static IReadOnlyList<CKCarriableDefinition> AllCarriables => _allCarriables;
-		[HideInEditor] internal static List<CKCarriableDefinition> _allCarriables = new();
+		[HideInEditor] public static IReadOnlyList<CKCarriableResource> AllCarriables => _allCarriables;
+		[HideInEditor] internal static List<CKCarriableResource> _allCarriables = new();
 
 		public string Identifier { get; set; }
 		public string LibraryType { get; set; } = "carriable_generic";
@@ -24,19 +24,19 @@ namespace CubicKitsune
 		public CitizenAnimationHelper.HoldTypes HoldType { get; set; }
 		public CitizenAnimationHelper.Hand Handedness { get; set; }
 
-		public static CKCarriable CreateFromDefinition(string path)
+		public static CKCarriable CreateFromResource(string path)
 		{
-			CKCarriableDefinition def = ResourceLibrary.Get<CKCarriableDefinition>(path);
+			CKCarriableResource def = ResourceLibrary.Get<CKCarriableResource>(path);
 			if (def == null)
 			{
-				Log.Error("Trying to create a carriable from a null definition!");
+				Log.Error("Trying to create a carriable from a null resource!");
 				return null;
 			}
 
 			CKCarriable carriable = TypeLibrary.Create<CKCarriable>(def.LibraryType);
 
 			if (carriable != null)
-				carriable.SetupFromDefinition(def);
+				carriable.SetupFromResource(def);
 
 			return carriable;
 		}
@@ -49,7 +49,7 @@ namespace CubicKitsune
 
 			foreach (CKCarriable carry in Entity.All.OfType<CKCarriable>())
 				if (carry.Identifier == Identifier)
-					carry.SetupFromDefinition(this);
+					carry.SetupFromResource(this);
 				
 		}
 

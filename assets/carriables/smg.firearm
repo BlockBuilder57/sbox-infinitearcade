@@ -6,12 +6,12 @@
 		{
 			MaxClip = 40
 			MaxAmmo = 120
-			ProjectileAsset = resource:"assets/carriables/projectiles/smg_round.proj"
+			Projectile = resource:"assets/carriables/projectiles/smg_round.proj"
 		}
 		SecondaryCapacitySettings = 
 		{
 			MaxClip = 6
-			ProjectileAsset = resource:"assets/carriables/projectiles/40mmgrenade.proj"
+			Projectile = resource:"assets/carriables/projectiles/40mmgrenade.proj"
 		}
 		PrimaryFunction = "FirePrimary"
 		SecondaryFunction = "FireSecondary"

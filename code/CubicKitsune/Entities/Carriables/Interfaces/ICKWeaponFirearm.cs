@@ -15,7 +15,7 @@ namespace CubicKitsune
 			public int MaxAmmo { get; set; }
 
 			[ResourceType("proj")]
-			public string ProjectileAsset { get; set; }
+			public string Projectile { get; set; }
 		}
 
 		public enum InputFunction

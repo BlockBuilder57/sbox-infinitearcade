@@ -8,11 +8,11 @@ using System.Threading.Tasks;
 
 namespace CubicKitsune
 {
-	[GameResource("Projectile Definition", "proj", "The definition for a projectile.", Icon = "merge")]
-	public class CKProjectileDefinition : GameResource, ICKProjectile
+	[GameResource("Projectile", "proj", "The definition for a projectile.", Icon = "merge")]
+	public class CKProjectileResource : GameResource, ICKProjectile
 	{
-		[HideInEditor] public static IReadOnlyList<CKProjectileDefinition> All => _allProjectiles;
-		[HideInEditor] internal static List<CKProjectileDefinition> _allProjectiles = new();
+		[HideInEditor] public static IReadOnlyList<CKProjectileResource> All => _allProjectiles;
+		[HideInEditor] internal static List<CKProjectileResource> _allProjectiles = new();
 
 		public string Identifier { get; set; }
 		[Description("Library name of the projectile to spawn. Leave blank for hitscan.")]

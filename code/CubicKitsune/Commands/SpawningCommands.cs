@@ -88,7 +88,7 @@ namespace CubicKitsune
 
 			var owner = ConsoleSystem.Caller.Pawn;
 
-			CKCarriable entity = CKCarriableDefinition.CreateFromDefinition(path);
+			CKCarriable entity = CKCarriableResource.CreateFromResource(path);
 
 			if (entity == null)
 				return;

@@ -6,12 +6,12 @@
 		{
 			MaxClip = 999
 			MaxAmmo = 99999
-			ProjectileAsset = resource:"assets/carriables/projectiles/debug.proj"
+			Projectile = resource:"assets/carriables/projectiles/debug.proj"
 		}
 		SecondaryCapacitySettings = 
 		{
 			MaxClip = 999
-			ProjectileAsset = resource:"assets/carriables/projectiles/demo_pill.proj"
+			Projectile = resource:"assets/carriables/projectiles/demo_pill.proj"
 		}
 		PrimaryFunction = "FirePrimary"
 		SecondaryFunction = "FireSecondary"

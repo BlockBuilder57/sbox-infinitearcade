@@ -8,11 +8,11 @@ using System.Threading.Tasks;
 
 namespace CubicKitsune
 {
-	[GameResource("Firearm Definition", "firearm", "The definition for a firearm.", Icon = "smoking_rooms")]
-	public class CKWeaponFirearmDefinition : CKToolDefinition, ICKWeaponFirearm
+	[GameResource("Firearm", "firearm", "The definition for a firearm.", Icon = "smoking_rooms")]
+	public class CKWeaponFirearmResource : CKToolResource, ICKWeaponFirearm
 	{
-		[HideInEditor] public static IReadOnlyList<CKWeaponFirearmDefinition> AllFirearms => _allFirearms;
-		[HideInEditor] internal static List<CKWeaponFirearmDefinition> _allFirearms = new();
+		[HideInEditor] public static IReadOnlyList<CKWeaponFirearmResource> AllFirearms => _allFirearms;
+		[HideInEditor] internal static List<CKWeaponFirearmResource> _allFirearms = new();
 
 		public ICKWeaponFirearm.CapacitySettings PrimaryCapacitySettings { get; set; }
 		public ICKWeaponFirearm.CapacitySettings SecondaryCapacitySettings { get; set; }

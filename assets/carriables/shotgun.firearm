@@ -6,11 +6,10 @@
 		{
 			MaxClip = 8
 			MaxAmmo = 24
-			ProjectileAsset = resource:"assets/carriables/projectiles/shotgun_round.proj"
+			Projectile = resource:"assets/carriables/projectiles/shotgun_round.proj"
 		}
 		SecondaryCapacitySettings = 
 		{
-			ProjectileAsset = ""
 		}
 		PrimaryFunction = "FirePrimary"
 		SecondaryFunction = "FireSecondary"

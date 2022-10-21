@@ -38,7 +38,7 @@ namespace CubicKitsune
 				SecondaryInput = new(tool.SecondaryInputSettings);
 				ReloadInput = new(tool.ReloadInputSettings);
 
-				if (tool is CKToolDefinition tooldef && tooldef.Sounds != null)
+				if (tool is CKToolResource tooldef && tooldef.Sounds != null)
 				{
 					SoundEvents = new Dictionary<string, SoundEvent>();
 
@@ -49,7 +49,7 @@ namespace CubicKitsune
 
 			return (CKTool)SetupFromInterface(carry);
 		}
-		public override CKCarriable SetupFromDefinition(CKCarriableDefinition def) => SetupFromInterface(def, def as ICKTool);
+		public override CKCarriable SetupFromResource(CKCarriableResource def) => SetupFromInterface(def, def as ICKTool);
 
 		public override void Simulate(Client cl)
 		{

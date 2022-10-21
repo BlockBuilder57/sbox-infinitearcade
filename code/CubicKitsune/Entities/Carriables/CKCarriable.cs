@@ -50,7 +50,7 @@ namespace CubicKitsune
 
 			return this;
 		}
-		public virtual CKCarriable SetupFromDefinition(CKCarriableDefinition def) => SetupFromInterface(def);
+		public virtual CKCarriable SetupFromResource(CKCarriableResource def) => SetupFromInterface(def);
 
 		public override void Spawn()
 		{

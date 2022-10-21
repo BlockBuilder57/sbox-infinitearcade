@@ -50,7 +50,7 @@ namespace infinitearcade
 
 		public override void GiveWeapons()
 		{
-			Inventory?.Add(CKCarriableDefinition.CreateFromDefinition("assets/carriables/pistol.firearm"), true);
+			Inventory?.Add(CKCarriableResource.CreateFromResource("assets/carriables/pistol.firearm"), true);
 		}
 
 		public override void Clothe()
