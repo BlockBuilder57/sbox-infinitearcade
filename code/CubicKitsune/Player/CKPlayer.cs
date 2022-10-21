@@ -64,8 +64,7 @@ namespace CubicKitsune
 			Velocity = Vector3.Zero;
 			WaterLevel = 0;
 
-			InitStats();
-			GiveWeapons();
+			InitLoadout();
 
 			//Undress();
 			if (m_clothed)
@@ -91,17 +90,46 @@ namespace CubicKitsune
 			}
 		}
 
-		public virtual void InitStats()
+		public virtual void InitLoadout()
 		{
-			Health = MaxHealth = 100f;
-
-			Armor = 15f;
-			MaxArmor = 100f;
-			ArmorPower = 0.8f;
+			CKPlayerLoadoutResource loadout = ResourceLibrary.Get<CKPlayerLoadoutResource>("assets/loadouts/default.loadout");
+			SetupFromLoadoutResource(loadout);
 		}
 
-		public virtual void GiveWeapons()
+		public void SetupFromLoadoutResource(CKPlayerLoadoutResource loadout)
 		{
+			if (loadout == null)
+			{
+				Health = MaxHealth = 100f;
+				Armor = MaxArmor = ArmorPower = 0f;
+				throw new Exception("Loadout was null!");
+			}
+
+			Health = loadout.StartingHealth;
+			MaxHealth = loadout.MaxHealth;
+			Armor = loadout.StartingArmor;
+			MaxArmor = loadout.MaxArmor;
+			ArmorPower = loadout.StartingArmorPower;
+			
+			if (Client.IsBot || loadout.Carriables == null)
+				return;
+
+			foreach (CKCarriableResource def in loadout.Carriables)
+			{
+				// temporary workaround
+				var def2 = ResourceLibrary.Get<CKCarriableResource>(def.ResourcePath);
+				
+				if (def2 == null)
+					throw new Exception("Null definition in loadout carriables!");
+				
+				CKCarriable carriable = TypeLibrary.Create<CKCarriable>(def2.LibraryType);
+
+				if (carriable != null)
+				{
+					carriable.SetupFromResource(def2);
+					Inventory?.Add(carriable);
+				}
+			}
 		}
 
 		public virtual Transform GetSpawnpoint()

@@ -28,28 +28,11 @@ namespace infinitearcade
 			if (m_machineController == null)
 				m_machineController = new GravityOnlyController();
 		}
-		
-		public override void GiveWeapons()
+
+		public override void InitLoadout()
 		{
-			if (Client.IsBot)
-				return;
-
-			Inventory?.Add(CKCarriableResource.CreateFromResource("assets/carriables/pistol.firearm"));
-			Inventory?.Add(CKCarriableResource.CreateFromResource("assets/carriables/shotgun.firearm"));
-			Inventory?.Add(CKCarriableResource.CreateFromResource("assets/carriables/smg.firearm"));
-
-			Inventory?.Add(CKCarriableResource.CreateFromResource("assets/carriables/flashlight.tool"));
-			Inventory?.Add(CKCarriableResource.CreateFromResource("assets/carriables/physmanip.tool"));
-			Inventory?.Add(CKCarriableResource.CreateFromResource("assets/carriables/medigun.tool"));
-		}
-
-		public override void InitStats()
-		{
-			Health = MaxHealth = 40f;
-
-			Armor = 0f;
-			MaxArmor = 50f;
-			ArmorPower = 1.0f;
+			CKPlayerLoadoutResource loadout = ResourceLibrary.Get<CKPlayerLoadoutResource>("assets/loadouts/arcadeplayer.loadout");
+			SetupFromLoadoutResource(loadout);
 		}
 
 		public override Transform GetSpawnpoint()

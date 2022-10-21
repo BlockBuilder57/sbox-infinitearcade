@@ -39,18 +39,10 @@ namespace infinitearcade
 			}
 		}
 
-		public override void InitStats()
+		public override void InitLoadout()
 		{
-			Health = MaxHealth = 100f;
-
-			Armor = 25f;
-			MaxArmor = 100f;
-			ArmorPower = 1f;
-		}
-
-		public override void GiveWeapons()
-		{
-			Inventory?.Add(CKCarriableResource.CreateFromResource("assets/carriables/pistol.firearm"), true);
+			CKPlayerLoadoutResource loadout = ResourceLibrary.Get<CKPlayerLoadoutResource>("assets/loadouts/machineplayer.loadout");
+			SetupFromLoadoutResource(loadout);
 		}
 
 		public override void Clothe()
