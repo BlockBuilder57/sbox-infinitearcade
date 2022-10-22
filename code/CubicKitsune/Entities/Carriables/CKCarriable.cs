@@ -83,8 +83,8 @@ namespace CubicKitsune
 		{
 			base.ActiveStart(ent);
 
-			if (Host.IsClient && Owner == Local.Pawn && Local.Hud is InfiniteArcadeHud hud)
-				hud.InventorySwitchActive(this);
+			if (Host.IsServer)
+				InfiniteArcadeHud.InventorySwitchActive(To.Single(Owner), this);
 
 			TimeSinceDeployed = 0;
 		}

@@ -8,20 +8,21 @@ using infinitearcade.UI;
 
 namespace CubicKitsune
 {
-	public partial class CKInventory : BaseNetworkable, IBaseInventory
+	public partial class CKInventory : IBaseInventory
 	{
 		[ConVar.ClientData] public static bool ck_inventory_flat_deploy_toggle { get; set; } = true;
 
 		public CKPlayer Owner { get; init; }
-		public List<CKCarriable> List { get; set; } = new List<CKCarriable>();
+		public List<CKCarriable> List = new List<CKCarriable>();
 
-		public enum Buckets
+		public enum BucketTypes
 		{
 			FlatUnordered, // eg fp's sandbox
 			FlatOrdered,
 			Bucketed // eg Source games, ULTRAKILL
 		}
-		public Buckets BucketType { get; set; } = Buckets.FlatOrdered;
+
+		public BucketTypes BucketType;
 
 		public virtual Entity Active => Owner.ActiveChild;
 		public virtual int Count() => List.Count;
@@ -31,6 +32,7 @@ namespace CubicKitsune
 		public CKInventory(CKPlayer owner)
 		{
 			Owner = owner;
+			BucketType = BucketTypes.FlatOrdered;
 		}
 
 		[ConCmd.Server("inv_clear")]
@@ -168,7 +170,7 @@ namespace CubicKitsune
 
 			var ac = Owner.ActiveChild;
 			if (!ac.IsValid()) return null;
-
+			
 			if (Drop(ac))
 			{
 				Owner.ActiveChild = null;
@@ -182,7 +184,7 @@ namespace CubicKitsune
 		{
 			if (Active == ent) return false;
 			if (!Contains(ent)) return false;
-
+			
 			Owner.ActiveChild = ent;
 
 			return true;
@@ -202,12 +204,10 @@ namespace CubicKitsune
 			if (Owner.ActiveChild == ent)
 			{
 				// press the slot number again to remove as active
-				if (evenIfEmpty && BucketType != Buckets.Bucketed && Owner.Client.GetClientData<bool>(nameof(ck_inventory_flat_deploy_toggle)))
+				if (evenIfEmpty && BucketType != BucketTypes.Bucketed && Owner.Client.GetClientData<bool>(nameof(ck_inventory_flat_deploy_toggle)))
 				{
 					ent = null;
-
-					if (Host.IsClient && Owner == Local.Pawn && Local.Hud is InfiniteArcadeHud hud)
-						hud.InventorySwitchActive(null);
+					InfiniteArcadeHud.InventorySwitchActive(To.Single(Owner), null);
 				}
 				else
 					return false;
@@ -215,7 +215,7 @@ namespace CubicKitsune
 
 			if (!evenIfEmpty && ent == null)
 				return false;
-
+		
 			Owner.ActiveChild = ent;
 
 			return ent.IsValid();
@@ -245,11 +245,10 @@ namespace CubicKitsune
 
 		public void ListReorder()
 		{
-			if (BucketType != Buckets.FlatUnordered)
+			if (BucketType != BucketTypes.FlatUnordered)
 				List = List.OrderBy(x => x.Bucket).ThenBy(x => x.SubBucket).ThenBy(x => x.NetworkIdent).ToList();
-
-			if (Host.IsClient && Owner == Local.Pawn && Local.Hud is InfiniteArcadeHud hud)
-				hud.InventoryFullUpdate(List.ToArray());
+			
+			InfiniteArcadeHud.InventoryFullUpdate(To.Single(Owner), List.ToArray());
 		}
 	}
 }

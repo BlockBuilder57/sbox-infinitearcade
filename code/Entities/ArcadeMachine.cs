@@ -123,7 +123,7 @@ namespace infinitearcade
 			}
 
 			if (CreatedPlayer.Inventory is CKInventory inv)
-				InfiniteArcadeHud.Current?.InventoryFullUpdate(inv.List.ToArray());
+				InfiniteArcadeHud.InventoryFullUpdate(To.Single(CreatedPlayer), inv.List.ToArray());
 		}
 
 		public void ExitMachine()
@@ -141,7 +141,7 @@ namespace infinitearcade
 			}
 
 			if (CreatorPlayer.Inventory is CKInventory inv)
-				InfiniteArcadeHud.Current?.InventoryFullUpdate(inv.List.ToArray());
+				InfiniteArcadeHud.InventoryFullUpdate(To.Single(CreatorPlayer), inv.List.ToArray());
 		}
 
 		public void CreatePlayer()

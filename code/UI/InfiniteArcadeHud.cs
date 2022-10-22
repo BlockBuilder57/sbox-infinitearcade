@@ -74,22 +74,30 @@ namespace infinitearcade.UI
 			Current?.Delete();
 			InfiniteArcadeHud hud = new();
 
-			if (Local.Pawn is Player player && player.Inventory is CKInventory inv)
-				hud.InventoryFullUpdate(inv.List.ToArray());
+			if (Local.Pawn is Player player && player.Inventory is CKInventory inv && inv.List != null)
+				InventoryFullUpdate(inv.List.ToArray());
 		}
 
-		public void InventoryFullUpdate(CKCarriable[] inv)
+		[ClientRpc]
+		public static void InventoryFullUpdate(CKCarriable[] inv)
 		{
-			m_invFlat?.FullUpdate(inv);
+			if (!Current.IsValid())
+				return;
+			
+			Current.m_invFlat?.FullUpdate(inv);
 
-			TimeSinceInventoryUpdate = 0;
+			Current.TimeSinceInventoryUpdate = 0;
 		}
 
-		public void InventorySwitchActive(CKCarriable newActive)
+		[ClientRpc]
+		public static void InventorySwitchActive(CKCarriable newActive)
 		{
-			m_invFlat?.SwitchActive(newActive);
+			if (!Current.IsValid())
+				return;
+			
+			Current.m_invFlat?.SwitchActive(newActive);
 
-			TimeSinceInventoryUpdate = 0;
+			Current.TimeSinceInventoryUpdate = 0;
 		}
 
 		public void EnableTargetStatus()
