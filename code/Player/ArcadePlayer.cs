@@ -31,7 +31,7 @@ namespace infinitearcade
 
 		public override void InitLoadout()
 		{
-			CKPlayerLoadoutResource loadout = ResourceLibrary.Get<CKPlayerLoadoutResource>("assets/loadouts/arcadeplayer.loadout");
+			CKPlayerLoadoutResource loadout = ResourceLibrary.Get<CKPlayerLoadoutResource>(InfiniteArcadeGame.ia_debug ? "assets/loadouts/debug.loadout" : "assets/loadouts/arcadeplayer.loadout");
 			SetupFromLoadoutResource(loadout);
 		}
 

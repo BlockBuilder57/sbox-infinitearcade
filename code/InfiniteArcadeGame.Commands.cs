@@ -11,6 +11,9 @@ namespace infinitearcade
 {
 	public partial class InfiniteArcadeGame : Sandbox.Game
 	{
+		[ConVar.Server(Saved = true)]
+		public static bool ia_debug { get; set; }
+		
 		[ConCmd.Server("vr_reset_seated_pos")]
 		public static void VRResetSeatedCommand()
 		{
