@@ -73,6 +73,8 @@ namespace infinitearcade
 				FxPhysBeamEnd = Particles.Create("particles/physmanip_beamend.vpcf", tr.EndPosition);
 
 			FxPhysBeam.SetEntityAttachment(0, EffectEntity, "muzzle");
+			FxPhysBeam.SetPosition(2, m_physColor);
+			FxPhysBeamEnd.SetPosition(1, m_physColor);
 
 			if (HeldEntity.IsValid() && !HeldEntity.IsWorld)
 			{
@@ -84,6 +86,8 @@ namespace infinitearcade
 					glow.Color = m_physColor;
 					glow.ObscuredColor = m_physColorObscured;
 				}
+				
+				
 
 				if (HeldEntity.PhysicsGroup?.BodyCount > 0 && HeldGroupIndex >= 0)
 				{

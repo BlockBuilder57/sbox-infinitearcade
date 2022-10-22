@@ -591,6 +591,7 @@ namespace CubicKitsune
 			ent.CopyBonesFrom(this);
 			ent.CopyBodyGroups(this);
 			ent.CopyMaterialGroup(this);
+			ent.CopyMaterialOverrides(this);
 			ent.TakeDecalsFrom(this);
 			ent.RenderColor = RenderColor;
 
@@ -607,6 +608,7 @@ namespace CubicKitsune
 					clothing.SetParent(ent, true);
 					clothing.CopyBodyGroups(e);
 					clothing.CopyMaterialGroup(e);
+					clothing.CopyMaterialOverrides(e);
 					clothing.TakeDecalsFrom(e);
 					clothing.RenderColor = e.RenderColor;
 				}
